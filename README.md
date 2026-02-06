@@ -169,10 +169,6 @@ OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 4. **AI策略**: 生成针对性改进策略
 5. **智能问答**: 基于知识库回答ESG问题
 
-## 📄 许可证
-
-MIT License
-
 ---
 
 **版本**: demo v1.2.0  

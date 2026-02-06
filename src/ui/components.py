@@ -133,52 +133,43 @@ def render_score_card(
     color = data.color or get_score_color(data.score)
     percentage = data.score / data.max_score
     
-    html = f"""
-    <div style="
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 12px;
-        padding: 20px;
-        border-left: 5px solid {color};
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 16px;
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="font-size: 0.9em; color: #666; margin-bottom: 4px;">{data.title}</div>
-                <div style="font-size: 2em; font-weight: bold; color: {color};">
-                    {data.score:.1f}<span style="font-size: 0.5em; color: #999;">/{data.max_score}</span>
-                </div>
-            </div>
-            <div style="font-size: 3em; opacity: 0.3;">{get_score_emoji(data.score)}</div>
-        </div>
-    """
-    
-    if show_progress:
-        html += f"""
-        <div style="margin-top: 12px;">
+    # 使用st.container和原生组件替代HTML
+    with st.container():
+        # 卡片背景
+        st.markdown(
+            f"""
             <div style="
-                background: #e0e0e0;
-                border-radius: 10px;
-                height: 8px;
-                overflow: hidden;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 12px;
+                padding: 20px;
+                border-left: 5px solid {color};
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                margin-bottom: 16px;
             ">
-                <div style="
-                    background: {color};
-                    width: {percentage * 100}%;
-                    height: 100%;
-                    border-radius: 10px;
-                    transition: width 0.3s ease;
-                "></div>
-            </div>
-        </div>
-        """
-    
-    if data.description:
-        html += f'<div style="margin-top: 8px; font-size: 0.85em; color: #888;">{data.description}</div>'
-    
-    html += "</div>"
-    
-    st.markdown(html, unsafe_allow_html=True)
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 4px;">{data.title}</div>
+                        <div style="font-size: 2em; font-weight: bold; color: {color};">
+                            {data.score:.1f}<span style="font-size: 0.5em; color: #999;">/{data.max_score}</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 3em; opacity: 0.3;">{get_score_emoji(data.score)}</div>
+                </div>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        if show_progress:
+            # 使用原生Streamlit progress bar
+            st.progress(float(percentage), text="")
+        
+        if data.description:
+            st.markdown(
+                f'<div style="font-size: 0.85em; color: #888;">{data.description}</div>',
+                unsafe_allow_html=True
+            )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_metric_card(
@@ -199,34 +190,14 @@ def render_metric_card(
         delta_description: 变化描述
         key: 组件key
     """
-    delta_color = "green" if delta and delta > 0 else "red" if delta and delta < 0 else "gray"
-    delta_icon = "↑" if delta and delta > 0 else "↓" if delta and delta < 0 else "→"
-    
-    html = f"""
-    <div style="
-        background: white;
-        border-radius: 8px;
-        padding: 16px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    ">
-        <div style="font-size: 0.85em; color: #888; margin-bottom: 4px;">{title}</div>
-        <div style="font-size: 1.8em; font-weight: bold; color: #333;">
-            {value}<span style="font-size: 0.6em; color: #999; margin-left: 4px;">{unit}</span>
-        </div>
-    """
-    
-    if delta is not None:
-        html += f"""
-        <div style="margin-top: 8px; font-size: 0.85em;">
-            <span style="color: {delta_color};">{delta_icon} {abs(delta):.1f}</span>
-            <span style="color: #999; margin-left: 4px;">{delta_description}</span>
-        </div>
-        """
-    
-    html += "</div>"
-    
-    st.markdown(html, unsafe_allow_html=True)
+    with st.container():
+        st.caption(title)
+        st.markdown(f"**{value}** {unit}")
+        
+        if delta is not None:
+            delta_color = "green" if delta > 0 else "red" if delta < 0 else "gray"
+            delta_icon = "↑" if delta > 0 else "↓" if delta < 0 else "→"
+            st.markdown(f":{delta_color}[{delta_icon} {abs(delta):.1f}] {delta_description}")
 
 
 def render_gap_card(data: GapCardData, key: Optional[str] = None) -> None:
@@ -244,58 +215,28 @@ def render_gap_card(data: GapCardData, key: Optional[str] = None) -> None:
     
     gap_status = "落后" if data.gap > 0 else "领先" if data.gap < 0 else "持平"
     
-    html = f"""
-    <div style="
-        background: white;
-        border-radius: 10px;
-        padding: 16px;
-        border: 2px solid {dim_color};
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 12px;
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center;">
-                <div style="
-                    width: 12px; height: 12px; border-radius: 50%;
-                    background: {dim_color}; margin-right: 8px;
-                "></div>
-                <span style="font-weight: bold; color: #333;">{dim_name} ({data.dimension})</span>
-            </div>
-            <span style="
-                background: {priority_color}20;
-                color: {priority_color};
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 0.8em;
-            ">优先级 {data.priority}</span>
-        </div>
+    with st.container():
+        # 标题行
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**{dim_name} ({data.dimension})**")
+        with col2:
+            st.markdown(f"<span style='color: {priority_color}; font-size: 0.8em;'>优先级 {data.priority}</span>", unsafe_allow_html=True)
         
-        <div style="display: flex; justify-content: space-between; text-align: center;">
-            <div>
-                <div style="font-size: 0.8em; color: #888;">当前</div>
-                <div style="font-size: 1.5em; font-weight: bold; color: #333;">{data.current:.1f}</div>
-            </div>
-            <div style="color: #ccc; font-size: 1.5em;">→</div>
-            <div>
-                <div style="font-size: 0.8em; color: #888;">标杆</div>
-                <div style="font-size: 1.5em; font-weight: bold; color: #52c41a;">{data.benchmark:.1f}</div>
-            </div>
-            <div style="color: #ccc; font-size: 1.5em;">=</div>
-            <div>
-                <div style="font-size: 0.8em; color: #888;">差距</div>
-                <div style="font-size: 1.5em; font-weight: bold; color: {'#ff4d4f' if data.gap > 0 else '#52c41a'};">
-                    {'+' if data.gap > 0 else ''}{data.gap:.1f}
-                </div>
-            </div>
-        </div>
+        # 数据对比
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("当前", f"{data.current:.1f}")
+        with col2:
+            st.metric("标杆", f"{data.benchmark:.1f}")
+        with col3:
+            gap_color = "#ff4d4f" if data.gap > 0 else "#52c41a"
+            gap_sign = "+" if data.gap > 0 else ""
+            st.markdown("**差距**")
+            st.markdown(f"<span style='color: {gap_color}; font-size: 1.2em; font-weight: bold;'>{gap_sign}{data.gap:.1f}</span>", unsafe_allow_html=True)
         
-        <div style="margin-top: 8px; text-align: center; font-size: 0.85em; color: #666;">
-            相比标杆{gap_status} {abs(data.gap):.1f} 分
-        </div>
-    </div>
-    """
-    
-    st.markdown(html, unsafe_allow_html=True)
+        # 状态说明
+        st.caption(f"相比标杆{gap_status} {abs(data.gap):.1f} 分")
 
 
 def render_strategy_card(

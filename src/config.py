@@ -24,7 +24,7 @@ OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "120"))
 
 # ========== 模型配置 ==========
 MODELS: Dict[str, str] = {
-    "llm": os.getenv("OLLAMA_LLM_MODEL", "deepseek-r1:7b"),
+    "llm": os.getenv("OLLAMA_LLM_MODEL", "deepseek-r1:1.5b"),
     "embedding": os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
 }
 

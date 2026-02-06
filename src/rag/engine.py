@@ -71,24 +71,49 @@ class RAGEngine:
         
         context = "\n\n".join(context_parts)
         
-        return f"""基于以下参考文档回答问题：
+        return f"""你是一个ESG领域的专家助手。请基于以下参考文档回答问题。
 
+参考文档：
 {context}
 
-问题：{question}
+用户问题：{question}
 
-请在<think>标签内展示思考过程，然后给出答案。"""
+重要提示：在回答之前，请先展示你的思考过程。请用以下格式输出：
+
+<thinking>
+1. 分析用户问题的关键要点
+2. 从参考文档中寻找相关信息
+3. 推理和整理思路
+4. 形成结论
+</thinking>
+
+<answer>
+基于以上思考，给出清晰、准确的答案。
+</answer>
+
+请严格按照以上格式输出。"""
     
     def _generate(self, prompt: str) -> Tuple[str, str]:
         """生成回答"""
         try:
+            # 针对 deepseek-r1 模型启用特殊推理模式
+            options = {
+                "temperature": 0.7,
+                "num_ctx": 4096,
+            }
+            
+            # 如果是 deepseek-r1 模型，启用推理模式
+            if "deepseek-r1" in self.model.lower():
+                # 某些版本的 deepseek-r1 支持这些选项
+                options["num_predict"] = 2048
+            
             response = requests.post(
                 f"{self.ollama_url}/api/generate",
                 json={
                     "model": self.model,
                     "prompt": prompt,
                     "stream": False,
-                    "options": {"temperature": 0.7, "num_ctx": 4096}
+                    "options": options
                 },
                 timeout=self.timeout
             )
@@ -96,18 +121,61 @@ class RAGEngine:
             
             text = response.json().get("response", "")
             
-            match = re.search(r'<think>(.*?)</think>', text, re.DOTALL)
-            if match:
-                reasoning = match.group(1).strip()
-                answer = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
-            else:
-                reasoning = "未显示思考过程"
-                answer = text
+            # 尝试多种方式提取思考过程
+            reasoning, answer = self._extract_thinking_and_answer(text)
             
             return answer, reasoning
             
         except Exception as e:
             return f"生成失败: {str(e)}", ""
+    
+    def _extract_thinking_and_answer(self, text: str) -> Tuple[str, str]:
+        """提取思考过程和答案
+        
+        尝试多种格式提取思考过程：
+        1. <thinking>...</thinking> 标签
+        2. <think>...</think> 标签
+        3. 思考：... 答案：... 格式
+        4. 如果没有明确标签，尝试识别推理段落
+        """
+        text = text.strip()
+        
+        # 尝试 <thinking>...</thinking> 格式
+        think_match = re.search(r'<thinking>(.*?)</thinking>', text, re.DOTALL | re.IGNORECASE)
+        if think_match:
+            reasoning = think_match.group(1).strip()
+            answer = re.sub(r'<thinking>.*?</thinking>', '', text, flags=re.DOTALL | re.IGNORECASE).strip()
+            # 移除 <answer> 标签
+            answer = re.sub(r'</?answer>', '', answer, flags=re.IGNORECASE).strip()
+            return reasoning, answer
+        
+        # 尝试 <think>...</think> 格式
+        think_match = re.search(r'<think>(.*?)</think>', text, re.DOTALL | re.IGNORECASE)
+        if think_match:
+            reasoning = think_match.group(1).strip()
+            answer = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL | re.IGNORECASE).strip()
+            return reasoning, answer
+        
+        # 尝试识别 "思考：" 或 "分析：" 等中文标记
+        think_match = re.search(r'(?:思考|分析|推理|思路)[：:](.*?)(?:答案|回答|结论)[：:]', text, re.DOTALL | re.IGNORECASE)
+        if think_match:
+            reasoning = think_match.group(1).strip()
+            answer_match = re.search(r'(?:答案|回答|结论)[：:](.*)', text, re.DOTALL | re.IGNORECASE)
+            if answer_match:
+                answer = answer_match.group(1).strip()
+                return reasoning, answer
+        
+        # 尝试通过段落结构识别（如果文本很长，可能前半部分是思考）
+        paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+        if len(paragraphs) >= 2 and len(text) > 500:
+            # 假设前一半是思考过程，后一半是答案
+            mid = len(paragraphs) // 2
+            reasoning = '\n\n'.join(paragraphs[:mid])
+            answer = '\n\n'.join(paragraphs[mid:])
+            return reasoning, answer
+        
+        # 如果都没有匹配到，返回默认提示和完整文本
+        return "模型未按照预期格式输出思考过程。以下是完整回答：", text
     
     def _calculate_confidence(self, documents: List[Dict]) -> float:
         """计算置信度"""

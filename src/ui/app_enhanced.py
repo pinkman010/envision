@@ -49,6 +49,7 @@ from src.config import (
     ANALYSIS_YEARS,
     AHP_CONSISTENCY_THRESHOLD,
 )
+from src.rag.engine import RAGEngine, RAGResponse
 
 
 # ============== 页面配置 ==============
@@ -86,6 +87,7 @@ def render_sidebar() -> Dict[str, Any]:
             "weights": "⚖️ 权重配置",
             "gap": "📉 差距诊断",
             "strategies": "💡 AI策略建议",
+            "rag": "💬 RAG智能问答",
         }
         
         manager = get_state_manager()
@@ -859,6 +861,135 @@ def render_gap_page(config: Dict[str, Any]) -> None:
         st.rerun()
 
 
+# ============== 模块6: RAG智能问答 ==============
+
+def render_rag_page(config: Dict[str, Any]) -> None:
+    """渲染RAG智能问答页面
+    
+    Args:
+        config: 配置参数
+    """
+    render_header(
+        title="RAG智能问答",
+        subtitle="基于知识库的AI智能问答，展示COT深度思考过程"
+    )
+    
+    # 初始化RAG引擎
+    try:
+        rag_engine = RAGEngine()
+    except Exception as e:
+        st.error(f"RAG引擎初始化失败: {e}")
+        st.info("请确保向量数据库已配置并且包含文档数据")
+        return
+    
+    # 页面说明
+    st.info("""
+    💡 **RAG (Retrieval-Augmented Generation)** 功能说明：
+    - 使用 deepseek-r1:7b 本地大语言模型
+    - 基于 ChromaDB 向量数据库进行知识检索
+    - 展示 AI 的 COT (Chain of Thought) 深度思考过程
+    - 答案基于知识库中的ESG相关文档
+    """)
+    
+    # 两列布局
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # 问题输入
+        st.markdown("### ❓ 输入问题")
+        question = st.text_area(
+            "请输入您关于ESG的问题",
+            placeholder="例如：什么是ESG评级？企业如何提高ESG评分？",
+            height=100
+        )
+        
+        # 参数配置
+        col_topk, col_button = st.columns([1, 1])
+        with col_topk:
+            top_k = st.slider("检索文档数", 1, 10, 5, help="从知识库中检索的相关文档数量")
+        with col_button:
+            st.markdown("<br>", unsafe_allow_html=True)
+            submit_button = st.button("🚀 开始问答", use_container_width=True, type="primary")
+    
+    with col2:
+        # 系统状态
+        st.markdown("### 📊 系统状态")
+        
+        # 显示模型信息
+        st.metric("使用模型", "deepseek-r1:7b")
+        
+        # 检查向量数据库状态
+        try:
+            from src.vector_store import ChromaDBStore
+            store = ChromaDBStore()
+            collection_count = len(store.collection.get()['ids'])
+            st.metric("知识库文档数", collection_count)
+        except:
+            st.metric("知识库文档数", "未初始化")
+        
+        # 添加文档上传功能
+        st.markdown("---")
+        st.markdown("### 📄 添加文档")
+        uploaded_file = st.file_uploader("上传PDF到知识库", type=["pdf"])
+        if uploaded_file:
+            with st.spinner("正在处理文档..."):
+                try:
+                    from src.vector_store.document_loader import DocumentLoader
+                    loader = DocumentLoader()
+                    
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                        tmp.write(uploaded_file.getvalue())
+                        tmp_path = tmp.name
+                    
+                    chunks = loader.load_pdf(tmp_path)
+                    store.add_documents(chunks)
+                    
+                    Path(tmp_path).unlink(missing_ok=True)
+                    st.success(f"✅ 已添加 {len(chunks)} 个文档片段")
+                except Exception as e:
+                    st.error(f"添加失败: {e}")
+    
+    # 执行问答
+    if submit_button and question:
+        with st.spinner("🔍 正在检索知识库并生成答案..."):
+            try:
+                response = rag_engine.query(question, top_k=top_k)
+                
+                # 保存到会话状态
+                st.session_state.last_rag_response = response
+                
+            except Exception as e:
+                st.error(f"问答失败: {e}")
+                return
+    
+    # 显示结果
+    if "last_rag_response" in st.session_state:
+        response = st.session_state.last_rag_response
+        
+        st.markdown("---")
+        st.markdown("### 📝 问答结果")
+        
+        # COT思考过程（可展开）
+        with st.expander("🔍 查看AI思考过程 (COT)", expanded=True):
+            st.markdown("**深度思考过程：**")
+            st.markdown(f"```\n{response.reasoning}\n```")
+        
+        # 最终答案
+        st.markdown("**💡 答案：**")
+        st.markdown(response.answer)
+        
+        # 参考来源
+        if response.sources:
+            with st.expander("📚 参考来源"):
+                for i, source in enumerate(response.sources, 1):
+                    meta = source.get("metadata", {})
+                    st.markdown(f"**[{i}]** 来源: {meta.get('source', '未知')} | 相关度: {source.get('score', 0):.2f}")
+                    st.caption(source.get("text", "")[:200] + "...")
+        
+        # 置信度
+        confidence_color = "green" if response.confidence > 0.7 else "orange" if response.confidence > 0.4 else "red"
+        st.markdown(f"**置信度:** :{confidence_color}[{response.confidence:.0%}]")
+
 # ============== 模块5: AI策略建议 ==============
 
 def render_strategies_page(config: Dict[str, Any]) -> None:
@@ -1158,6 +1289,8 @@ def render_app() -> None:
         render_gap_page(config)
     elif current_page == "strategies":
         render_strategies_page(config)
+    elif current_page == "rag":
+        render_rag_page(config)
     else:
         render_home_page(config)
 

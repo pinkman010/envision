@@ -18,7 +18,7 @@ except ImportError:
     HAS_CHROMADB = False
 
 from src.config import DB_DIR, MODELS, OLLAMA_URL, OLLAMA_TIMEOUT
-from src.utils.ollama import OllamaClient
+from src.utils.ollama_client import OllamaClient
 
 
 class ChromaDBStore:

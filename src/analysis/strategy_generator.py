@@ -34,6 +34,34 @@ class Strategy:
     expected_impact: float
     timeframe: str
     resources_needed: List[str]
+    target_audiences: List[str] = None
+    communication_style: str = "正式"
+    recommended_channels: List[Dict[str, str]] = None
+    
+    def __post_init__(self):
+        """初始化默认值"""
+        if self.target_audiences is None:
+            self.target_audiences = []
+        if self.recommended_channels is None:
+            self.recommended_channels = []
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """将策略转换为字典"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "dimension": self.dimension,
+            "actions": self.actions,
+            "priority": self.priority.value if isinstance(self.priority, StrategyPriority) else self.priority,
+            "confidence": self.confidence,
+            "expected_impact": self.expected_impact,
+            "timeframe": self.timeframe,
+            "resources_needed": self.resources_needed,
+            "target_audiences": self.target_audiences,
+            "communication_style": self.communication_style,
+            "recommended_channels": self.recommended_channels,
+        }
 
 
 class StrategyGenerator:
@@ -59,7 +87,15 @@ class StrategyGenerator:
                     "推动供应链碳排放管理"
                 ],
                 "timeframe": "6-12个月",
-                "resources": ["碳管理专员", "碳核算软件", "第三方核查"]
+                "resources": ["碳管理专员", "碳核算软件", "第三方核查"],
+                "target_audiences": ["监管机构", "投资者", "评级机构"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {"channel_name": "年度ESG报告", "priority": "主渠道", "reason": "年报适合详细碳排放数据披露和减排目标进展汇报"},
+                    {"channel_name": "官网ESG专栏", "priority": "主渠道", "reason": "实时展示碳管理数据和可视化进展"},
+                    {"channel_name": "ESG评级回复", "priority": "辅助渠道", "reason": "回应评级机构对碳管理的专业问询"},
+                    {"channel_name": "投资者路演", "priority": "辅助渠道", "reason": "向投资者阐述碳中和战略和投资价值"}
+                ]
             },
             "renewable_energy": {
                 "title": "提升可再生能源使用比例",
@@ -71,7 +107,15 @@ class StrategyGenerator:
                     "建立可再生能源使用追踪体系"
                 ],
                 "timeframe": "12-24个月",
-                "resources": ["能源管理团队", "项目资金", "技术供应商"]
+                "resources": ["能源管理团队", "项目资金", "技术供应商"],
+                "target_audiences": ["投资者", "社区/公众", "监管机构"],
+                "communication_style": "营销",
+                "recommended_channels": [
+                    {"channel_name": "官网ESG专栏", "priority": "主渠道", "reason": "展示可再生能源项目进展和实时数据"},
+                    {"channel_name": "社交媒体", "priority": "主渠道", "reason": "传播绿色能源成就，提升品牌形象"},
+                    {"channel_name": "年度ESG报告", "priority": "辅助渠道", "reason": "汇总披露可再生能源使用比例和目标"},
+                    {"channel_name": "新闻发布会", "priority": "辅助渠道", "reason": "重大项目签约或并网时对外发布"}
+                ]
             },
             "circular_economy": {
                 "title": "推进循环经济实践",
@@ -83,7 +127,15 @@ class StrategyGenerator:
                     "与回收企业建立合作关系"
                 ],
                 "timeframe": "12-18个月",
-                "resources": ["循环经济专员", "设计团队", "合作伙伴"]
+                "resources": ["循环经济专员", "设计团队", "合作伙伴"],
+                "target_audiences": ["社区/公众", "供应链伙伴", "投资者"],
+                "communication_style": "亲和",
+                "recommended_channels": [
+                    {"channel_name": "社交媒体", "priority": "主渠道", "reason": "分享循环经济案例，增强公众参与感"},
+                    {"channel_name": "供应商大会", "priority": "主渠道", "reason": "推动供应链伙伴参与循环经济计划"},
+                    {"channel_name": "年度ESG报告", "priority": "辅助渠道", "reason": "披露废弃物管理和资源利用数据"},
+                    {"channel_name": "社区活动", "priority": "辅助渠道", "reason": "组织回收活动，提升社区参与度"}
+                ]
             }
         },
         "S": {
@@ -97,7 +149,15 @@ class StrategyGenerator:
                     "定期进行薪酬公平性审计"
                 ],
                 "timeframe": "6-12个月",
-                "resources": ["HR团队", "培训预算", "DEI专员"]
+                "resources": ["HR团队", "培训预算", "DEI专员"],
+                "target_audiences": ["员工", "投资者", "社区/公众"],
+                "communication_style": "亲和",
+                "recommended_channels": [
+                    {"channel_name": "员工大会", "priority": "主渠道", "reason": "向全员宣导多元化政策和员工资源小组"},
+                    {"channel_name": "社交媒体", "priority": "主渠道", "reason": "分享多元文化故事，展示包容性文化"},
+                    {"channel_name": "年度ESG报告", "priority": "辅助渠道", "reason": "披露员工多样性数据和薪酬公平性"},
+                    {"channel_name": "招聘网站", "priority": "辅助渠道", "reason": "展示多元化承诺，吸引多样化人才"}
+                ]
             },
             "employee_development": {
                 "title": "加强员工培训与发展",
@@ -109,7 +169,15 @@ class StrategyGenerator:
                     "开展ESG意识和技能培训"
                 ],
                 "timeframe": "3-6个月",
-                "resources": ["培训团队", "学习平台", "培训预算"]
+                "resources": ["培训团队", "学习平台", "培训预算"],
+                "target_audiences": ["员工", "投资者"],
+                "communication_style": "亲和",
+                "recommended_channels": [
+                    {"channel_name": "员工培训", "priority": "主渠道", "reason": "直接开展技能培训和ESG意识课程"},
+                    {"channel_name": "内部通讯", "priority": "主渠道", "reason": "发布培训机会和员工发展成功案例"},
+                    {"channel_name": "年度ESG报告", "priority": "辅助渠道", "reason": "披露培训投入和覆盖率数据"},
+                    {"channel_name": "员工内网", "priority": "辅助渠道", "reason": "提供在线学习资源和个人发展工具"}
+                ]
             },
             "supply_chain_human_rights": {
                 "title": "强化供应链人权尽职调查",
@@ -121,7 +189,15 @@ class StrategyGenerator:
                     "与供应商合作改善工作条件"
                 ],
                 "timeframe": "12-18个月",
-                "resources": ["供应链团队", "审核预算", "第三方机构"]
+                "resources": ["供应链团队", "审核预算", "第三方机构"],
+                "target_audiences": ["监管机构", "供应链伙伴", "社区/公众"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {"channel_name": "供应商大会", "priority": "主渠道", "reason": "宣导供应商行为准则和审核要求"},
+                    {"channel_name": "年度ESG报告", "priority": "主渠道", "reason": "披露供应链人权尽职调查进展"},
+                    {"channel_name": "供应商培训", "priority": "辅助渠道", "reason": "帮助供应商理解和改善人权表现"},
+                    {"channel_name": "官网供应商门户", "priority": "辅助渠道", "reason": "发布行为准则和审核标准"}
+                ]
             }
         },
         "G": {
@@ -135,7 +211,15 @@ class StrategyGenerator:
                     "建立董事会ESG委员会"
                 ],
                 "timeframe": "12-24个月",
-                "resources": ["董事会", "猎头公司", "治理顾问"]
+                "resources": ["董事会", "猎头公司", "治理顾问"],
+                "target_audiences": ["投资者", "监管机构", "评级机构"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {"channel_name": "年度ESG报告", "priority": "主渠道", "reason": "披露董事会构成和多元化政策详情"},
+                    {"channel_name": "股东大会", "priority": "主渠道", "reason": "向股东汇报治理结构和董事变更"},
+                    {"channel_name": "投资者路演", "priority": "辅助渠道", "reason": "阐述董事会ESG监督能力提升"},
+                    {"channel_name": "公司治理公告", "priority": "辅助渠道", "reason": "发布董事会委员会设立和调整"}
+                ]
             },
             "esg_disclosure": {
                 "title": "完善ESG信息披露",
@@ -147,7 +231,15 @@ class StrategyGenerator:
                     "获取第三方ESG报告鉴证"
                 ],
                 "timeframe": "6-12个月",
-                "resources": ["ESG团队", "披露平台", "咨询顾问"]
+                "resources": ["ESG团队", "披露平台", "咨询顾问"],
+                "target_audiences": ["投资者", "监管机构", "评级机构"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {"channel_name": "年度ESG报告", "priority": "主渠道", "reason": "核心披露载体，包含完整ESG数据和分析"},
+                    {"channel_name": "官网ESG专栏", "priority": "主渠道", "reason": "实时更新ESG进展和下载中心"},
+                    {"channel_name": "ESG评级回复", "priority": "辅助渠道", "reason": "回应MSCI、Sustainalytics等评级问询"},
+                    {"channel_name": "投资者说明会", "priority": "辅助渠道", "reason": "解读ESG报告亮点和应对投资者问题"}
+                ]
             },
             "ethics_compliance": {
                 "title": "强化商业伦理与合规",
@@ -159,7 +251,15 @@ class StrategyGenerator:
                     "定期进行合规风险评估"
                 ],
                 "timeframe": "3-9个月",
-                "resources": ["合规团队", "培训资源", "举报系统"]
+                "resources": ["合规团队", "培训资源", "举报系统"],
+                "target_audiences": ["员工", "监管机构", "投资者"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {"channel_name": "员工培训", "priority": "主渠道", "reason": "全员伦理培训和商业行为准则宣导"},
+                    {"channel_name": "年度ESG报告", "priority": "主渠道", "reason": "披露合规管理体系和举报机制"},
+                    {"channel_name": "内部举报热线", "priority": "辅助渠道", "reason": "提供匿名举报渠道和保护机制"},
+                    {"channel_name": "官网合规专栏", "priority": "辅助渠道", "reason": "公开商业行为准则和合规承诺"}
+                ]
             }
         }
     }
@@ -260,7 +360,10 @@ class StrategyGenerator:
             confidence=round(confidence, 2),
             expected_impact=round(impact, 1),
             timeframe=template["timeframe"],
-            resources_needed=template["resources"]
+            resources_needed=template["resources"],
+            target_audiences=template.get("target_audiences", []),
+            communication_style=template.get("communication_style", "正式"),
+            recommended_channels=template.get("recommended_channels", [])
         )
     
     def fine_tune_strategy(
@@ -288,7 +391,10 @@ class StrategyGenerator:
             confidence=strategy.confidence,
             expected_impact=strategy.expected_impact,
             timeframe=adjustments.get("timeframe", strategy.timeframe),
-            resources_needed=adjustments.get("resources", strategy.resources_needed.copy())
+            resources_needed=adjustments.get("resources", strategy.resources_needed.copy()),
+            target_audiences=adjustments.get("target_audiences", list(strategy.target_audiences) if strategy.target_audiences else []),
+            communication_style=adjustments.get("communication_style", strategy.communication_style),
+            recommended_channels=adjustments.get("recommended_channels", list(strategy.recommended_channels) if strategy.recommended_channels else [])
         )
         
         # 如果有行动项调整，重新计算置信度
@@ -382,7 +488,10 @@ class StrategyGenerator:
                 confidence=round(confidence, 2),
                 expected_impact=round(impact, 1),
                 timeframe=template["timeframe"],
-                resources_needed=template["resources"]
+                resources_needed=template["resources"],
+                target_audiences=template.get("target_audiences", []),
+                communication_style=template.get("communication_style", "正式"),
+                recommended_channels=template.get("recommended_channels", [])
             )
             strategies.append(strategy)
         
@@ -485,13 +594,30 @@ class StrategyGenerator:
             "dimension": strategy.dimension,
             "dimension_name": ESG_DIMENSION_NAMES.get(strategy.dimension, "未知"),
             "actions": strategy.actions,
-            "priority": strategy.priority.value,
+            "priority": strategy.priority.value if isinstance(strategy.priority, StrategyPriority) else strategy.priority,
             "confidence": strategy.confidence,
             "confidence_level": self._confidence_level(strategy.confidence),
             "expected_impact": strategy.expected_impact,
             "timeframe": strategy.timeframe,
-            "resources_needed": strategy.resources_needed
+            "resources_needed": strategy.resources_needed,
+            "target_audiences": strategy.target_audiences if strategy.target_audiences else [],
+            "communication_style": strategy.communication_style,
+            "recommended_channels": strategy.recommended_channels if strategy.recommended_channels else [],
         }
+    
+    def filter_by_audience(self, strategies: List[Strategy], audience: str) -> List[Strategy]:
+        """按目标受众筛选策略
+        
+        Args:
+            strategies: 策略列表
+            audience: 目标受众名称
+            
+        Returns:
+            包含该受众的策略列表
+        """
+        if not audience:
+            return strategies
+        return [s for s in strategies if audience in (s.target_audiences or [])]
     
     def _confidence_level(self, confidence: float) -> str:
         """置信度数值转等级"""
@@ -503,3 +629,8 @@ class StrategyGenerator:
             return "中等"
         else:
             return "待提升"
+    
+    @staticmethod
+    def get_all_audiences() -> List[str]:
+        """获取所有可用的目标受众选项"""
+        return ["投资者", "监管机构", "员工", "社区/公众", "供应链伙伴", "评级机构"]

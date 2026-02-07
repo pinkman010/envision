@@ -1,13 +1,22 @@
-"""
-PDF 文本提取器模块
+"""PDF 文本提取器模块
 
 支持使用 pdfplumber 和 PyPDF2 提取 PDF 文本内容及元数据
 """
 
+import os
 import re
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field
+
+# 安全：定义允许的根目录（防止路径遍历攻击）
+# 获取项目根目录（当前文件的祖父目录）
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# 系统临时目录
+TEMP_DIR = Path(tempfile.gettempdir()).resolve()
+# 允许访问的目录列表
+ALLOWED_DIRECTORIES = [PROJECT_ROOT, TEMP_DIR]
 
 # 尝试导入可选的 PDF 库
 try:
@@ -120,6 +129,38 @@ class PDFExtractor:
                 "未找到可用的 PDF 提取库，请安装：pip install pdfplumber 或 pip install PyPDF2"
             )
     
+    def _validate_path_security(self, path: Path) -> Path:
+        """验证路径安全性（防止路径遍历攻击）
+        
+        Args:
+            path: 输入的文件路径
+            
+        Returns:
+            Path: 解析后的绝对路径
+            
+        Raises:
+            PDFNotFoundError: 当路径不在允许的目录内时
+        """
+        # 安全：使用resolve()解析绝对路径，消除所有符号链接和..组件
+        try:
+            resolved_path = path.resolve()
+        except (OSError, ValueError) as e:
+            raise PDFNotFoundError(f"无效的文件路径: {path}") from e
+        
+        # 安全：检查解析后的路径是否在允许的目录内
+        is_allowed = any(
+            str(resolved_path).startswith(str(allowed_dir))
+            for allowed_dir in ALLOWED_DIRECTORIES
+        )
+        
+        if not is_allowed:
+            raise PDFNotFoundError(
+                f"访问被拒绝：路径 '{path}' 不在允许的目录内。"
+                f"只允许访问项目目录或临时目录内的文件。"
+            )
+        
+        return resolved_path
+    
     def extract(self, pdf_path: Union[str, Path]) -> PDFContent:
         """提取 PDF 文本内容
         
@@ -132,10 +173,14 @@ class PDFExtractor:
             PDFContent: 包含提取的文本和元数据的对象
             
         Raises:
-            PDFNotFoundError: 当 PDF 文件不存在时
+            PDFNotFoundError: 当 PDF 文件不存在时或路径不安全时
             PDFExtractionError: 当提取过程失败时
         """
         path = Path(pdf_path)
+        
+        # 安全：验证路径防止路径遍历攻击
+        path = self._validate_path_security(path)
+        
         if not path.exists():
             raise PDFNotFoundError(f"PDF 文件不存在: {pdf_path}")
         

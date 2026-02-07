@@ -10,6 +10,23 @@ DEFAULT_SCORE: float = 50.0
 GAP_THRESHOLD_HIGH: float = 15.0
 GAP_THRESHOLD_MEDIUM: float = 8.0
 
+# 碳强度评分参考值（吨CO2e/万元营收）
+# 低于此值为优秀，高于此值为差
+CARBON_INTENSITY_BENCHMARK_LOW = 0.5   # 优秀阈值
+CARBON_INTENSITY_BENCHMARK_HIGH = 2.0  # 较差阈值
+
+# 新能源特色指标评分参考值
+TURBINE_AVAILABILITY_BENCHMARK = 97.0      # 风机可利用率基准
+BATTERY_CYCLE_LIFE_BENCHMARK = 6000        # 电池循环寿命基准
+BATTERY_RECYCLING_RATE_BENCHMARK = 95.0    # 电池回收率基准
+ELECTROLYSIS_EFFICIENCY_BENCHMARK = 70.0   # 电解效率基准
+
+# 行业指标评分参考值
+BIODIVERSITY_IMPACT_BENCHMARK = 80.0       # 生物多样性影响基准
+ENERGY_STORAGE_SAFETY_BENCHMARK = 90.0     # 储能安全评分基准
+WATER_INTENSITY_BENCHMARK_LOW = 10.0       # 水资源强度优秀阈值（立方米/万元营收）
+WATER_INTENSITY_BENCHMARK_HIGH = 50.0      # 水资源强度较差阈值
+
 
 @dataclass
 class ESGMetrics:
@@ -21,19 +38,49 @@ class ESGMetrics:
     Attributes:
         company_name: 公司名称
         year: 报告年份
-        carbon_emissions: 碳排放量
+        
+        # 碳排放指标（范围1/2/3分离）
+        carbon_emissions: 总碳排放量（向后兼容，可为范围1+2+3总和）
+        scope1_emissions: 范围1排放（直接排放）
+        scope2_emissions_location: 范围2排放（基于位置法）
+        scope2_emissions_market: 范围2排放（基于市场法）
+        scope3_emissions: 范围3排放（价值链间接排放）
+        carbon_intensity: 碳强度（吨CO2e/万元营收）
+        
+        # 能源指标
         renewable_energy_ratio: 可再生能源使用比例(%)
         energy_efficiency: 能源效率指标
+        
+        # 水资源指标
         water_consumption: 用水量
+        water_intensity: 水资源强度（立方米/万元营收）
+        
+        # 废弃物指标
         waste_recycling_rate: 废物回收率(%)
+        
+        # 生物多样性
+        biodiversity_impact_score: 生物多样性影响评分(0-100)
+        
+        # 社会指标 (S)
         employee_count: 员工数量
         female_ratio: 女性员工比例(%)
         training_hours: 人均培训时长(小时)
         safety_incidents: 安全事故数量
         community_investment: 社区投资金额
+        
+        # 治理指标 (G)
         board_independence_ratio: 董事会独立董事比例(%)
         ethics_training_coverage: 道德培训覆盖率(%)
         esg_report_quality: ESG报告质量评分
+        
+        # 新能源特色指标
+        turbine_availability: 风机可利用率(%)
+        battery_cycle_life: 电池循环寿命(次)
+        battery_recycling_rate: 电池回收率(%)
+        electrolysis_efficiency: 电解效率(%)
+        energy_storage_safety_score: 储能安全评分(0-100)
+        
+        # 元数据
         source: 数据来源
         extracted_at: 数据提取时间
         confidence: 各字段置信度
@@ -42,12 +89,27 @@ class ESGMetrics:
     company_name: str
     year: str
     
-    # 环境指标 (E)
+    # 环境指标 (E) - 碳排放
     carbon_emissions: Optional[float] = None
+    scope1_emissions: Optional[float] = None
+    scope2_emissions_location: Optional[float] = None
+    scope2_emissions_market: Optional[float] = None
+    scope3_emissions: Optional[float] = None
+    carbon_intensity: Optional[float] = None
+    
+    # 环境指标 (E) - 能源
     renewable_energy_ratio: Optional[float] = None
     energy_efficiency: Optional[float] = None
+    
+    # 环境指标 (E) - 水资源
     water_consumption: Optional[float] = None
+    water_intensity: Optional[float] = None
+    
+    # 环境指标 (E) - 废弃物
     waste_recycling_rate: Optional[float] = None
+    
+    # 环境指标 (E) - 生物多样性
+    biodiversity_impact_score: Optional[float] = None
     
     # 社会指标 (S)
     employee_count: Optional[int] = None
@@ -61,11 +123,100 @@ class ESGMetrics:
     ethics_training_coverage: Optional[float] = None
     esg_report_quality: Optional[float] = None
     
+    # 新能源特色指标
+    turbine_availability: Optional[float] = None
+    battery_cycle_life: Optional[float] = None
+    battery_recycling_rate: Optional[float] = None
+    electrolysis_efficiency: Optional[float] = None
+    energy_storage_safety_score: Optional[float] = None
+    
     # 元数据
     source: str = ""
     extracted_at: str = field(default_factory=lambda: datetime.now().isoformat())
     confidence: Dict[str, float] = field(default_factory=dict)
     data_sources: Dict[str, str] = field(default_factory=dict)
+    
+    def get_total_emissions(self) -> Optional[float]:
+        """计算总碳排放量
+        
+        优先使用分离的范围1/2/3排放数据，如不存在则使用carbon_emissions字段。
+        
+        Returns:
+            总碳排放量或None
+        """
+        # 如果scope1和scope2（任一方法）存在，计算总和
+        if self.scope1_emissions is not None:
+            total = self.scope1_emissions
+            # 范围2使用市场法优先，否则使用位置法
+            scope2 = self.scope2_emissions_market if self.scope2_emissions_market is not None else self.scope2_emissions_location
+            if scope2 is not None:
+                total += scope2
+            if self.scope3_emissions is not None:
+                total += self.scope3_emissions
+            return total
+        
+        # 回退到carbon_emissions字段
+        return self.carbon_emissions
+    
+    def get_scope1_2_emissions(self) -> Optional[float]:
+        """获取范围1+2排放总量
+        
+        Returns:
+            范围1+2排放总量或None
+        """
+        if self.scope1_emissions is not None:
+            scope2 = self.scope2_emissions_market if self.scope2_emissions_market is not None else self.scope2_emissions_location
+            if scope2 is not None:
+                return self.scope1_emissions + scope2
+            return self.scope1_emissions
+        return self.carbon_emissions
+    
+    def _calculate_carbon_intensity_score(self) -> Optional[float]:
+        """计算碳强度得分（越低越好）
+        
+        使用反向计分：碳强度越低得分越高
+        
+        Returns:
+            碳强度得分(0-100)或None
+        """
+        intensity = self.carbon_intensity
+        if intensity is None:
+            return None
+        
+        # 低于优秀阈值得满分
+        if intensity <= CARBON_INTENSITY_BENCHMARK_LOW:
+            return 100.0
+        # 高于较差阈值得0分
+        if intensity >= CARBON_INTENSITY_BENCHMARK_HIGH:
+            return 0.0
+        
+        # 线性插值计算得分
+        # 得分 = 100 - (强度 - 低阈值) / (高阈值 - 低阈值) * 100
+        ratio = (intensity - CARBON_INTENSITY_BENCHMARK_LOW) / \
+                (CARBON_INTENSITY_BENCHMARK_HIGH - CARBON_INTENSITY_BENCHMARK_LOW)
+        return 100.0 * (1 - ratio)
+    
+    def _calculate_water_intensity_score(self) -> Optional[float]:
+        """计算水资源强度得分（越低越好）
+        
+        Returns:
+            水资源强度得分(0-100)或None
+        """
+        intensity = self.water_intensity
+        if intensity is None:
+            return None
+        
+        # 低于优秀阈值得满分
+        if intensity <= WATER_INTENSITY_BENCHMARK_LOW:
+            return 100.0
+        # 高于较差阈值得0分
+        if intensity >= WATER_INTENSITY_BENCHMARK_HIGH:
+            return 0.0
+        
+        # 线性插值
+        ratio = (intensity - WATER_INTENSITY_BENCHMARK_LOW) / \
+                (WATER_INTENSITY_BENCHMARK_HIGH - WATER_INTENSITY_BENCHMARK_LOW)
+        return 100.0 * (1 - ratio)
     
     def get_dimension_score(self, dimension: str) -> float:
         """计算指定维度的得分
@@ -79,10 +230,30 @@ class ESGMetrics:
         scores: List[Optional[float]] = []
         
         if dimension == 'E':
+            # 环境维度评分：包含碳强度、可再生能源、能源效率、废弃物回收、
+            # 水资源强度、生物多样性、新能源特色指标
             scores = [
+                # 碳强度（越低越好）
+                self._calculate_carbon_intensity_score(),
+                # 可再生能源比例
                 self._safe_score(self.renewable_energy_ratio, 100.0),
+                # 能源效率
                 self._safe_score(self.energy_efficiency, 100.0),
-                self._safe_score(self.waste_recycling_rate, 100.0)
+                # 废弃物回收率
+                self._safe_score(self.waste_recycling_rate, 100.0),
+                # 水资源强度（越低越好）
+                self._calculate_water_intensity_score(),
+                # 生物多样性影响评分
+                self._safe_score(self.biodiversity_impact_score, 100.0),
+                # 新能源特色指标
+                self._safe_score(self.turbine_availability, 100.0, 
+                                multiplier=100.0 / TURBINE_AVAILABILITY_BENCHMARK),
+                self._safe_score(self.battery_cycle_life, 100.0,
+                                multiplier=100.0 / BATTERY_CYCLE_LIFE_BENCHMARK),
+                self._safe_score(self.battery_recycling_rate, 100.0),
+                self._safe_score(self.electrolysis_efficiency, 100.0,
+                                multiplier=100.0 / ELECTROLYSIS_EFFICIENCY_BENCHMARK),
+                self._safe_score(self.energy_storage_safety_score, 100.0),
             ]
         elif dimension == 'S':
             scores = [
@@ -144,10 +315,22 @@ class ESGMetrics:
         checks: Dict[str, List[Optional[Any]]] = {
             'E': [
                 self.carbon_emissions,
+                self.scope1_emissions,
+                self.scope2_emissions_location,
+                self.scope2_emissions_market,
+                self.scope3_emissions,
+                self.carbon_intensity,
                 self.renewable_energy_ratio,
                 self.energy_efficiency,
                 self.water_consumption,
-                self.waste_recycling_rate
+                self.water_intensity,
+                self.waste_recycling_rate,
+                self.biodiversity_impact_score,
+                self.turbine_availability,
+                self.battery_cycle_life,
+                self.battery_recycling_rate,
+                self.electrolysis_efficiency,
+                self.energy_storage_safety_score,
             ],
             'S': [
                 self.employee_count,
@@ -175,6 +358,22 @@ class ESGMetrics:
             'S': self.get_dimension_score('S'),
             'G': self.get_dimension_score('G')
         }
+    
+    def get_emissions_breakdown(self) -> Dict[str, Optional[float]]:
+        """获取碳排放分解数据
+        
+        Returns:
+            包含各范围排放的字典
+        """
+        return {
+            'scope1': self.scope1_emissions,
+            'scope2_location': self.scope2_emissions_location,
+            'scope2_market': self.scope2_emissions_market,
+            'scope2_used': self.scope2_emissions_market if self.scope2_emissions_market is not None else self.scope2_emissions_location,
+            'scope3': self.scope3_emissions,
+            'total_calculated': self.get_total_emissions(),
+            'total_reported': self.carbon_emissions,
+        }
 
 
 @dataclass
@@ -192,6 +391,8 @@ class BenchmarkData:
         avg_training_hours: 平均培训时长
         avg_board_independence_ratio: 平均董事会独立比例
         avg_esg_report_quality: 平均ESG报告质量
+        avg_carbon_intensity: 平均碳强度
+        avg_water_intensity: 平均水资源强度
         source: 数据来源
         sample_size: 样本数量
     """
@@ -204,6 +405,8 @@ class BenchmarkData:
     avg_training_hours: Optional[float] = None
     avg_board_independence_ratio: Optional[float] = None
     avg_esg_report_quality: Optional[float] = None
+    avg_carbon_intensity: Optional[float] = None
+    avg_water_intensity: Optional[float] = None
     
     source: str = ""
     sample_size: int = 0
@@ -223,6 +426,8 @@ class BenchmarkData:
             training_hours=self.avg_training_hours,
             board_independence_ratio=self.avg_board_independence_ratio,
             esg_report_quality=self.avg_esg_report_quality,
+            carbon_intensity=self.avg_carbon_intensity,
+            water_intensity=self.avg_water_intensity,
             source=self.source
         )
 

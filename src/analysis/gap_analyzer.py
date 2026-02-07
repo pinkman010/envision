@@ -1,15 +1,21 @@
 """差距分析器
 
 对标行业标杆，计算维度差距和指标差距。
+采用Repository模式实现数据访问层的解耦。
 """
 
 import json
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 
 from src.config import MOCK_DATA_DIR, DEFAULT_SCORE, ESG_DIMENSION_NAMES
 from src.core.models import ESGMetrics
+
+
+# 历史数据文件路径
+HISTORICAL_DATA_PATH = Path(__file__).parent.parent.parent / "data" / "mock_historical_metrics.json"
 
 
 @dataclass
@@ -34,17 +40,132 @@ class IndicatorGap:
     disclosure_level: str
 
 
+class BenchmarkRepository(ABC):
+    """标杆数据仓库抽象基类
+    
+    定义标杆数据访问的标准接口，支持不同的数据源实现。
+    """
+    
+    @abstractmethod
+    def load_data(self) -> Tuple[Dict[str, Any], Dict[str, str]]:
+        """加载标杆数据
+        
+        Returns:
+            (companies_data, indicator_names) 元组
+        """
+        pass
+    
+    @abstractmethod
+    def get_available_companies(self) -> List[str]:
+        """获取可用的标杆企业列表"""
+        pass
+    
+    @abstractmethod
+    def get_benchmark(self, company: str) -> Optional[Dict[str, Any]]:
+        """获取指定企业的标杆数据"""
+        pass
+
+
+class JsonBenchmarkRepository(BenchmarkRepository):
+    """JSON文件标杆数据仓库
+    
+    从JSON文件加载标杆数据，支持fallback到默认数据。
+    """
+    
+    # 默认标杆数据（当文件不存在时使用）
+    DEFAULT_BENCHMARK_DATA = {
+        "companies": {
+            "行业平均": {
+                "overall_score": 70.0,
+                "dimensions": {"E": 68.0, "S": 70.0, "G": 72.0},
+                "indicators": {
+                    "renewable_energy": {"score": 65.0, "disclosure": "中"},
+                    "carbon_emissions": {"score": 68.0, "disclosure": "中"},
+                    "employee_diversity": {"score": 72.0, "disclosure": "中"},
+                    "board_independence": {"score": 75.0, "disclosure": "中"},
+                }
+            },
+            "维斯塔斯": {
+                "overall_score": 88.0,
+                "dimensions": {"E": 90.0, "S": 85.0, "G": 89.0},
+                "indicators": {
+                    "renewable_energy": {"score": 95.0, "disclosure": "高"},
+                    "carbon_emissions": {"score": 90.0, "disclosure": "高"},
+                    "employee_diversity": {"score": 82.0, "disclosure": "高"},
+                    "board_independence": {"score": 90.0, "disclosure": "高"},
+                }
+            },
+            "西门子歌美飒": {
+                "overall_score": 85.0,
+                "dimensions": {"E": 87.0, "S": 82.0, "G": 86.0},
+                "indicators": {
+                    "renewable_energy": {"score": 92.0, "disclosure": "高"},
+                    "carbon_emissions": {"score": 88.0, "disclosure": "高"},
+                    "employee_diversity": {"score": 80.0, "disclosure": "高"},
+                    "board_independence": {"score": 88.0, "disclosure": "高"},
+                }
+            }
+        },
+        "indicator_names": {
+            "renewable_energy": "可再生能源使用比例",
+            "carbon_emissions": "碳排放管理",
+            "employee_diversity": "员工多元化",
+            "board_independence": "董事会独立性"
+        }
+    }
+    
+    def __init__(self, data_source: Optional[Path] = None):
+        """初始化仓库
+        
+        Args:
+            data_source: JSON文件路径，默认为 MOCK_DATA_DIR / "benchmark_data.json"
+        """
+        self.data_source = data_source or (MOCK_DATA_DIR / "benchmark_data.json")
+        self._benchmark_data: Dict[str, Any] = {}
+        self._indicator_names: Dict[str, str] = {}
+        self._load_data()
+    
+    def _load_data(self) -> None:
+        """加载数据，文件不存在时使用默认数据"""
+        try:
+            if self.data_source.exists():
+                with open(self.data_source, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self._benchmark_data = data.get("companies", {})
+                self._indicator_names = data.get("indicator_names", {})
+            else:
+                # 使用默认fallback数据
+                self._benchmark_data = self.DEFAULT_BENCHMARK_DATA["companies"]
+                self._indicator_names = self.DEFAULT_BENCHMARK_DATA["indicator_names"]
+        except (FileNotFoundError, json.JSONDecodeError):
+            # 文件不存在或解析错误时使用默认数据
+            self._benchmark_data = self.DEFAULT_BENCHMARK_DATA["companies"]
+            self._indicator_names = self.DEFAULT_BENCHMARK_DATA["indicator_names"]
+    
+    def load_data(self) -> Tuple[Dict[str, Any], Dict[str, str]]:
+        """加载标杆数据"""
+        return self._benchmark_data, self._indicator_names
+    
+    def get_available_companies(self) -> List[str]:
+        """获取可用的标杆企业列表"""
+        return list(self._benchmark_data.keys())
+    
+    def get_benchmark(self, company: str) -> Optional[Dict[str, Any]]:
+        """获取指定企业的标杆数据"""
+        return self._benchmark_data.get(company)
+
+
 class GapAnalyzer:
     """ESG差距分析器
     
     对标行业标杆企业，计算维度差距和指标差距。
+    支持依赖注入不同的BenchmarkRepository实现。
     
     Attributes:
+        repository: 标杆数据仓库
         benchmark_data: 标杆数据字典
         indicator_names: 指标名称映射
     """
-    
-    DEFAULT_DATA_SOURCE = MOCK_DATA_DIR / "benchmark_data.json"
     
     # 指标映射：从ESGMetrics字段到benchmark指标ID
     INDICATOR_MAPPING = {
@@ -54,29 +175,23 @@ class GapAnalyzer:
         "board_independence_ratio": "board_independence",
     }
     
-    def __init__(self, data_source: Optional[Path] = None):
+    def __init__(
+        self,
+        repository: Optional[BenchmarkRepository] = None,
+        data_source: Optional[Path] = None
+    ):
         """初始化分析器
         
         Args:
-            data_source: 自定义标杆数据源路径
+            repository: 自定义标杆数据仓库（优先使用）
+            data_source: 自定义标杆数据源路径（当repository为None时使用）
         """
-        self.data_source = data_source or self.DEFAULT_DATA_SOURCE
-        self.benchmark_data: Dict[str, Any] = {}
-        self.indicator_names: Dict[str, str] = {}
-        self._load_data()
-    
-    def _load_data(self) -> None:
-        """加载标杆数据"""
-        try:
-            with open(self.data_source, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            self.benchmark_data = data.get("companies", {})
-            self.indicator_names = data.get("indicator_names", {})
-        except FileNotFoundError:
-            raise FileNotFoundError(f"标杆数据源文件不存在: {self.data_source}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"标杆数据JSON解析错误: {e}")
+        if repository is not None:
+            self.repository = repository
+        else:
+            self.repository = JsonBenchmarkRepository(data_source)
+        
+        self.benchmark_data, self.indicator_names = self.repository.load_data()
     
     def analyze_dimension_gap(
         self, 
@@ -92,7 +207,7 @@ class GapAnalyzer:
         Returns:
             各维度差距分析结果
         """
-        benchmark = self._get_benchmark(benchmark_company)
+        benchmark = self.repository.get_benchmark(benchmark_company)
         if not benchmark:
             raise ValueError(f"未找到标杆企业: {benchmark_company}")
         
@@ -133,7 +248,7 @@ class GapAnalyzer:
         Returns:
             指标差距列表
         """
-        benchmark = self._get_benchmark(benchmark_company)
+        benchmark = self.repository.get_benchmark(benchmark_company)
         if not benchmark:
             raise ValueError(f"未找到标杆企业: {benchmark_company}")
         
@@ -176,11 +291,11 @@ class GapAnalyzer:
             多标杆对比结果
         """
         if benchmark_companies is None:
-            benchmark_companies = list(self.benchmark_data.keys())
+            benchmark_companies = self.repository.get_available_companies()
         
         comparisons = []
         for company in benchmark_companies:
-            benchmark = self._get_benchmark(company)
+            benchmark = self.repository.get_benchmark(company)
             if not benchmark:
                 continue
             
@@ -265,11 +380,7 @@ class GapAnalyzer:
     
     def get_available_benchmarks(self) -> List[str]:
         """获取可用的标杆企业列表"""
-        return list(self.benchmark_data.keys())
-    
-    def _get_benchmark(self, company: str) -> Optional[Dict[str, Any]]:
-        """获取指定企业的标杆数据"""
-        return self.benchmark_data.get(company)
+        return self.repository.get_available_companies()
     
     def _calculate_indicator_scores(self, metrics: ESGMetrics) -> Dict[str, float]:
         """计算各项指标分数"""
@@ -328,4 +439,98 @@ class GapAnalyzer:
             "total": total,
             "percentile": round((total - rank + 1) / total * 100, 1),
             "overall_score": round(current_overall, 1)
+        }
+    
+    def analyze_historical_trend(self, company_name: str) -> Dict[str, Any]:
+        """分析企业历史趋势
+        
+        从Mock JSON读取历史数据，返回各维度分数的时间序列。
+        
+        Args:
+            company_name: 公司名称（"绿色能源集团"/"新能源科技有限公司"/"传统能源企业"）
+            
+        Returns:
+            {
+                "years": ["2022", "2023", "2024"],
+                "trends": {
+                    "E": [70, 75, 80],
+                    "S": [68, 72, 78],
+                    "G": [70, 74, 80]
+                },
+                "overall": [69.3, 73.7, 79.3]
+            }
+        """
+        try:
+            with open(HISTORICAL_DATA_PATH, 'r', encoding='utf-8') as f:
+                historical_data = json.load(f)
+        except FileNotFoundError:
+            return {"years": [], "trends": {}, "overall": []}
+        except json.JSONDecodeError:
+            return {"years": [], "trends": {}, "overall": []}
+        
+        company_data = historical_data.get(company_name, {})
+        if not company_data:
+            return {"years": [], "trends": {}, "overall": []}
+        
+        years = sorted(company_data.keys())
+        
+        trends = {"E": [], "S": [], "G": []}
+        overall = []
+        
+        for year in years:
+            year_data = company_data[year]
+            trends["E"].append(year_data.get("E", 0))
+            trends["S"].append(year_data.get("S", 0))
+            trends["G"].append(year_data.get("G", 0))
+            overall.append(year_data.get("overall", 0))
+        
+        return {
+            "years": years,
+            "trends": trends,
+            "overall": overall
+        }
+    
+    def predict_next_year(self, historical_trend: Dict[str, Any]) -> Dict[str, Any]:
+        """基于简单线性回归预测下一年数据
+        
+        使用(2024-2023)的差值外推2025年预测值。
+        
+        Args:
+            historical_trend: analyze_historical_trend返回的历史数据
+            
+        Returns:
+            {
+                "year": "2025",
+                "predicted": {"E": 85, "S": 82, "G": 84},
+                "overall": 83.7
+            }
+        """
+        years = historical_trend.get("years", [])
+        trends = historical_trend.get("trends", {})
+        overall = historical_trend.get("overall", [])
+        
+        if len(years) < 2:
+            return {"year": "2025", "predicted": {}, "overall": 0}
+        
+        # 计算最近两年的差值
+        def predict_dimension(values):
+            if len(values) >= 2:
+                diff = values[-1] - values[-2]
+                predicted = values[-1] + diff
+                # 限制在0-100范围内
+                return max(0, min(100, predicted))
+            return values[-1] if values else 0
+        
+        predicted = {
+            "E": predict_dimension(trends.get("E", [])),
+            "S": predict_dimension(trends.get("S", [])),
+            "G": predict_dimension(trends.get("G", [])),
+        }
+        
+        predicted_overall = predict_dimension(overall)
+        
+        return {
+            "year": "2025",
+            "predicted": predicted,
+            "overall": round(predicted_overall, 1)
         }

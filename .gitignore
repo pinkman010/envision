@@ -29,3 +29,5 @@ logs/
 *.bin
 *.sqlite3
 *.json
+# 忽略项目根目录下的 data 文件夹（所有内容）
+/data/

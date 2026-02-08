@@ -10,17 +10,33 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-# ChromaDB 可用性检查
-try:
-    import chromadb
-    from chromadb.config import Settings
-
-    HAS_CHROMADB = True
-except ImportError:
-    HAS_CHROMADB = False
-
 from src.esg.config import DB_DIR, MODELS, OLLAMA_TIMEOUT, OLLAMA_URL
 from src.esg.utils.ollama_client import OllamaClient
+
+# ChromaDB 可用性检查（延迟导入，避免导入时检查sqlite3版本）
+HAS_CHROMADB = False
+_chromadb_module = None
+_Settings_class = None
+
+
+def _check_chromadb():
+    """运行时检查ChromaDB是否可用"""
+    global HAS_CHROMADB, _chromadb_module, _Settings_class
+    if HAS_CHROMADB:
+        return True
+    try:
+        import chromadb
+        from chromadb.config import Settings
+
+        _chromadb_module = chromadb
+        _Settings_class = Settings
+        HAS_CHROMADB = True
+        return True
+    except ImportError:
+        return False
+    except Exception:
+        # 处理其他导入错误（如sqlite3版本问题）
+        return False
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -79,19 +95,26 @@ class ChromaDBStore:
         尝试使用新版 API，失败时回退到旧版 API。
         创建或获取指定的集合。
         """
+        global _chromadb_module, _Settings_class
+        
+        # 运行时检查ChromaDB是否可用
+        if not _check_chromadb():
+            logger.warning("ChromaDB 不可用（可能未安装或sqlite3版本不兼容）")
+            return
+        
         try:
             # 确保数据库目录存在
             os.makedirs(self.db_dir, exist_ok=True)
 
             # 尝试新版 API (ChromaDB >= 0.4.0)
             try:
-                self.client = chromadb.PersistentClient(
-                    path=str(self.db_dir), settings=Settings(anonymized_telemetry=False)
+                self.client = _chromadb_module.PersistentClient(
+                    path=str(self.db_dir), settings=_Settings_class(anonymized_telemetry=False)
                 )
             except (AttributeError, TypeError):
                 # 回退到旧版 API
-                self.client = chromadb.Client(
-                    Settings(chroma_db_impl="duckdb+parquet", persist_directory=str(self.db_dir))
+                self.client = _chromadb_module.Client(
+                    _Settings_class(chroma_db_impl="duckdb+parquet", persist_directory=str(self.db_dir))
                 )
 
             # 获取或创建集合

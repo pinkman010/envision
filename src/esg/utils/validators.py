@@ -183,6 +183,15 @@ def validate_score(score: Union[int, float, str]) -> Tuple[bool, str]:
     except (ValueError, TypeError):
         return False, f"评分必须是有效的数字，收到: {score}"
 
+    # 检查是否为有效数值（非 NaN, Inf）- 必须先检查，再检查范围
+    import math
+
+    if math.isnan(score_float):
+        return False, "评分不能为 NaN"
+
+    if math.isinf(score_float):
+        return False, "评分不能为无穷大"
+
     # 检查范围
     MIN_SCORE = 0.0
     MAX_SCORE = 100.0
@@ -192,15 +201,6 @@ def validate_score(score: Union[int, float, str]) -> Tuple[bool, str]:
 
     if score_float > MAX_SCORE:
         return False, f"评分不能大于 {MAX_SCORE}，收到: {score_float}"
-
-    # 检查是否为有效数值（非 NaN, Inf）
-    import math
-
-    if math.isnan(score_float):
-        return False, "评分不能为 NaN"
-
-    if math.isinf(score_float):
-        return False, "评分不能为无穷大"
 
     return True, "验证通过"
 

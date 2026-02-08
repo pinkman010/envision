@@ -207,9 +207,11 @@ class TestOllamaClientGenerate(unittest.TestCase):
         result = self.client.generate("提示词", temperature=0.7, top_p=0.9, max_tokens=100)
 
         self.assertEqual(result, "回答")
-        # 验证调用参数
+        # 验证调用参数 - _make_request(method, endpoint, json_data)
         call_args = mock_make_request.call_args
-        self.assertIn("options", call_args[1]["json_data"])
+        json_data = call_args[0][2]  # 第三个位置参数
+        self.assertIn("options", json_data)
+        self.assertIn("temperature", json_data["options"])
 
     def test_generate_no_model(self):
         """测试未指定模型"""
@@ -240,7 +242,8 @@ class TestOllamaClientGenerate(unittest.TestCase):
 
         # None值应该被过滤掉
         call_args = mock_make_request.call_args
-        options = call_args[1]["json_data"]["options"]
+        json_data = call_args[0][2]  # 第三个位置参数
+        options = json_data["options"]
         self.assertNotIn("top_p", options)
 
 

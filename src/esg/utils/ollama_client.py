@@ -41,6 +41,13 @@ class OllamaResponseError(OllamaError):
         self.status_code = status_code
         self.response_text = response_text
 
+    def __str__(self) -> str:
+        """返回包含状态码的错误信息"""
+        msg = super().__str__()
+        if self.status_code is not None:
+            msg = f"[{self.status_code}] {msg}"
+        return msg
+
 
 def retry_with_backoff(
     max_retries: int = 3,

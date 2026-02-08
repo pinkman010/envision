@@ -108,15 +108,21 @@ class TestTopicUpdaterInit(unittest.TestCase):
         """测试后置"""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    @patch.object(TopicUpdater, "DATA_FILE", property(lambda self: self._data_file))
     def test_init_with_existing_file(self):
         """测试存在数据文件时初始化"""
         # 创建测试数据文件
-        test_data = {"version_1": {"topics": {"carbon_emission": {"name": "碳排放", "heat": 80}}}}
+        test_data = {
+            "version_1": {
+                "topics": {
+                    "carbon_emission": {"name": "碳排放", "heat": 80}
+                }
+            }
+        }
         self.data_file.write_text(json.dumps(test_data), encoding="utf-8")
 
+        # 创建实例并手动设置数据文件路径
         updater = TopicUpdater()
-        updater._data_file = self.data_file
+        updater.data_file = self.data_file
         updater._load_data()
 
         current_data = updater.get_current_data()

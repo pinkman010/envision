@@ -5,7 +5,12 @@
 
 import sys
 import os
+import logging
 from pathlib import Path
+
+# 配置日志
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def setup_environment():
@@ -25,12 +30,12 @@ def setup_environment():
     # 设置环境变量
     os.environ["PYTHONPATH"] = str(project_root)
     
-    print(f"✅ 环境设置完成")
-    print(f"   项目根目录: {project_root}")
-    print(f"   Python路径: {sys.path[:2]}")
+    logger.info(f"✅ 环境设置完成")
+    logger.info(f"   项目根目录: {project_root}")
+    logger.info(f"   Python路径: {sys.path[:2]}")
 
 
-def run_streamlit(mode="enhanced"):
+def run_streamlit(mode="simple"):
     """运行Streamlit应用"""
     import subprocess
     
@@ -40,7 +45,7 @@ def run_streamlit(mode="enhanced"):
         "--", "--mode", mode
     ]
     
-    print(f"\n🚀 启动ESG智能分析系统 ({mode}模式)...\n")
+    logger.info(f"\n🚀 启动ESG智能分析系统 ({mode}模式)...\n")
     subprocess.run(cmd, cwd=str(Path(__file__).parent))
 
 

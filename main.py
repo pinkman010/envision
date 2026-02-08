@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 import streamlit as st
-from src.config import APP_NAME, APP_ICON, VERSION
+from src.esg.config import APP_NAME, APP_ICON, VERSION
 
 
 def parse_args():
@@ -38,7 +38,7 @@ def parse_args():
     try:
         args, _ = parser.parse_known_args()
         return args
-    except:
+    except Exception:
         return argparse.Namespace(mode="simple")
 
 
@@ -123,13 +123,13 @@ def main():
 
 def render_simple_mode():
     """渲染简洁版"""
-    from src.ui.app_simple import render_simple_app
+    from src.esg.ui.app_simple import render_simple_app
     render_simple_app()
 
 
 def render_enhanced_mode():
     """渲染增强版"""
-    from src.ui.app_enhanced import render_app
+    from src.esg.ui.app_enhanced import render_app
     render_app()
 
 

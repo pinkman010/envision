@@ -16,3 +16,8 @@ temp/
 logs/
 # 过滤编辑器缓存（可选，如VS Code）
 .vscode/
+# 过滤文件
+.pdf/
+.doc/
+.docx/
+.json/

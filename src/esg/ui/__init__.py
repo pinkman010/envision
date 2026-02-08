@@ -8,7 +8,7 @@ Example:
     >>> render_app()  # 启动增强版
 """
 
-from src.esg.ui.app_simple import render_simple_app
 from src.esg.ui.app_enhanced import render_app
+from src.esg.ui.app_simple import render_simple_app
 
 __all__ = ["render_app", "render_simple_app"]

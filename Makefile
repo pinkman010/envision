@@ -30,24 +30,24 @@ install-dev:
 
 # Testing
 test:
-	pytest tests/ -v --tb=short
+	pytest src/tests/ -v --tb=short
 
 test-unit:
-	pytest tests/ -v -m "not integration and not e2e" --tb=short
+	pytest src/tests/ -v -m "not integration and not e2e" --tb=short
 
 test-integration:
-	pytest tests/ -v -m integration --tb=short
+	pytest src/tests/ -v -m integration --tb=short
 
 test-e2e:
-	pytest tests/ -v -m e2e --tb=short
+	pytest src/tests/ -v -m e2e --tb=short
 
 test-coverage:
-	pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
+	pytest src/tests/ --cov=src --cov-report=html --cov-report=term-missing
 
 # Linting and Formatting
 lint:
 	@echo "Running flake8..."
-	flake8 src tests --max-line-length=100 --extend-ignore=E203,W503
+	flake8 src src/tests --max-line-length=100 --extend-ignore=E203,W503
 	@echo "Running pylint..."
 	pylint src --disable=C0103,C0114,R0903,R0913
 	@echo "Running complexity check..."
@@ -55,15 +55,15 @@ lint:
 
 format:
 	@echo "Formatting with black..."
-	black src tests --line-length=100
+	black src src/tests --line-length=100
 	@echo "Sorting imports with isort..."
-	isort src tests --profile=black --line-length=100
+	isort src src/tests --profile=black --line-length=100
 
 format-check:
 	@echo "Checking black formatting..."
-	black src tests --line-length=100 --check
+	black src src/tests --line-length=100 --check
 	@echo "Checking isort..."
-	isort src tests --profile=black --line-length=100 --check-only
+	isort src src/tests --profile=black --line-length=100 --check-only
 
 # Type Checking
 type-check:
@@ -120,10 +120,10 @@ run-enhanced:
 
 # Development utilities
 run-tests-watch:
-	ptw tests/ -- --testmon
+	ptw src/tests/ -- --testmon
 
 benchmark:
-	pytest tests/ -m performance --benchmark-json=benchmark.json
+	pytest src/tests/ -m performance --benchmark-json=benchmark.json
 
 # Docker commands (if using Docker)
 docker-build:

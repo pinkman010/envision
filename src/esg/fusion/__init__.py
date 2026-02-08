@@ -4,11 +4,11 @@
 """
 
 from src.esg.fusion.ahp import AHPFusionEngine
-from src.esg.fusion.rule_engine import RuleEngine, Rule, RuleContext
+from src.esg.fusion.rule_engine import Rule, RuleContext, RuleEngine
 
 __all__ = [
     "AHPFusionEngine",
-    "RuleEngine", 
+    "RuleEngine",
     "Rule",
     "RuleContext",
 ]

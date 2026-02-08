@@ -48,11 +48,8 @@ DATA_VERSION_CONFIG = {
     "backup_count": 5,
     "auto_backup": True,
     "compatibility_matrix": {
-        "1.0.0": {
-            "compatible_with": ["0.9.x", "1.0.x"],
-            "breaking_changes": []
-        }
-    }
+        "1.0.0": {"compatible_with": ["0.9.x", "1.0.x"], "breaking_changes": []}
+    },
 }
 
 # ========== 数据血缘追踪配置 ==========
@@ -61,5 +58,5 @@ DATA_LINEAGE_CONFIG = {
     "track_sources": True,
     "track_transformations": True,
     "storage_type": "json",  # 可选: json, sqlite
-    "lineage_file": "data/.lineage.json"
+    "lineage_file": "data/.lineage.json",
 }

@@ -1,42 +1,45 @@
 """检查docstring覆盖率"""
+
 import ast
 import os
 
+
 def check_file(filepath):
     """检查单个文件的docstring"""
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     tree = ast.parse(content)
-    
+
     total = 0
     with_doc = 0
     missing = []
-    
+
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
             # 跳过私有方法（单下划线开头但非双下划线）
-            if node.name.startswith('_') and not node.name.startswith('__'):
+            if node.name.startswith("_") and not node.name.startswith("__"):
                 continue
-            
+
             total += 1
             if ast.get_docstring(node):
                 with_doc += 1
             else:
                 missing.append(f"  {node.name} (line {node.lineno})")
-    
+
     return total, with_doc, missing
+
 
 # 检查src目录
 total_all = 0
 with_doc_all = 0
 missing_all = []
 
-for root, dirs, files in os.walk('src'):
-    if '__pycache__' in root or 'egg-info' in root:
+for root, dirs, files in os.walk("src"):
+    if "__pycache__" in root or "egg-info" in root:
         continue
     for file in files:
-        if file.endswith('.py') and file != '__init__.py':
+        if file.endswith(".py") and file != "__init__.py":
             filepath = os.path.join(root, file)
             try:
                 t, w, m = check_file(filepath)

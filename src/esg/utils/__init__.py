@@ -6,29 +6,29 @@
 - 数据校验工具：PDF、年份、评分等数据验证
 """
 
+# 文件操作工具
+from src.esg.utils.file_utils import (
+    copy_file,
+    delete_file,
+    ensure_dir,
+    get_file_extension,
+    get_file_size,
+    save_uploaded_file,
+)
+
 # Ollama 客户端
 from src.esg.utils.ollama_client import OllamaClient
 
-# 文件操作工具
-from src.esg.utils.file_utils import (
-    save_uploaded_file,
-    ensure_dir,
-    get_file_extension,
-    copy_file,
-    delete_file,
-    get_file_size,
-)
-
 # 数据校验工具
 from src.esg.utils.validators import (
-    validate_pdf,
-    validate_year,
-    validate_score,
-    validate_company_code,
-    validate_report_year_range,
     ALLOWED_PDF_EXTENSIONS,
     ALLOWED_PDF_MIME_TYPES,
     MAX_FILE_SIZE,
+    validate_company_code,
+    validate_pdf,
+    validate_report_year_range,
+    validate_score,
+    validate_year,
 )
 
 __all__ = [

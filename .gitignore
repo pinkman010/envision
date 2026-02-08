@@ -25,3 +25,7 @@ logs/
 # 可选：若有临时/隐藏的这类文件（如 ~$xxx.docx），也可补充忽略
 ~$*.docx
 ~$*.doc
+# 忽略所有 bin 格式文件
+*.bin
+*.sqlite3
+*.json

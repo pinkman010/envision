@@ -16,8 +16,12 @@ temp/
 logs/
 # 过滤编辑器缓存（可选，如VS Code）
 .vscode/
-# 过滤文件
-*.pdf/
-*.doc/
-*.docx/
-*.json/
+# 忽略所有 PDF 文件
+*.pdf
+# 忽略所有 DOC 格式文件
+*.doc
+# 忽略所有 DOCX 格式文件
+*.docx
+# 可选：若有临时/隐藏的这类文件（如 ~$xxx.docx），也可补充忽略
+~$*.docx
+~$*.doc

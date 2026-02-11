@@ -36,11 +36,9 @@ envision/
 │   ├── tests/                 # 测试
 │   └── scripts/               # 工具脚本
 ├── data/                      # 数据文件
-│   ├── 01_raw/               # 原始数据
-│   ├── 02_extracted/         # 提取后数据
-│   ├── 03_fused/             # 融合后数据
-│   ├── 04_completed/         # 补全后数据
+│   ├── raw/                  # 原始数据
 │   ├── mock/                 # 模拟数据
+│   ├── reports/              # 下载的报告
 │   └── uploads/              # 上传文件
 ├── storage/                   # 存储
 │   └── vector/               # ChromaDB向量库
@@ -51,7 +49,7 @@ envision/
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         用户界面层                            │
+│                         用户界面层                           │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │   Streamlit  │  │   Web API    │  │   CLI Tools      │  │
 │  │   (UI)       │  │   (REST)     │  │                  │  │
@@ -59,7 +57,7 @@ envision/
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
-│                         应用服务层                            │
+│                         应用服务层                           │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │   ESG引擎    │  │   RAG引擎    │  │   分析报告       │  │
 │  │   src/esg    │  │   src/esg    │  │   src/esg        │  │
@@ -68,7 +66,7 @@ envision/
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
-│                         核心领域层                            │
+│                         核心领域层                           │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │   模型       │  │   合规检查   │  │   融合计算       │  │
 │  │   src/esg    │  │   src/esg    │  │   src/esg        │  │
@@ -77,7 +75,7 @@ envision/
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
-│                         基础设施层                            │
+│                         基础设施层                           │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │   数据提取   │  │   向量存储   │  │   LLM客户端     │  │
 │  │   src/esg    │  │   src/esg    │  │   src/esg        │  │
@@ -85,7 +83,7 @@ envision/
 │  │              │  │   _store     │  │   /ollama_client │  │
 │  └──────────────┘  └──────────────┘  └──────────────────┘  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │   安全       │  │   缓存       │  │   性能监控      │  │
+│  │   安全       │  │   缓存       │  │   性能监控        │  │
 │  │   src/esg    │  │   src/esg    │  │   src/esg        │  │
 │  │   /security  │  │   /utils     │  │   /utils         │  │
 │  │              │  │   /cache     │  │   /performance   │  │
@@ -104,13 +102,15 @@ envision/
 | engine.py | ESG分析引擎 | ESGAnalysisEngine |
 | compliance_checker.py | 合规性检查 | ComplianceChecker |
 
-#### 2.2.2 提取模块（src/extractor/）
+#### 2.2.2 提取模块（src/esg/extraction/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
 | pdf_extractor.py | PDF文本提取 | PDFExtractor, PDFContent |
 | pdf_extractor_async.py | 异步PDF提取 | AsyncPDFExtractor |
 | metric_extractor.py | 指标提取 | MetricExtractor |
+| carbon_footprint.py | 碳足迹计算 | CarbonFootprintCalculator |
+| multilingual.py | 多语言处理 | MultilingualProcessor |
 
 #### 2.2.3 分析模块（src/analysis/）
 
@@ -203,26 +203,39 @@ envision/
 |------|------|------|
 | Web框架 | Streamlit | >=1.28.0 |
 | 数据处理 | Pandas, NumPy | >=2.0.0, >=1.24.0 |
-| 可视化 | Plotly, Matplotlib | >=5.15.0, >=3.7.0 |
+| 可视化 | Plotly, Matplotlib, WordCloud | >=5.15.0, >=3.7.0, >=1.9.0 |
 | PDF处理 | pdfplumber, PyPDF2 | >=0.9.0, >=3.0.0 |
+| 文档生成 | python-docx, markdown | >=0.8.11, >=3.5.0 |
 | 向量数据库 | ChromaDB | >=0.4.0 |
 | LLM服务 | Ollama | - |
 | 数据验证 | Pydantic | >=2.0.0 |
+| 异步HTTP | aiohttp | >=3.9.0 |
+| 异步缓存 | aiocache | >=0.12.0 |
+| 密码哈希 | bcrypt | >=4.1.0 |
 | 加密 | cryptography | >=41.0.0 |
 | 认证 | PyJWT | >=2.8.0 |
+| 进度条 | tqdm | >=4.65.0 |
+| 监控指标 | prometheus-client | >=0.19.0 |
 
 ### 4.2 开发工具
 
 | 工具 | 用途 |
 |------|------|
 | pytest | 测试框架 |
+| pytest-asyncio | 异步测试支持 |
+| pytest-cov | 覆盖率报告 |
+| pytest-mock | 模拟测试 |
 | black | 代码格式化 |
 | isort | 导入排序 |
 | mypy | 类型检查 |
 | flake8 | 代码检查 |
+| pylint | 静态代码分析 |
 | bandit | 安全扫描 |
+| safety | 依赖漏洞扫描 |
 | xenon | 复杂度检查 |
+| radon | 代码度量 |
 | pre-commit | 预提交钩子 |
+| sphinx | 文档生成 |
 
 ## 5. 安全设计
 

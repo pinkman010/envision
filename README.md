@@ -252,16 +252,20 @@ JWT_SECRET_KEY=your-jwt-secret
 | 组件 | 技术 | 说明 |
 |------|------|------|
 | Web框架 | Streamlit | 交互式Web应用 |
-| 可视化 | Plotly, Matplotlib | 数据可视化 |
+| 可视化 | Plotly, Matplotlib, WordCloud | 数据可视化与词云 |
 | LLM | Ollama | 本地大模型服务 |
 | 向量库 | ChromaDB | 向量数据存储 |
 | 嵌入模型 | nomic-embed-text | 文本向量化 |
 | PDF处理 | pdfplumber, PyPDF2 | PDF文本提取 |
+| 文档生成 | python-docx, markdown | Word/Markdown报告生成 |
+| 异步支持 | aiohttp, aiocache | 异步HTTP与缓存 |
 | 数据验证 | Pydantic | 数据模型验证 |
+| 密码哈希 | bcrypt | 密码加密存储 |
 | 加密 | cryptography | AES-256加密 |
 | 认证 | PyJWT | JWT令牌管理 |
-| 测试 | pytest | 测试框架 |
-| 代码质量 | black, isort, mypy, flake8 | 代码格式化与检查 |
+| 监控 | prometheus-client | 性能指标监控 |
+| 测试 | pytest, pytest-asyncio | 测试框架 |
+| 代码质量 | black, isort, mypy, flake8, pylint | 代码格式化与检查 |
 | 安全扫描 | bandit, safety | 安全漏洞扫描 |
 
 ## 📝 使用指南
@@ -294,7 +298,7 @@ JWT_SECRET_KEY=your-jwt-secret
 
 - **认证授权**: JWT令牌认证，RBAC权限控制
 - **数据加密**: 敏感数据AES-256加密存储
-- **密码安全**: PBKDF2密码哈希
+- **密码安全**: bcrypt密码哈希
 - **CSRF防护**: 双重提交Cookie模式
 - **XSS防护**: HTML内容自动净化
 - **输入验证**: 所有用户输入经过验证和清理

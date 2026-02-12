@@ -170,7 +170,6 @@ envision/
 ├── environment.yml           # Conda 环境配置
 ├── README.md                 # 项目说明
 ├── CHANGELOG.md              # 版本更新日志
-├── CONTRIBUTING.md           # 贡献指南
 ├── Makefile                  # 便捷命令
 │
 ├── src/                      # 源代码
@@ -204,8 +203,7 @@ envision/
 │
 ├── docs/                     # 文档
 │   ├── ARCHITECTURE.md       # 架构设计
-│   ├── DEVELOPMENT.md        # 开发指南
-│   └── MIGRATION.md          # 迁移指南
+│   └── DEVELOPMENT.md        # 开发指南
 │
 └── deployment/               # 部署配置
 ```

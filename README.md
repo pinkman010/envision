@@ -60,20 +60,15 @@
 git clone <repository-url>
 cd esg-intelligent-analysis
 
-# 创建虚拟环境
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
+# 方式1：使用 Conda（推荐，自动安装系统依赖如 poppler）
+conda env create -f environment.yml
+conda activate esg-analysis
+
+# 方式2：使用 venv + pip（如果不用 Conda）
+# python -m venv venv
+# source venv/bin/activate  # Linux/Mac
 # 或 venv\Scripts\activate  # Windows
-
-# 安装生产依赖
-make install
-# 或
-pip install -r requirements.txt
-
-# 安装开发依赖（推荐开发者）
-make install-dev
-# 或
-pip install -e ".[dev]"
+# pip install -e ".[dev]"
 
 # 配置Ollama
 ollama pull deepseek-r1:7b
@@ -172,7 +167,7 @@ envision/
 ├── main.py                   # 统一入口
 ├── start_windows.py          # Windows启动脚本
 ├── pyproject.toml            # 项目配置
-├── requirements.txt          # 依赖清单
+├── environment.yml           # Conda 环境配置
 ├── README.md                 # 项目说明
 ├── CHANGELOG.md              # 版本更新日志
 ├── CONTRIBUTING.md           # 贡献指南

@@ -310,40 +310,10 @@ JWT_SECRET_KEY=your-jwt-secret
 | 代码质量 | 93/100 | 自动化测试、代码审查、类型检查 |
 | 综合评分 | **93/100** | **优秀** |
 
-## 🤝 贡献指南
-
-欢迎贡献代码！请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解详细信息。
-
-### 快速开始贡献
-
-```bash
-# 1. Fork项目并克隆
-git clone https://github.com/YOUR_USERNAME/envision.git
-
-# 2. 创建功能分支
-git checkout -b feature/your-feature
-
-# 3. 安装开发依赖
-make install-dev
-
-# 4. 安装pre-commit钩子
-make pre-commit
-
-# 5. 开发并测试
-make test
-
-# 6. 提交代码
-git commit -m "feat(module): description"
-
-# 7. 推送并创建Pull Request
-git push origin feature/your-feature
-```
-
 ## 📚 文档
 
 - [架构设计文档](./docs/ARCHITECTURE.md)
 - [开发指南](./docs/DEVELOPMENT.md)
-- [贡献指南](./CONTRIBUTING.md)
 - [更新日志](./CHANGELOG.md)
 
 ## 🗺️ 路线图
@@ -353,11 +323,6 @@ git push origin feature/your-feature
 - [ ] 实时数据同步
 - [ ] 移动端适配
 
-### v2.0.0（规划中）
-- [ ] 机器学习模型集成
-- [ ] 区块链存证
-- [ ] 行业对比平台
-
 ## 📄 许可证
 
 MIT License
@@ -366,5 +331,3 @@ MIT License
 
 **版本**: v1.2.0  
 **更新日期**: 2026-02-08  
-**作者**: ESG智能分析团队  
-**GitHub**: https://github.com/pinkman010/envision

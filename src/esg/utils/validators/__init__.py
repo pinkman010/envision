@@ -22,14 +22,6 @@ from src.esg.utils.validators.base import (
     validate_report_year_range,
     validate_year,
 )
-from src.esg.utils.validators.fields import (
-    validate_company_code,
-    validate_company_name,
-    validate_percentage,
-    validate_positive_int,
-    validate_ratio,
-    validate_score,
-)
 from src.esg.utils.validators.esg_metrics import (
     validate_carbon_intensity,
     validate_emissions_value,
@@ -37,6 +29,14 @@ from src.esg.utils.validators.esg_metrics import (
     validate_non_negative_number,
     validate_training_hours,
     validate_water_intensity,
+)
+from src.esg.utils.validators.fields import (
+    validate_company_code,
+    validate_company_name,
+    validate_percentage,
+    validate_positive_int,
+    validate_ratio,
+    validate_score,
 )
 
 __all__ = [

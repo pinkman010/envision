@@ -111,13 +111,7 @@ class TestTopicUpdaterInit(unittest.TestCase):
     def test_init_with_existing_file(self):
         """测试存在数据文件时初始化"""
         # 创建测试数据文件
-        test_data = {
-            "version_1": {
-                "topics": {
-                    "carbon_emission": {"name": "碳排放", "heat": 80}
-                }
-            }
-        }
+        test_data = {"version_1": {"topics": {"carbon_emission": {"name": "碳排放", "heat": 80}}}}
         self.data_file.write_text(json.dumps(test_data), encoding="utf-8")
 
         # 创建实例并手动设置数据文件路径

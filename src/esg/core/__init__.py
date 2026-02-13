@@ -43,7 +43,6 @@ from src.esg.core.constants import (
     WATER_INTENSITY_BENCHMARK_HIGH,
     WATER_INTENSITY_BENCHMARK_LOW,
 )
-
 from src.esg.core.engine import ESGAnalysisEngine
 from src.esg.core.models import (
     DEFAULT_SCORE,

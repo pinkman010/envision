@@ -23,13 +23,14 @@ logger = logging.getLogger(__name__)
 # 开发环境配置 - 必须在_get_jwt_secret之前定义
 DEV_MODE = os.getenv("ENVIRONMENT", "development").lower() != "production"
 
+
 # JWT配置 - 生产环境强制要求环境变量，开发环境使用临时密钥
 def _get_jwt_secret() -> str:
     """获取JWT密钥，生产环境必须设置环境变量"""
     secret = os.getenv("JWT_SECRET_KEY")
     if secret:
         return secret
-    
+
     # 开发模式下使用临时密钥
     if DEV_MODE:
         # 基于时间生成临时密钥（每天变化）
@@ -37,7 +38,7 @@ def _get_jwt_secret() -> str:
         temp_key = f"dev-secret-{today}"
         logger.warning(f"开发模式：使用临时JWT密钥（基于日期：{today}）")
         return hashlib.sha256(temp_key.encode()).hexdigest()[:32]
-    
+
     # 生产环境必须设置
     raise EnvironmentError(
         "JWT_SECRET_KEY 环境变量未设置！"
@@ -45,8 +46,10 @@ def _get_jwt_secret() -> str:
         "示例: export JWT_SECRET_KEY=$(openssl rand -base64 32)"
     )
 
+
 # 延迟初始化JWT密钥（在首次使用时检查）
 JWT_SECRET_KEY: Optional[str] = None
+
 
 def get_jwt_secret() -> str:
     """获取JWT密钥的延迟初始化函数"""
@@ -55,6 +58,7 @@ def get_jwt_secret() -> str:
         JWT_SECRET_KEY = _get_jwt_secret()
     return JWT_SECRET_KEY
 
+
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -62,7 +66,6 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7
 # 开发环境警告
 if DEV_MODE:
     logger.warning("⚠️ 运行在开发模式！请在生产环境中设置 JWT_SECRET_KEY 环境变量")
-
 
 
 class Permission(Enum):
@@ -221,10 +224,10 @@ class AuthManager:
         if not DEV_MODE:
             logger.info("生产环境模式：默认用户已禁用")
             return
-            
+
         # 开发模式下创建默认账户（生产环境应通过管理界面创建）
         dev_password = os.getenv("DEV_PASSWORD", "dev_password_change_me")
-        
+
         default_users = [
             {
                 "id": "admin_001",
@@ -247,7 +250,7 @@ class AuthManager:
             user = User(**user_data)
             self._users[user.id] = user
             self._user_credentials[user.username] = self._hash_password(password)
-            
+
         logger.warning("⚠️ 开发模式：已创建默认用户，请及时修改密码或删除")
 
     def _hash_password(self, password: str) -> str:

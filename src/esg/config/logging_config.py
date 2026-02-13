@@ -41,11 +41,11 @@ def setup_logging(
         配置好的日志记录器
     """
     logger = logging.getLogger(name)
-    
+
     # 避免重复添加handler
     if logger.handlers:
         return logger
-    
+
     log_level = getattr(logging, (level or DEFAULT_LOG_LEVEL).upper(), logging.INFO)
     logger.setLevel(log_level)
 
@@ -91,7 +91,7 @@ def get_logger(name: str) -> logging.Logger:
 def init_root_logger():
     """初始化根日志记录器"""
     setup_logging(name=None, level=DEFAULT_LOG_LEVEL, log_to_file=True)
-    
+
     # 设置第三方库日志级别，减少噪音
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("requests").setLevel(logging.WARNING)

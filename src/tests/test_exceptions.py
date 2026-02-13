@@ -293,8 +293,8 @@ class TestDatabaseErrors(unittest.TestCase):
     def test_chromadb_unavailable_handling(self):
         """测试ChromaDB不可用时的处理"""
         # 测试ChromaDB不可用时的优雅降级
-        from src.esg.vector_store.chroma_store import ChromaDBStore, HAS_CHROMADB
-        
+        from src.esg.vector_store.chroma_store import HAS_CHROMADB, ChromaDBStore
+
         # 如果ChromaDB不可用，测试会降级
         if not HAS_CHROMADB:
             # 预期：ChromaDB不可用时会返回False

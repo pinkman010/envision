@@ -38,6 +38,7 @@ def _check_chromadb():
         # 处理其他导入错误（如sqlite3版本问题）
         return False
 
+
 # 配置日志
 logger = logging.getLogger(__name__)
 
@@ -96,12 +97,12 @@ class ChromaDBStore:
         创建或获取指定的集合。
         """
         global _chromadb_module, _Settings_class
-        
+
         # 运行时检查ChromaDB是否可用
         if not _check_chromadb():
             logger.warning("ChromaDB 不可用（可能未安装或sqlite3版本不兼容）")
             return
-        
+
         try:
             # 确保数据库目录存在
             os.makedirs(self.db_dir, exist_ok=True)
@@ -114,7 +115,9 @@ class ChromaDBStore:
             except (AttributeError, TypeError):
                 # 回退到旧版 API
                 self.client = _chromadb_module.Client(
-                    _Settings_class(chroma_db_impl="duckdb+parquet", persist_directory=str(self.db_dir))
+                    _Settings_class(
+                        chroma_db_impl="duckdb+parquet", persist_directory=str(self.db_dir)
+                    )
                 )
 
             # 获取或创建集合

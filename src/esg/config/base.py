@@ -18,6 +18,7 @@ FUSED_DATA_DIR = DATA_DIR / "03_fused"
 COMPLETED_DATA_DIR = DATA_DIR / "04_completed"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"  # 向后兼容
 MOCK_DATA_DIR = DATA_DIR / "mock"
+MOCK_AUTO_DIR = DATA_DIR / "mock_auto_updates"
 UPLOADS_DIR = DATA_DIR / "uploads"
 REPORTS_DIR = DATA_DIR / "reports"
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "esg-intelligent-analysis"
-version = "1.2.0"
+version = "1.2.1"
 description = "基于AI的新能源行业ESG披露与沟通智能分析框架"
 readme = "README.md"
 requires-python = ">=3.9"

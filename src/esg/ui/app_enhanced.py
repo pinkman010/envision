@@ -1122,7 +1122,7 @@ def render_rag_page(config: Dict[str, Any]) -> None:
     st.info(
         """
     💡 **RAG (Retrieval-Augmented Generation)** 功能说明：
-    - 使用 deepseek-r1:7b 本地大语言模型
+    - 使用 DeepSeek-R1 本地大语言模型
     - 基于 ChromaDB 向量数据库进行知识检索
     - 展示 AI 的 COT (Chain of Thought) 深度思考过程
     - 答案基于知识库中的ESG相关文档
@@ -1154,7 +1154,7 @@ def render_rag_page(config: Dict[str, Any]) -> None:
         st.markdown("### 📊 系统状态")
 
         # 显示模型信息
-        st.metric("使用模型", "deepseek-r1:7b")
+        st.metric("使用模型", "DeepSeek-R1")
 
         # 检查向量数据库状态
         try:

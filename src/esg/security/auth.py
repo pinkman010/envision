@@ -20,11 +20,49 @@ from cryptography.fernet import Fernet
 # 配置日志
 logger = logging.getLogger(__name__)
 
-# JWT配置 - 从环境变量读取，如未设置则使用固定密钥（生产环境应使用环境变量）
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "envision-esg-secret-key-2024-change-in-production")
+# 开发环境配置 - 必须在_get_jwt_secret之前定义
+DEV_MODE = os.getenv("ENVIRONMENT", "development").lower() != "production"
+
+# JWT配置 - 生产环境强制要求环境变量，开发环境使用临时密钥
+def _get_jwt_secret() -> str:
+    """获取JWT密钥，生产环境必须设置环境变量"""
+    secret = os.getenv("JWT_SECRET_KEY")
+    if secret:
+        return secret
+    
+    # 开发模式下使用临时密钥
+    if DEV_MODE:
+        # 基于时间生成临时密钥（每天变化）
+        today = datetime.now().strftime("%Y-%m-%d")
+        temp_key = f"dev-secret-{today}"
+        logger.warning(f"开发模式：使用临时JWT密钥（基于日期：{today}）")
+        return hashlib.sha256(temp_key.encode()).hexdigest()[:32]
+    
+    # 生产环境必须设置
+    raise EnvironmentError(
+        "JWT_SECRET_KEY 环境变量未设置！"
+        "生产环境必须设置此环境变量以确保安全。"
+        "示例: export JWT_SECRET_KEY=$(openssl rand -base64 32)"
+    )
+
+# 延迟初始化JWT密钥（在首次使用时检查）
+JWT_SECRET_KEY: Optional[str] = None
+
+def get_jwt_secret() -> str:
+    """获取JWT密钥的延迟初始化函数"""
+    global JWT_SECRET_KEY
+    if JWT_SECRET_KEY is None:
+        JWT_SECRET_KEY = _get_jwt_secret()
+    return JWT_SECRET_KEY
+
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# 开发环境警告
+if DEV_MODE:
+    logger.warning("⚠️ 运行在开发模式！请在生产环境中设置 JWT_SECRET_KEY 环境变量")
+
 
 
 class Permission(Enum):
@@ -168,40 +206,39 @@ class AuthManager:
         """初始化认证管理器
 
         Args:
-            secret_key: JWT密钥，None则自动生成
+            secret_key: JWT密钥，None则从环境变量获取
         """
-        self.secret_key = secret_key or JWT_SECRET_KEY
+        self.secret_key = secret_key or get_jwt_secret()
         self._users: Dict[str, User] = {}
         self._user_credentials: Dict[str, str] = {}  # username -> hashed_password
         self._refresh_tokens: Set[str] = set()
 
-        # 初始化默认用户
+        # 初始化默认用户（仅在开发模式下）
         self._init_default_users()
 
     def _init_default_users(self):
-        """初始化默认用户"""
-        # 创建默认管理员账户
+        """初始化默认用户 - 仅开发模式可用"""
+        if not DEV_MODE:
+            logger.info("生产环境模式：默认用户已禁用")
+            return
+            
+        # 开发模式下创建默认账户（生产环境应通过管理界面创建）
+        dev_password = os.getenv("DEV_PASSWORD", "dev_password_change_me")
+        
         default_users = [
             {
                 "id": "admin_001",
                 "username": "admin",
                 "email": "admin@company.com",
                 "role": Role.ADMIN,
-                "password": "admin123",  # 生产环境应该修改
-            },
-            {
-                "id": "analyst_001",
-                "username": "analyst",
-                "email": "analyst@company.com",
-                "role": Role.ANALYST,
-                "password": "analyst123",
+                "password": dev_password,
             },
             {
                 "id": "viewer_001",
                 "username": "viewer",
                 "email": "viewer@company.com",
                 "role": Role.VIEWER,
-                "password": "viewer123",
+                "password": dev_password,
             },
         ]
 
@@ -210,6 +247,8 @@ class AuthManager:
             user = User(**user_data)
             self._users[user.id] = user
             self._user_credentials[user.username] = self._hash_password(password)
+            
+        logger.warning("⚠️ 开发模式：已创建默认用户，请及时修改密码或删除")
 
     def _hash_password(self, password: str) -> str:
         """使用bcrypt哈希密码

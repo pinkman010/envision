@@ -48,13 +48,13 @@ class TestRetryWithBackoff(unittest.TestCase):
         def fail_then_succeed():
             nonlocal call_count
             call_count += 1
-            if call_count < 3:
+            if call_count < 3:  # 第1、2次失败，第3次成功
                 raise Exception("Temporary error")
             return "success"
 
         result = fail_then_succeed()
         self.assertEqual(result, "success")
-        self.assertEqual(call_count, 3)
+        self.assertEqual(call_count, 3)  # 初始调用 + 2次重试 = 3次调用
 
     def test_max_retries_exceeded(self):
         """测试超过最大重试次数"""

@@ -54,7 +54,7 @@ def retry_with_backoff(
     initial_delay: float = 1.0,
     max_delay: float = 30.0,
     backoff_factor: float = 2.0,
-    exceptions: tuple = (requests.RequestException,),
+    exceptions: tuple = (Exception,),  # 默认捕获所有异常
 ):
     """带指数退避的重试装饰器
 
@@ -63,7 +63,7 @@ def retry_with_backoff(
         initial_delay: 初始延迟（秒）
         max_delay: 最大延迟（秒）
         backoff_factor: 退避因子
-        exceptions: 需要捕获重试的异常类型
+        exceptions: 需要捕获重试的异常类型（默认捕获所有Exception）
     """
 
     def decorator(func: Callable) -> Callable:

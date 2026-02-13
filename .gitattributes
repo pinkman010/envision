@@ -1,2 +1,43 @@
-# Auto detect text files and perform LF normalization
+# 自动识别文本文件，统一换行符处理
 * text=auto
+
+# 文本文件强制LF（跨平台通用）
+*.txt text eol=lf
+*.md text eol=lf encoding=utf-8
+*.js text eol=lf
+*.ts text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.py text eol=lf
+*.java text eol=lf
+
+# 脚本文件特殊处理
+*.sh text eol=lf  # Linux/macOS脚本必须LF
+*.bat text eol=crlf  # Windows批处理必须CRLF
+
+# 二进制文件
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.rar binary
+*.exe binary
+*.dll binary
+*.jar binary
+*.war binary
+
+# 无需diff的文件
+*.lock -diff
+*.min.js -diff
+*.min.css -diff
+
+# 本地配置文件禁止合并
+config/local.* -merge
+
+# 归档时忽略的文件/目录
+.github/ export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+*.log export-ignore

@@ -77,10 +77,6 @@ def render_sidebar() -> Dict[str, Any]:
         配置参数字典
     """
     with st.sidebar:
-        st.markdown("## 🌱 ESG智能分析系统")
-        st.markdown("*增强版 v2.0*")
-        st.markdown("---")
-
         # 导航
         st.markdown("### 📍 功能导航")
 

@@ -126,15 +126,41 @@ def render_upload_step() -> Optional[PDFContent]:
 
         col1, col2, col3 = st.columns(3)
 
+        # 清除旧的指标和分析结果
+        manager = get_state_manager()
+
+        # 使用session_state跟踪当前选择的示例
+        if "demo_selected" not in st.session_state:
+            st.session_state.demo_selected = None
+
         with col1:
-            if st.button("🌟 优秀案例", use_container_width=True):
-                return load_demo_data("excellent")
+            if st.button("🌟 优秀案例", key="demo_excellent_1", use_container_width=True):
+                manager.set_metrics(None)
+                manager.set_analysis_result(None)
+                manager.set_gap_analysis(None)
+                manager.set_strategies(None)
+                st.session_state.demo_selected = "excellent"
+                st.rerun()
         with col2:
-            if st.button("📊 平均案例", use_container_width=True):
-                return load_demo_data("average")
+            if st.button("📊 平均案例", key="demo_average_2", use_container_width=True):
+                manager.set_metrics(None)
+                manager.set_analysis_result(None)
+                manager.set_gap_analysis(None)
+                manager.set_strategies(None)
+                st.session_state.demo_selected = "average"
+                st.rerun()
         with col3:
-            if st.button("⚠️ 待改进案例", use_container_width=True):
-                return load_demo_data("poor")
+            if st.button("⚠️ 待改进案例", key="demo_poor_3", use_container_width=True):
+                manager.set_metrics(None)
+                manager.set_analysis_result(None)
+                manager.set_gap_analysis(None)
+                manager.set_strategies(None)
+                st.session_state.demo_selected = "poor"
+                st.rerun()
+
+        # 如果已选择示例，直接加载数据
+        if st.session_state.demo_selected:
+            return load_demo_data(st.session_state.demo_selected)
 
         return None
 

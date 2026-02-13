@@ -61,3 +61,6 @@ DATA_LINEAGE_CONFIG = {
     "storage_type": "json",  # 可选: json, sqlite
     "lineage_file": "data/.lineage.json",
 }
+
+# ========== 分析时间配置 ==========
+ANALYSIS_YEARS: list = ["2025", "2024", "2023"]

@@ -5,6 +5,35 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.3.0] - 2026-02-13
+
+### 🚀 新增功能
+
+#### 配置模块重构
+- 将原有的 `ui.py` 拆分为多个独立配置模块
+- 新增 `communication.py` - 传播策略模块 (COMMUNICATION_CALENDAR 沟通日历)
+- 新增 `evaluation.py` - 评估配置模块 (EVALUATION_PERSPECTIVES, BENCHMARK_COMPANIES)
+- 新增 `visualization.py` - UI样式配置
+- 将 ANALYSIS_YEARS 移至 `base.py`
+
+#### 多语言报告支持
+- 在 `report_generator.py` 中集成多语言报告生成功能
+- 支持生成中文、英文、繁体中文报告
+- 新增 `generate_multilingual()` 方法支持批量多语言生成
+- 在 Streamlit UI 中添加语言选择器（支持单语言和多语言模式）
+
+### 🔧 改进
+
+- 优化报告生成流程，支持按需选择报告语言
+- 改进UI交互体验：多语言报告可一次性生成多份供下载
+
+### 📚 文档
+
+- 更新架构设计文档（ARCHITECTURE.md）- 添加配置模块说明
+- 更新演进路线：标记已完成功能并添加后续语言支持计划
+
+---
+
 ## [1.2.1] - 2026-02-13
 
 ### 🐛 修复

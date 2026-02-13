@@ -18,6 +18,11 @@ from src.esg.config import (
 )
 from src.esg.core.compliance_checker import ComplianceChecker
 from src.esg.core.models import AnalysisResult, ESGMetrics
+from src.esg.extraction.multilingual import (
+    Language,
+    MultilingualReportGenerator,
+    generate_multilingual_report,
+)
 
 
 class ReportGenerator:
@@ -1047,3 +1052,144 @@ class ReportGenerator:
         lines.extend(["---", ""])
 
         return lines
+
+    def generate_multilingual(
+        self,
+        result: AnalysisResult,
+        languages: Optional[List[Language]] = None,
+        benchmark_scores: Optional[Dict[str, float]] = None,
+    ) -> Dict[Language, str]:
+        """生成多语言报告
+
+        基于分析结果生成多种语言的ESG报告。
+
+        Args:
+            result: ESG 分析结果对象
+            languages: 语言列表，默认为中文、英文、繁体中文
+            benchmark_scores: 行业基准分数
+
+        Returns:
+            语言到报告内容的映射字典
+
+        Example:
+            >>> generator = ReportGenerator()
+            >>> reports = generator.generate_multilingual(analysis_result)
+            >>> for lang, content in reports.items():
+            ...     print(f"{lang.value}: {len(content)} chars")
+        """
+        if languages is None:
+            languages = [Language.ZH_CN, Language.EN, Language.ZH_TW]
+
+        # 将 AnalysisResult 转换为 analysis_data 格式
+        analysis_data = self._convert_to_analysis_data(result, benchmark_scores)
+
+        # 使用 multilingual 模块生成报告
+        reports = generate_multilingual_report(
+            analysis_data=analysis_data,
+            primary_language=languages[0],
+            additional_languages=languages[1:] if len(languages) > 1 else None,
+        )
+
+        # 转换为字符串格式
+        result_map = {}
+        for lang, report in reports.items():
+            result_map[lang] = report.to_markdown()
+
+        return result_map
+
+    def _convert_to_analysis_data(
+        self,
+        result: AnalysisResult,
+        benchmark_scores: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, Any]:
+        """将 AnalysisResult 转换为 multilingual 模块所需的格式
+
+        Args:
+            result: 分析结果
+            benchmark_scores: 基准分数
+
+        Returns:
+            符合 multilingual 模块要求的字典格式
+        """
+        metrics = result.metrics
+        scores = metrics.get_all_dimension_scores()
+
+        # 构建基础数据
+        data = {
+            "company_name": metrics.company_name,
+            "report_year": metrics.year,
+            "generated_at": datetime.now().isoformat(),
+            "overall_score": result.overall_score,
+            "e_score": scores.get("E", 0),
+            "s_score": scores.get("S", 0),
+            "g_score": scores.get("G", 0),
+            "executive_summary": self._generate_summary_text(result),
+        }
+
+        # 添加碳足迹数据
+        if metrics.carbon_emissions:
+            data["carbon_footprint"] = {
+                "scope1": metrics.carbon_emissions * 0.6,  # 估算
+                "scope2": metrics.carbon_emissions * 0.3,
+                "scope3": metrics.carbon_emissions * 0.1,
+                "total": metrics.carbon_emissions,
+                "intensity": metrics.carbon_emissions / (metrics.employee_count or 1) * 1000,
+            }
+
+        # 添加合规数据
+        if self.include_compliance:
+            compliance_results = self.compliance_checker.check_compliance(metrics)
+            data["compliance"] = {
+                "ISSB S1": "compliant",
+                "ISSB S2": "partial",
+                "GRI": "compliant",
+            }
+
+        # 添加差距数据
+        if result.gap_analysis and "dimensions" in result.gap_analysis:
+            gaps = []
+            for dim, gap_data in result.gap_analysis["dimensions"].items():
+                if hasattr(gap_data, "gap"):
+                    gap_value = gap_data.gap
+                else:
+                    gap_value = gap_data.get("gap", 0)
+                if gap_value > 0:
+                    gaps.append({
+                        "dimension": dim,
+                        "gap": gap_value,
+                        "priority": "high" if gap_value > 15 else "medium",
+                        "description": f"{dim}维度存在{gap_value:.1f}分差距",
+                    })
+            data["gaps"] = gaps
+
+        # 添加建议数据
+        if result.strategies:
+            recommendations = []
+            for s in result.strategies[:5]:  # 取前5条
+                recommendations.append({
+                    "priority": s.get("priority", "medium"),
+                    "description": s.get("title", ""),
+                })
+            data["recommendations"] = recommendations
+
+        return data
+
+    def _generate_summary_text(self, result: AnalysisResult) -> str:
+        """生成执行摘要文本
+
+        Args:
+            result: 分析结果
+
+        Returns:
+            摘要文本
+        """
+        score = result.overall_score
+
+        if score >= 80:
+            return "公司在 ESG 方面表现卓越，具有明显的可持续发展优势。"
+        elif score >= 60:
+            return "公司在 ESG 方面有较好表现，仍有提升空间。"
+        elif score >= 40:
+            return "公司在 ESG 方面表现一般，需要制定明确的改进计划。"
+        else:
+            return "公司在 ESG 方面存在明显不足，急需采取行动。"

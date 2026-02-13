@@ -4,7 +4,7 @@
 支持 Ollama embedding 和多种文档格式。
 """
 
-from src.esg.vector_store.chroma_store import HAS_CHROMADB, ChromaDBStore, VectorStore
+from src.esg.vector_store.chroma_store import HAS_CHROMADB, ChromaDBStore, VectorStore, get_chromadb_error
 from src.esg.vector_store.document_loader import DocumentLoader
 
-__all__ = ["ChromaDBStore", "VectorStore", "DocumentLoader", "HAS_CHROMADB"]
+__all__ = ["ChromaDBStore", "VectorStore", "DocumentLoader", "HAS_CHROMADB", "get_chromadb_error"]

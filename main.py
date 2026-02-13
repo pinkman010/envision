@@ -52,7 +52,7 @@ def get_mode_from_session() -> str:
 def render_mode_selector():
     """渲染模式选择器"""
     st.sidebar.title(f"{APP_ICON} {APP_NAME}")
-    st.sidebar.caption(f"版本: v{VERSION}")
+    st.sidebar.caption(f"版本: {VERSION}")
     st.sidebar.markdown("---")
     
     mode = st.sidebar.radio(

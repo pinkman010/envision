@@ -1,35 +1,13 @@
-"""UI相关配置
+"""传播策略配置
 
-分析年份、标杆企业、评估视角、沟通日历等UI配置。
+PR/IR部门用的传播排期工具。
+包含ESG沟通日历配置，用于推荐最佳披露时机。
 """
 
 from typing import Any, Dict, List
 
-# ========== UI 配置 ==========
-ANALYSIS_YEARS: List[str] = ["2025", "2024", "2023"]
-BENCHMARK_COMPANIES: List[str] = ["维斯塔斯", "西门子歌美飒", "行业平均"]
-
-EVALUATION_PERSPECTIVES: Dict[str, Dict] = {
-    "financial": {
-        "name": "财务稳健性（投资者视角）",
-        "weights": {"E": 0.25, "S": 0.30, "G": 0.45},
-    },
-    "compliance": {
-        "name": "合规与风险（监管视角）",
-        "weights": {"E": 0.40, "S": 0.25, "G": 0.35},
-    },
-    "brand": {
-        "name": "品牌影响力（公众视角）",
-        "weights": {"E": 0.30, "S": 0.45, "G": 0.25},
-    },
-    "balanced": {
-        "name": "均衡配置",
-        "weights": {"E": 0.333, "S": 0.333, "G": 0.334},
-    },
-}
-
 # ========== ESG沟通日历配置 ==========
-COMMUNICATION_CALENDAR = [
+COMMUNICATION_CALENDAR: List[Dict[str, Any]] = [
     {
         "event_name": "COP29联合国气候变化大会",
         "date": "2024-11",

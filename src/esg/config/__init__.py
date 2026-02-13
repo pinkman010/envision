@@ -6,6 +6,7 @@
 
 # 基础配置
 from .base import (
+    ANALYSIS_YEARS,
     APP_ICON,
     APP_NAME,
     DATA_DIR,
@@ -45,6 +46,15 @@ from .esg import (
     TOPIC_BUSINESS_MAP,
 )
 
+# 传播策略配置
+from .communication import COMMUNICATION_CALENDAR
+
+# 评估配置
+from .evaluation import (
+    BENCHMARK_COMPANIES,
+    EVALUATION_PERSPECTIVES,
+)
+
 # 标准配置
 from .standards import (
     COMPLIANCE_STATUS_COMPLIANT,
@@ -58,12 +68,18 @@ from .standards import (
     REQUIREMENT_RECOMMENDED,
 )
 
-# UI配置
-from .ui import (
-    ANALYSIS_YEARS,
-    BENCHMARK_COMPANIES,
-    COMMUNICATION_CALENDAR,
-    EVALUATION_PERSPECTIVES,
+# 可视化配置
+from .visualization import (
+    CARD_BORDER_RADIUS,
+    CARD_PADDING,
+    CHART_HEIGHT,
+    CHART_THEME,
+    CONTENT_MAX_WIDTH,
+    ESG_CHART_COLORS,
+    PRIORITY_COLORS,
+    SIDEBAR_WIDTH,
+    STATUS_COLORS,
+    WORDCLOUD_COLORS,
 )
 
 __all__ = [
@@ -83,6 +99,7 @@ __all__ = [
     "APP_ICON",
     "DATA_VERSION_CONFIG",
     "DATA_LINEAGE_CONFIG",
+    "ANALYSIS_YEARS",
     # esg
     "ESG_DIMENSIONS",
     "ESG_DIMENSION_NAMES",
@@ -102,6 +119,11 @@ __all__ = [
     "TOPIC_BUSINESS_MAP",
     "BUSINESS_UNIT_DESCRIPTIONS",
     "NEW_ENERGY_SPECIFIC_METRICS",
+    # communication
+    "COMMUNICATION_CALENDAR",
+    # evaluation
+    "BENCHMARK_COMPANIES",
+    "EVALUATION_PERSPECTIVES",
     # standards
     "REQUIREMENT_MANDATORY",
     "REQUIREMENT_RECOMMENDED",
@@ -112,9 +134,15 @@ __all__ = [
     "COMPLIANCE_STATUS_COMPLIANT",
     "COMPLIANCE_STATUS_NON_COMPLIANT",
     "COMPLIANCE_STATUS_PARTIAL",
-    # ui
-    "ANALYSIS_YEARS",
-    "BENCHMARK_COMPANIES",
-    "EVALUATION_PERSPECTIVES",
-    "COMMUNICATION_CALENDAR",
+    # visualization
+    "ESG_CHART_COLORS",
+    "PRIORITY_COLORS",
+    "STATUS_COLORS",
+    "CHART_THEME",
+    "CHART_HEIGHT",
+    "WORDCLOUD_COLORS",
+    "SIDEBAR_WIDTH",
+    "CONTENT_MAX_WIDTH",
+    "CARD_BORDER_RADIUS",
+    "CARD_PADDING",
 ]

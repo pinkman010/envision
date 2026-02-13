@@ -151,7 +151,18 @@ envision/
 | encryption.py | 数据加密 | EncryptionManager |
 | csrf.py | CSRF防护 | CSRFProtection |
 
-#### 2.2.8 工具模块（src/utils/）
+#### 2.2.8 配置模块（src/config/）
+
+| 模块 | 职责 | 关键类/配置项 |
+|------|------|--------|
+| base.py | 基础配置 | PROJECT_ROOT, ANALYSIS_YEARS, 版本信息 |
+| esg.py | ESG维度配置 | ESG_DIMENSIONS, ESG_COLORS, 指标阈值 |
+| standards.py | 标准配置 | ISSB, GRI 标准条款 |
+| communication.py | 传播策略 | COMMUNICATION_CALENDAR 沟通日历 |
+| evaluation.py | 评估配置 | EVALUATION_PERSPECTIVES, BENCHMARK_COMPANIES |
+| visualization.py | 可视化配置 | 图表颜色、主题配置 |
+
+#### 2.2.9 工具模块（src/utils/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
@@ -362,9 +373,10 @@ class CustomMetricExtractor(MetricExtractor):
 
 ### 10.1 短期目标（v1.3）
 
-- [ ] 多语言报告支持
+- [x] 多语言报告支持（中文、英文、繁体中文）
 - [ ] 数据可视化仪表板
 - [ ] API接口完善
+- [ ] 更多语言支持（日语、韩语、德语、法语、西班牙语）- 后续版本
 
 ### 10.2 中期目标（v2.0）
 

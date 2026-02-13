@@ -17,13 +17,20 @@ from src.esg.utils.ollama_client import OllamaClient
 HAS_CHROMADB = False
 _chromadb_module = None
 _Settings_class = None
+_CHROMADB_ERROR = None
 
 
 def _check_chromadb():
     """运行时检查ChromaDB是否可用"""
-    global HAS_CHROMADB, _chromadb_module, _Settings_class
+    global HAS_CHROMADB, _chromadb_module, _Settings_class, _CHROMADB_ERROR
+    
     if HAS_CHROMADB:
         return True
+    
+    # 如果之前有过错误，直接返回False
+    if _CHROMADB_ERROR is not None:
+        return False
+        
     try:
         import chromadb
         from chromadb.config import Settings
@@ -32,11 +39,22 @@ def _check_chromadb():
         _Settings_class = Settings
         HAS_CHROMADB = True
         return True
-    except ImportError:
+    except ImportError as e:
+        _CHROMADB_ERROR = str(e)
         return False
-    except Exception:
-        # 处理其他导入错误（如sqlite3版本问题）
+    except RuntimeError as e:
+        # 处理sqlite3版本问题 - 这是一个常见的环境问题
+        _CHROMADB_ERROR = f"SQLite3版本不兼容: {str(e)[:100]}"
         return False
+    except Exception as e:
+        # 处理其他未知错误
+        _CHROMADB_ERROR = str(e)[:100]
+        return False
+
+
+def get_chromadb_error():
+    """获取ChromaDB的错误信息"""
+    return _CHROMADB_ERROR
 
 
 # 配置日志
@@ -335,5 +353,5 @@ class ChromaDBStore:
 VectorStore = ChromaDBStore
 
 
-# 导出 HAS_CHROMADB
-__all__ = ["ChromaDBStore", "VectorStore", "HAS_CHROMADB"]
+# 导出
+__all__ = ["ChromaDBStore", "VectorStore", "HAS_CHROMADB", "get_chromadb_error"]

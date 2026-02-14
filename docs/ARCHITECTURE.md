@@ -405,7 +405,7 @@ class CustomMetricExtractor(MetricExtractor):
 - 架构变更更新本文档
 - 版本发布更新CHANGELOG
 
-## 10. 模块详细说明（v1.3.5）
+## 10. 模块详细说明（v1.3.6）
 
 本节详细列出所有.py文件及其功能说明。
 
@@ -581,5 +581,5 @@ class CustomMetricExtractor(MetricExtractor):
 
 ---
 
-**版本**: v1.3.5  
+**版本**: v1.3.6  
 **更新日期**: 2026-02-14

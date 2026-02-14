@@ -5,6 +5,21 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.3.6] - 2026-02-14
+
+### 🔧 改进
+
+#### 代码重构
+- 合并 `config/standards.py` 和 `core/compliance_checker.py` 中的重复 ComplianceChecker 类
+- 简化 `config/standards.py` 为纯配置文件，从 core 模块导入
+- 删除重复的 `utils/validators.py` 文件，整合到 `utils/validators/` 包
+
+### 📚 文档
+
+- 更新版本号为 v1.3.6
+
+---
+
 ## [1.3.5] - 2026-02-14
 
 ### 🚀 新增功能

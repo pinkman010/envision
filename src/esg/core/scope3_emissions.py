@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 class Scope3Category(Enum):
     """范围3排放类别（GHG Protocol标准）"""
-    
+
     # 上游排放（Upstream）
     PURCHASED_GOODS_SERVICES = 1  # 外购商品和服务
     CAPITAL_GOODS = 2  # 资本商品
@@ -24,7 +24,7 @@ class Scope3Category(Enum):
     BUSINESS_TRAVEL = 6  # 商务旅行
     EMPLOYEE_COMMUTING = 7  # 员工通勤
     UPSTREAM_LEASED_ASSETS = 8  # 上游租赁资产
-    
+
     # 下游排放（Downstream）
     DOWNSTREAM_TRANSPORTATION = 9  # 下游运输和配送
     PROCESSING_OF_SOLD_PRODUCTS = 10  # 售出产品的加工
@@ -196,6 +196,7 @@ NEW_ENERGY_SECTOR_RELEVANCE = {
 
 class DataQuality(Enum):
     """数据质量等级"""
+
     HIGH = "high"  # 供应商特定数据/实测数据
     MEDIUM = "medium"  # 混合数据（部分特定+部分行业平均）
     LOW = "low"  # 行业平均数据
@@ -205,7 +206,7 @@ class DataQuality(Enum):
 @dataclass
 class Scope3CategoryData:
     """单个范围3类别的排放数据
-    
+
     Attributes:
         category: 排放类别
         emissions: 排放量（吨CO2e）
@@ -218,6 +219,7 @@ class Scope3CategoryData:
         coverage_percentage: 数据覆盖率（%）
         exclusions: 排除项说明
     """
+
     category: Scope3Category
     emissions: Optional[float] = None
     calculation_method: str = ""
@@ -231,7 +233,7 @@ class Scope3CategoryData:
     coverage_percentage: float = 0.0  # 数据覆盖率
     exclusions: List[str] = field(default_factory=list)
     notes: str = ""
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
@@ -254,9 +256,9 @@ class Scope3CategoryData:
 @dataclass
 class Scope3Inventory:
     """范围3排放清单
-    
+
     存储企业完整的范围3排放数据，支持15个类别的核算。
-    
+
     Attributes:
         reporting_year: 报告年份
         company_name: 公司名称
@@ -267,6 +269,7 @@ class Scope3Inventory:
         verification_status: 第三方核证状态
         verification_provider: 核证机构
     """
+
     reporting_year: str
     company_name: str
     sector: str = "new_energy_composite"
@@ -276,71 +279,73 @@ class Scope3Inventory:
     verification_provider: str = ""
     prepared_by: str = ""
     preparation_date: str = field(default_factory=lambda: datetime.now().isoformat())
-    
+
     def __post_init__(self):
         """初始化后确保所有类别都存在"""
         for cat in Scope3Category:
             if cat not in self.categories:
                 self.categories[cat] = Scope3CategoryData(category=cat)
-    
+
     def get_category(self, category: Scope3Category) -> Scope3CategoryData:
         """获取指定类别的数据"""
         return self.categories.get(category, Scope3CategoryData(category=category))
-    
+
     def set_category(self, data: Scope3CategoryData) -> None:
         """设置类别的数据"""
         self.categories[data.category] = data
-    
+
     def get_total_emissions(self) -> Optional[float]:
         """计算范围3排放总量
-        
+
         Returns:
             总排放量（吨CO2e）或None（如果数据不完整）
         """
         total = 0.0
         has_data = False
-        
+
         for cat_data in self.categories.values():
             if cat_data.emissions is not None:
                 total += cat_data.emissions
                 has_data = True
-        
+
         return total if has_data else None
-    
+
     def get_upstream_emissions(self) -> Optional[float]:
         """计算上游排放总量（类别1-8）"""
         upstream_cats = [c for c in Scope3Category if SCOPE3_CATEGORY_INFO[c]["type"] == "upstream"]
         total = 0.0
         has_data = False
-        
+
         for cat in upstream_cats:
             cat_data = self.categories.get(cat)
             if cat_data and cat_data.emissions is not None:
                 total += cat_data.emissions
                 has_data = True
-        
+
         return total if has_data else None
-    
+
     def get_downstream_emissions(self) -> Optional[float]:
         """计算下游排放总量（类别9-15）"""
-        downstream_cats = [c for c in Scope3Category if SCOPE3_CATEGORY_INFO[c]["type"] == "downstream"]
+        downstream_cats = [
+            c for c in Scope3Category if SCOPE3_CATEGORY_INFO[c]["type"] == "downstream"
+        ]
         total = 0.0
         has_data = False
-        
+
         for cat in downstream_cats:
             cat_data = self.categories.get(cat)
             if cat_data and cat_data.emissions is not None:
                 total += cat_data.emissions
                 has_data = True
-        
+
         return total if has_data else None
-    
+
     def get_scope3_intensity(self, revenue_millions: float) -> Optional[float]:
         """计算范围3排放强度
-        
+
         Args:
             revenue_millions: 营收（百万元）
-            
+
         Returns:
             排放强度（吨CO2e/百万元营收）
         """
@@ -348,20 +353,20 @@ class Scope3Inventory:
         if total is None or revenue_millions <= 0:
             return None
         return total / revenue_millions
-    
+
     def get_coverage_percentage(self) -> float:
         """计算整体数据覆盖率"""
         total = self.get_total_emissions()
         if total is None or total == 0:
             return 0.0
-        
+
         covered = 0.0
         for cat_data in self.categories.values():
             if cat_data.emissions is not None and cat_data.coverage_percentage > 0:
                 covered += cat_data.emissions * (cat_data.coverage_percentage / 100)
-        
+
         return (covered / total) * 100
-    
+
     def get_data_quality_score(self) -> float:
         """计算数据质量评分（0-100）"""
         quality_scores = {
@@ -370,104 +375,102 @@ class Scope3Inventory:
             DataQuality.LOW: 40,
             DataQuality.EXTRAPOLATED: 20,
         }
-        
+
         total = self.get_total_emissions()
         if total is None or total == 0:
             return 0.0
-        
+
         weighted_score = 0.0
         for cat_data in self.categories.values():
             if cat_data.emissions is not None and cat_data.emissions > 0:
                 weight = cat_data.emissions / total
                 score = quality_scores.get(cat_data.data_quality, 0)
                 weighted_score += weight * score
-        
+
         return weighted_score
-    
+
     def get_significant_categories(self, threshold: float = 0.05) -> List[Scope3Category]:
         """获取重要排放类别（占比>阈值）
-        
+
         Args:
             threshold: 占比阈值（如0.05表示5%）
-            
+
         Returns:
             重要类别列表
         """
         total = self.get_total_emissions()
         if total is None or total == 0:
             return []
-        
+
         significant = []
         for cat, cat_data in self.categories.items():
             if cat_data.emissions is not None and cat_data.emissions / total >= threshold:
                 significant.append(cat)
-        
+
         # 按排放量排序
-        significant.sort(
-            key=lambda c: self.categories[c].emissions or 0,
-            reverse=True
-        )
+        significant.sort(key=lambda c: self.categories[c].emissions or 0, reverse=True)
         return significant
-    
+
     def calculate_completeness_score(self) -> float:
         """计算核算完整性评分（基于行业相关性）"""
         relevance_map = NEW_ENERGY_SECTOR_RELEVANCE.get(
-            self.sector, 
-            NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
+            self.sector, NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
         )
-        
+
         total_relevance = sum(relevance_map.values())
         covered_relevance = 0.0
-        
+
         for cat, relevance in relevance_map.items():
             cat_data = self.categories.get(cat)
             if cat_data and cat_data.emissions is not None:
                 covered_relevance += relevance
-        
+
         return (covered_relevance / total_relevance) * 100 if total_relevance > 0 else 0
-    
+
     def get_cdp_alignment_score(self) -> Dict[str, Any]:
         """计算CDP范围3披露对齐评分
-        
+
         CDP评分标准：
         - 披露所有相关类别（30分）
         - 数据质量（25分）
         - 覆盖重要类别（25分）
         - 有减排目标（20分）
-        
+
         Returns:
             CDP对齐评分详情
         """
         score = 0
         details = []
-        
+
         # 1. 披露完整性（30分）
         relevance_map = NEW_ENERGY_SECTOR_RELEVANCE.get(
-            self.sector, 
-            NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
+            self.sector, NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
         )
         disclosed_high = sum(
-            1 for cat in relevance_map.keys()
+            1
+            for cat in relevance_map.keys()
             if self.categories.get(cat) and self.categories[cat].emissions is not None
         )
         total_high = len(relevance_map)
-        
+
         disclosure_ratio = disclosed_high / total_high if total_high > 0 else 0
         disclosure_score = min(30, disclosure_ratio * 30)
         score += disclosure_score
-        details.append(f"披露完整性: {disclosed_high}/{total_high} 重要类别 ({disclosure_score:.0f}分)")
-        
+        details.append(
+            f"披露完整性: {disclosed_high}/{total_high} 重要类别 ({disclosure_score:.0f}分)"
+        )
+
         # 2. 数据质量（25分）
         quality_score = self.get_data_quality_score() / 4  # 转换为25分制
         score += quality_score
         details.append(f"数据质量: {quality_score:.0f}分")
-        
+
         # 3. 数据覆盖率（25分）
         coverage = self.get_coverage_percentage()
         coverage_score = min(25, coverage / 4)
         score += coverage_score
         details.append(f"数据覆盖率: {coverage:.0f}% ({coverage_score:.0f}分)")
-        
+
         # 4. 第三方核证（20分）
         if self.verification_status == "reasonable":
             score += 20
@@ -477,7 +480,7 @@ class Scope3Inventory:
             details.append("第三方核证: 有限保证 (12分)")
         else:
             details.append("第三方核证: 无 (0分)")
-        
+
         # 确定CDP等级
         if score >= 80:
             level = "A"
@@ -487,7 +490,7 @@ class Scope3Inventory:
             level = "C"
         else:
             level = "D"
-        
+
         return {
             "total_score": score,
             "cdp_level": level,
@@ -496,7 +499,7 @@ class Scope3Inventory:
             "data_quality": self.get_data_quality_score(),
             "coverage": self.get_coverage_percentage(),
         }
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为完整字典"""
         return {
@@ -508,18 +511,16 @@ class Scope3Inventory:
             "downstream_emissions_tco2e": self.get_downstream_emissions(),
             "scope1_2_total_tco2e": self.scope1_2_total,
             "scope3_to_scope12_ratio": (
-                self.get_total_emissions() / self.scope1_2_total 
-                if self.scope1_2_total and self.scope1_2_total > 0 else None
+                self.get_total_emissions() / self.scope1_2_total
+                if self.scope1_2_total and self.scope1_2_total > 0
+                else None
             ),
             "data_quality_score": self.get_data_quality_score(),
             "coverage_percentage": self.get_coverage_percentage(),
             "completeness_score": self.calculate_completeness_score(),
             "verification_status": self.verification_status,
             "verification_provider": self.verification_provider,
-            "categories": {
-                cat.value: data.to_dict()
-                for cat, data in self.categories.items()
-            },
+            "categories": {cat.value: data.to_dict() for cat, data in self.categories.items()},
             "significant_categories": [
                 {
                     "category_id": cat.value,
@@ -533,27 +534,27 @@ class Scope3Inventory:
 
 class Scope3Calculator:
     """范围3排放计算器
-    
+
     提供各种范围3排放类别的计算方法。
     """
-    
+
     @staticmethod
     def calculate_category1_purchased_goods(
         material_quantities: Dict[str, float],  # 物料重量(kg)
         emission_factors: Dict[str, float],  # 排放因子(kgCO2e/kg)
     ) -> Tuple[float, Dict[str, Any]]:
         """计算类别1：外购商品和服务
-        
+
         Args:
             material_quantities: 物料数量，如{"钢材": 1000, "铜": 500}
             emission_factors: 排放因子，如{"钢材": 2.3, "铜": 3.5}
-            
+
         Returns:
             (总排放量, 详细数据)
         """
         total = 0.0
         breakdown = {}
-        
+
         for material, quantity in material_quantities.items():
             ef = emission_factors.get(material, 0)
             emissions = quantity * ef
@@ -563,25 +564,25 @@ class Scope3Calculator:
                 "emission_factor_kgco2e_per_kg": ef,
                 "emissions_kgco2e": emissions,
             }
-        
+
         return total / 1000, {  # 转换为吨CO2e
             "method": "供应商特定排放因子法",
             "breakdown": breakdown,
             "total_tco2e": total / 1000,
         }
-    
+
     @staticmethod
     def calculate_category4_upstream_transport(
         transport_data: List[Dict[str, Any]],  # 运输数据列表
     ) -> Tuple[float, Dict[str, Any]]:
         """计算类别4：上游运输
-        
+
         Args:
             transport_data: 运输数据列表，每项包含：
                 - mode: 运输方式（road/rail/sea/air）
                 - distance_km: 距离（公里）
                 - weight_tonnes: 重量（吨）
-                
+
         Returns:
             (总排放量, 详细数据)
         """
@@ -592,42 +593,44 @@ class Scope3Calculator:
             "sea": 0.008,
             "air": 0.602,
         }
-        
+
         total = 0.0
         breakdown = []
-        
+
         for item in transport_data:
             mode = item.get("mode", "road")
             distance = item.get("distance_km", 0)
             weight = item.get("weight_tonnes", 0)
-            
+
             ef = transport_efs.get(mode, transport_efs["road"])
             emissions = distance * weight * ef
             total += emissions
-            
-            breakdown.append({
-                "mode": mode,
-                "distance_km": distance,
-                "weight_tonnes": weight,
-                "ton_km": distance * weight,
-                "emissions_kgco2e": emissions,
-            })
-        
+
+            breakdown.append(
+                {
+                    "mode": mode,
+                    "distance_km": distance,
+                    "weight_tonnes": weight,
+                    "ton_km": distance * weight,
+                    "emissions_kgco2e": emissions,
+                }
+            )
+
         return total / 1000, {
             "method": "基于吨公里的运输排放计算",
             "breakdown": breakdown,
             "total_tco2e": total / 1000,
         }
-    
+
     @staticmethod
     def calculate_category11_use_of_sold_products(
         products: List[Dict[str, Any]],
         lifetime_years: float,
     ) -> Tuple[float, Dict[str, Any]]:
         """计算类别11：售出产品的使用
-        
+
         适用于风电/光伏设备制造商（设备运营期排放）
-        
+
         Args:
             products: 产品销售数据，每项包含：
                 - product_type: 产品类型（wind_turbine/solar_panel/battery等）
@@ -638,13 +641,13 @@ class Scope3Calculator:
         """
         total = 0.0
         breakdown = []
-        
+
         for product in products:
             product_type = product.get("product_type", "")
             capacity = product.get("capacity_mw", 0)
             generation = product.get("annual_generation_mwh", 0)
             grid_ef = product.get("grid_carbon_intensity", 0.0005)  # 默认0.5kgCO2e/kWh
-            
+
             # 计算避免/产生的排放
             # 风电/光伏设备：产生清洁电力，避免电网排放
             if product_type in ("wind_turbine", "solar_panel"):
@@ -655,30 +658,36 @@ class Scope3Calculator:
             else:
                 # 其他设备可能有运营排放
                 net_emissions = 0
-            
+
             total += net_emissions
-            breakdown.append({
-                "product_type": product_type,
-                "capacity_mw": capacity,
-                "lifetime_years": lifetime_years,
-                "annual_generation_mwh": generation,
-                "avoided_emissions_tco2e": avoided_emissions / 1000 if product_type in ("wind_turbine", "solar_panel") else 0,
-            })
-        
+            breakdown.append(
+                {
+                    "product_type": product_type,
+                    "capacity_mw": capacity,
+                    "lifetime_years": lifetime_years,
+                    "annual_generation_mwh": generation,
+                    "avoided_emissions_tco2e": (
+                        avoided_emissions / 1000
+                        if product_type in ("wind_turbine", "solar_panel")
+                        else 0
+                    ),
+                }
+            )
+
         return total / 1000, {
             "method": "产品使用期排放/避免排放计算",
             "breakdown": breakdown,
             "total_tco2e": total / 1000,
             "note": "负值表示净减排贡献",
         }
-    
+
     @staticmethod
     def calculate_category12_end_of_life(
         products: List[Dict[str, Any]],
         recycling_rates: Dict[str, float],
     ) -> Tuple[float, Dict[str, Any]]:
         """计算类别12：产品报废处理
-        
+
         Args:
             products: 产品报废数据，每项包含：
                 - product_type: 产品类型
@@ -697,42 +706,44 @@ class Scope3Calculator:
             "blade_composite": 3.0,  # 风机叶片复合材料
             "battery": 8.0,
         }
-        
+
         total = 0.0
         breakdown = []
-        
+
         for product in products:
             product_type = product.get("product_type", "")
             weight = product.get("weight_tonnes", 0)
             composition = product.get("material_composition", {})
-            
+
             product_emissions = 0.0
             material_breakdown = {}
-            
+
             for material, ratio in composition.items():
                 material_weight = weight * ratio
                 ef = eol_efs.get(material, 1.0)
                 recycling_rate = recycling_rates.get(material, 0.5)
-                
+
                 # 考虑回收率（回收减少排放）
                 effective_ef = ef * (1 - recycling_rate * 0.7)  # 回收可减少70%排放
                 emissions = material_weight * effective_ef
                 product_emissions += emissions
-                
+
                 material_breakdown[material] = {
                     "weight_tonnes": material_weight,
                     "recycling_rate": recycling_rate,
                     "emissions_tco2e": emissions,
                 }
-            
+
             total += product_emissions
-            breakdown.append({
-                "product_type": product_type,
-                "total_weight_tonnes": weight,
-                "emissions_tco2e": product_emissions,
-                "materials": material_breakdown,
-            })
-        
+            breakdown.append(
+                {
+                    "product_type": product_type,
+                    "total_weight_tonnes": weight,
+                    "emissions_tco2e": product_emissions,
+                    "materials": material_breakdown,
+                }
+            )
+
         return total, {
             "method": "基于材料组成的报废处理排放计算",
             "breakdown": breakdown,
@@ -742,12 +753,12 @@ class Scope3Calculator:
 
 def create_empty_inventory(company_name: str, year: str, sector: str) -> Scope3Inventory:
     """创建空的范围3排放清单
-    
+
     Args:
         company_name: 公司名称
         year: 报告年份
         sector: 行业分类
-        
+
     Returns:
         空的Scope3Inventory对象
     """

@@ -17,6 +17,7 @@ import pandas as pd
 
 class CDPModule(Enum):
     """CDP问卷模块"""
+
     GOVERNANCE = "governance"  # 治理
     STRATEGY = "strategy"  # 战略
     RISK_OPPORTUNITY = "risk_opportunity"  # 风险和机遇
@@ -27,6 +28,7 @@ class CDPModule(Enum):
 
 class CDPQuestionType(Enum):
     """CDP问题类型"""
+
     TEXT = "text"  # 文本
     NUMBER = "number"  # 数字
     YES_NO = "yes_no"  # 是/否
@@ -51,7 +53,7 @@ CDP_SCORING_WEIGHTS = {
 @dataclass
 class CDPQuestion:
     """CDP问题定义
-    
+
     Attributes:
         question_number: CDP题号（如C1.1a）
         module: 所属模块
@@ -64,6 +66,7 @@ class CDPQuestion:
         parent_question: 父问题（条件题）
         condition_value: 触发条件值
     """
+
     question_number: str
     module: CDPModule
     question_text: str
@@ -82,7 +85,7 @@ class CDPQuestion:
 @dataclass
 class CDPAnswer:
     """CDP答案
-    
+
     Attributes:
         question_number: 题号
         answer_value: 答案值
@@ -91,13 +94,14 @@ class CDPAnswer:
         notes: 备注
         updated_at: 更新时间
     """
+
     question_number: str
     answer_value: Any
     confidence: float = 1.0
     data_source: str = ""
     notes: str = ""
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "question_number": self.question_number,
@@ -162,7 +166,6 @@ CDP_QUESTIONNAIRE: List[CDPQuestion] = [
         required=True,
         section="Risk Management",
     ),
-    
     # ========== Module 2: Strategy 战略 ==========
     CDPQuestion(
         question_number="C2.1",
@@ -204,7 +207,6 @@ CDP_QUESTIONNAIRE: List[CDPQuestion] = [
         condition_value="Yes",
         section="Opportunities",
     ),
-    
     # ========== Module 3: Risk and Opportunity 风险和机遇 ==========
     CDPQuestion(
         question_number="C3.1",
@@ -235,7 +237,6 @@ CDP_QUESTIONNAIRE: List[CDPQuestion] = [
         required=True,
         section="Risk Management Process",
     ),
-    
     # ========== Module 4: Emissions 排放 ==========
     CDPQuestion(
         question_number="C4.1",
@@ -349,7 +350,6 @@ CDP_QUESTIONNAIRE: List[CDPQuestion] = [
         required=True,
         section="Methodology",
     ),
-    
     # ========== Module 5: Targets 目标 ==========
     CDPQuestion(
         question_number="C5.1",
@@ -408,7 +408,6 @@ CDP_QUESTIONNAIRE: List[CDPQuestion] = [
         required=True,
         section="Emissions Reduction Initiatives",
     ),
-    
     # ========== Module 6: Value Chain 价值链 ==========
     CDPQuestion(
         question_number="C6.1",
@@ -450,7 +449,7 @@ CDP_QUESTION_INDEX = {q.question_number: q for q in CDP_QUESTIONNAIRE}
 @dataclass
 class ClimateRisk:
     """气候风险定义（TCFD/CDP格式）
-    
+
     Attributes:
         risk_id: 风险ID
         risk_type: 风险类型（acute/chronic）
@@ -462,6 +461,7 @@ class ClimateRisk:
         financial_impact: 财务影响估算（百万元）
         response_strategy: 应对策略
     """
+
     risk_id: str
     risk_type: str  # acute / chronic
     risk_category: str  # Policy, Technology, Market, Reputation, Physical
@@ -471,11 +471,11 @@ class ClimateRisk:
     impact_magnitude: int  # 1-5
     financial_impact: Optional[float] = None  # 百万元
     response_strategy: str = ""
-    
+
     def get_risk_score(self) -> int:
         """计算风险评分（1-25）"""
         return self.likelihood * self.impact_magnitude
-    
+
     def get_risk_level(self) -> str:
         """获取风险等级"""
         score = self.get_risk_score()
@@ -490,7 +490,7 @@ class ClimateRisk:
 @dataclass
 class ClimateOpportunity:
     """气候机遇定义
-    
+
     Attributes:
         opportunity_id: 机遇ID
         opportunity_type: 机遇类型（Resource efficiency/Energy source/Products & services/Markets/Resilience）
@@ -501,6 +501,7 @@ class ClimateOpportunity:
         financial_benefit: 财务收益估算（百万元）
         realization_strategy: 实现策略
     """
+
     opportunity_id: str
     opportunity_type: str
     description: str
@@ -513,10 +514,10 @@ class ClimateOpportunity:
 
 class CDPAutoFiler:
     """CDP自动填报器
-    
+
     自动从ESG数据模型提取答案，生成CDP填报文件。
     """
-    
+
     def __init__(self, metrics: Any):
         """
         Args:
@@ -526,10 +527,10 @@ class CDPAutoFiler:
         self.answers: Dict[str, CDPAnswer] = {}
         self.risks: List[ClimateRisk] = []
         self.opportunities: List[ClimateOpportunity] = []
-        
+
     def auto_fill(self) -> Dict[str, CDPAnswer]:
         """自动填报所有问题
-        
+
         Returns:
             题号到答案的映射
         """
@@ -537,15 +538,15 @@ class CDPAutoFiler:
             answer = self._extract_answer(question)
             if answer:
                 self.answers[question.question_number] = answer
-        
+
         return self.answers
-    
+
     def _extract_answer(self, question: CDPQuestion) -> Optional[CDPAnswer]:
         """从ESGMetrics提取单个问题的答案
-        
+
         Args:
             question: CDP问题
-            
+
         Returns:
             CDPAnswer或None
         """
@@ -554,10 +555,10 @@ class CDPAutoFiler:
             parent_answer = self.answers.get(question.parent_question)
             if not parent_answer or parent_answer.answer_value != question.condition_value:
                 return None
-        
+
         # 根据映射字段提取答案
         if question.mapping_field == "scope1_emissions":
-            value = getattr(self.metrics, 'scope1_emissions', None)
+            value = getattr(self.metrics, "scope1_emissions", None)
             if value is not None:
                 return CDPAnswer(
                     question_number=question.question_number,
@@ -565,9 +566,9 @@ class CDPAutoFiler:
                     data_source="ESGMetrics.scope1_emissions",
                     confidence=0.95,
                 )
-        
+
         elif question.mapping_field == "scope2_emissions_location":
-            value = getattr(self.metrics, 'scope2_emissions_location', None)
+            value = getattr(self.metrics, "scope2_emissions_location", None)
             if value is not None:
                 return CDPAnswer(
                     question_number=question.question_number,
@@ -575,9 +576,9 @@ class CDPAutoFiler:
                     data_source="ESGMetrics.scope2_emissions_location",
                     confidence=0.95,
                 )
-        
+
         elif question.mapping_field == "scope2_emissions_market":
-            value = getattr(self.metrics, 'scope2_emissions_market', None)
+            value = getattr(self.metrics, "scope2_emissions_market", None)
             if value is not None:
                 return CDPAnswer(
                     question_number=question.question_number,
@@ -585,10 +586,10 @@ class CDPAutoFiler:
                     data_source="ESGMetrics.scope2_emissions_market",
                     confidence=0.95,
                 )
-        
+
         elif question.mapping_field == "scope3_emissions":
             # 优先使用scope3_inventory
-            inventory = getattr(self.metrics, 'scope3_inventory', None)
+            inventory = getattr(self.metrics, "scope3_inventory", None)
             if inventory:
                 value = inventory.get_total_emissions()
                 if value is not None:
@@ -599,7 +600,7 @@ class CDPAutoFiler:
                         confidence=inventory.get_data_quality_score() / 100,
                     )
             # 回退到scope3_emissions字段
-            value = getattr(self.metrics, 'scope3_emissions', None)
+            value = getattr(self.metrics, "scope3_emissions", None)
             if value is not None:
                 return CDPAnswer(
                     question_number=question.question_number,
@@ -607,9 +608,9 @@ class CDPAutoFiler:
                     data_source="ESGMetrics.scope3_emissions",
                     confidence=0.7,
                 )
-        
+
         elif question.mapping_field == "scope3_inventory":
-            inventory = getattr(self.metrics, 'scope3_inventory', None)
+            inventory = getattr(self.metrics, "scope3_inventory", None)
             if inventory:
                 if question.question_number == "C4.2a":
                     # 范围3分类分解
@@ -646,9 +647,9 @@ class CDPAutoFiler:
                         data_source="ESGMetrics.scope3_inventory",
                         confidence=0.85,
                     )
-        
+
         elif question.mapping_field == "sbti_target":
-            sbti = getattr(self.metrics, 'sbti_target', None)
+            sbti = getattr(self.metrics, "sbti_target", None)
             if sbti:
                 if question.question_number == "C5.1":
                     return CDPAnswer(
@@ -683,7 +684,7 @@ class CDPAutoFiler:
                         data_source="ESGMetrics.sbti_target is None",
                         confidence=1.0,
                     )
-        
+
         elif question.mapping_field == "get_emissions_breakdown":
             breakdown = self.metrics.get_emissions_breakdown()
             return CDPAnswer(
@@ -692,9 +693,9 @@ class CDPAutoFiler:
                 data_source="ESGMetrics.get_emissions_breakdown()",
                 confidence=0.9,
             )
-        
+
         elif question.mapping_field == "esg_committee_independence":
-            value = getattr(self.metrics, 'esg_committee_independence', None)
+            value = getattr(self.metrics, "esg_committee_independence", None)
             if value is not None and value > 0:
                 return CDPAnswer(
                     question_number=question.question_number,
@@ -702,7 +703,7 @@ class CDPAutoFiler:
                     data_source="ESGMetrics.esg_committee_independence",
                     confidence=0.9,
                 )
-        
+
         # 布尔/文本类问题返回默认值
         if question.question_type == CDPQuestionType.YES_NO:
             # 对于未映射的问题，返回默认"No"
@@ -713,21 +714,21 @@ class CDPAutoFiler:
                 confidence=0.5,
                 notes="需要人工核实",
             )
-        
+
         return None
-    
+
     def add_climate_risk(self, risk: ClimateRisk) -> None:
         """添加气候风险"""
         self.risks.append(risk)
         # 同时更新答案
         self._update_risk_opportunity_answers()
-    
+
     def add_climate_opportunity(self, opportunity: ClimateOpportunity) -> None:
         """添加气候机遇"""
         self.opportunities.append(opportunity)
         # 同时更新答案
         self._update_risk_opportunity_answers()
-    
+
     def _update_risk_opportunity_answers(self) -> None:
         """更新风险和机遇相关答案"""
         # C2.1 - 是否识别风险和机遇
@@ -738,31 +739,33 @@ class CDPAutoFiler:
                 data_source="ClimateRisk/ClimateOpportunity objects",
                 confidence=0.9,
             )
-        
+
         # C2.2 - 风险和机遇详情
         if self.risks:
             risks_data = []
             for risk in self.risks:
-                risks_data.append({
-                    "risk_id": risk.risk_id,
-                    "risk_type": risk.risk_type,
-                    "category": risk.risk_category,
-                    "description": risk.description,
-                    "time_horizon": risk.time_horizon,
-                    "likelihood": risk.likelihood,
-                    "impact": risk.impact_magnitude,
-                    "risk_score": risk.get_risk_score(),
-                    "risk_level": risk.get_risk_level(),
-                    "financial_impact_cny_millions": risk.financial_impact,
-                    "response_strategy": risk.response_strategy,
-                })
+                risks_data.append(
+                    {
+                        "risk_id": risk.risk_id,
+                        "risk_type": risk.risk_type,
+                        "category": risk.risk_category,
+                        "description": risk.description,
+                        "time_horizon": risk.time_horizon,
+                        "likelihood": risk.likelihood,
+                        "impact": risk.impact_magnitude,
+                        "risk_score": risk.get_risk_score(),
+                        "risk_level": risk.get_risk_level(),
+                        "financial_impact_cny_millions": risk.financial_impact,
+                        "response_strategy": risk.response_strategy,
+                    }
+                )
             self.answers["C2.2"] = CDPAnswer(
                 question_number="C2.2",
                 answer_value=risks_data,
                 data_source="ClimateRisk objects",
                 confidence=0.85,
             )
-        
+
         # C2.3 - 是否识别机遇
         if self.opportunities:
             self.answers["C2.3"] = CDPAnswer(
@@ -771,28 +774,30 @@ class CDPAutoFiler:
                 data_source="ClimateOpportunity objects",
                 confidence=0.9,
             )
-            
+
             # C2.4 - 机遇详情
             opportunities_data = []
             for opp in self.opportunities:
-                opportunities_data.append({
-                    "opportunity_id": opp.opportunity_id,
-                    "opportunity_type": opp.opportunity_type,
-                    "description": opp.description,
-                    "time_horizon": opp.time_horizon,
-                    "likelihood": opp.likelihood,
-                    "impact": opp.impact_magnitude,
-                    "opportunity_score": opp.likelihood * opp.impact_magnitude,
-                    "financial_benefit_cny_millions": opp.financial_benefit,
-                    "realization_strategy": opp.realization_strategy,
-                })
+                opportunities_data.append(
+                    {
+                        "opportunity_id": opp.opportunity_id,
+                        "opportunity_type": opp.opportunity_type,
+                        "description": opp.description,
+                        "time_horizon": opp.time_horizon,
+                        "likelihood": opp.likelihood,
+                        "impact": opp.impact_magnitude,
+                        "opportunity_score": opp.likelihood * opp.impact_magnitude,
+                        "financial_benefit_cny_millions": opp.financial_benefit,
+                        "realization_strategy": opp.realization_strategy,
+                    }
+                )
             self.answers["C2.4"] = CDPAnswer(
                 question_number="C2.4",
                 answer_value=opportunities_data,
                 data_source="ClimateOpportunity objects",
                 confidence=0.85,
             )
-        
+
         # C3.1 - 固有气候风险
         if self.risks:
             self.answers["C3.1"] = CDPAnswer(
@@ -801,33 +806,40 @@ class CDPAutoFiler:
                 data_source="ClimateRisk objects",
                 confidence=0.9,
             )
-            
+
             # C3.1a - 风险详情（与C2.2类似但格式略有不同）
             risks_detail = []
             for risk in self.risks:
-                risks_detail.append({
-                    "risk_identifier": risk.risk_id,
-                    "risk_type": "Transition" if risk.risk_category in ["Policy", "Technology", "Market", "Reputation"] else "Physical",
-                    "primary_climate_related_risk_driver": risk.risk_category,
-                    "risk_description": risk.description,
-                    "time_horizon": risk.time_horizon,
-                    "likelihood": risk.likelihood,
-                    "magnitude_of_impact": risk.impact_magnitude,
-                    "potential_financial_impact": risk.financial_impact,
-                })
+                risks_detail.append(
+                    {
+                        "risk_identifier": risk.risk_id,
+                        "risk_type": (
+                            "Transition"
+                            if risk.risk_category
+                            in ["Policy", "Technology", "Market", "Reputation"]
+                            else "Physical"
+                        ),
+                        "primary_climate_related_risk_driver": risk.risk_category,
+                        "risk_description": risk.description,
+                        "time_horizon": risk.time_horizon,
+                        "likelihood": risk.likelihood,
+                        "magnitude_of_impact": risk.impact_magnitude,
+                        "potential_financial_impact": risk.financial_impact,
+                    }
+                )
             self.answers["C3.1a"] = CDPAnswer(
                 question_number="C3.1a",
                 answer_value=risks_detail,
                 data_source="ClimateRisk objects",
                 confidence=0.85,
             )
-    
+
     def generate_json_file(self, output_path: str) -> str:
         """生成CDP JSON填报文件
-        
+
         Args:
             output_path: 输出文件路径
-            
+
         Returns:
             生成的文件路径
         """
@@ -838,10 +850,7 @@ class CDPAutoFiler:
                 "reporting_year": self.metrics.year,
                 "questionnaire_version": "CDP Climate Change 2024",
             },
-            "answers": {
-                q_num: answer.to_dict()
-                for q_num, answer in self.answers.items()
-            },
+            "answers": {q_num: answer.to_dict() for q_num, answer in self.answers.items()},
             "risks": [
                 {
                     "risk_id": r.risk_id,
@@ -872,22 +881,28 @@ class CDPAutoFiler:
             "statistics": {
                 "total_questions": len(CDP_QUESTIONNAIRE),
                 "answered_questions": len(self.answers),
-                "completion_rate": len(self.answers) / len(CDP_QUESTIONNAIRE) if CDP_QUESTIONNAIRE else 0,
-                "average_confidence": sum(a.confidence for a in self.answers.values()) / len(self.answers) if self.answers else 0,
+                "completion_rate": (
+                    len(self.answers) / len(CDP_QUESTIONNAIRE) if CDP_QUESTIONNAIRE else 0
+                ),
+                "average_confidence": (
+                    sum(a.confidence for a in self.answers.values()) / len(self.answers)
+                    if self.answers
+                    else 0
+                ),
             },
         }
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
+
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        
+
         return output_path
-    
+
     def generate_excel_file(self, output_path: str) -> str:
         """生成CDP Excel填报文件
-        
+
         Args:
             output_path: 输出文件路径
-            
+
         Returns:
             生成的文件路径
         """
@@ -895,103 +910,132 @@ class CDPAutoFiler:
         rows = []
         for question in CDP_QUESTIONNAIRE:
             answer = self.answers.get(question.question_number)
-            rows.append({
-                "Question Number": question.question_number,
-                "Module": question.module.value,
-                "Section": question.section,
-                "Question (EN)": question.question_text,
-                "Question (CN)": question.question_text_cn,
-                "Question Type": question.question_type.value,
-                "Required": "Yes" if question.required else "No",
-                "Answer": json.dumps(answer.answer_value, ensure_ascii=False) if answer else "",
-                "Confidence": answer.confidence if answer else "",
-                "Data Source": answer.data_source if answer else "",
-                "Notes": answer.notes if answer else "",
-                "Mapping Field": question.mapping_field,
-            })
-        
+            rows.append(
+                {
+                    "Question Number": question.question_number,
+                    "Module": question.module.value,
+                    "Section": question.section,
+                    "Question (EN)": question.question_text,
+                    "Question (CN)": question.question_text_cn,
+                    "Question Type": question.question_type.value,
+                    "Required": "Yes" if question.required else "No",
+                    "Answer": json.dumps(answer.answer_value, ensure_ascii=False) if answer else "",
+                    "Confidence": answer.confidence if answer else "",
+                    "Data Source": answer.data_source if answer else "",
+                    "Notes": answer.notes if answer else "",
+                    "Mapping Field": question.mapping_field,
+                }
+            )
+
         df = pd.DataFrame(rows)
-        
-        with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+
+        with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
             # 主填报表
-            df.to_excel(writer, sheet_name='CDP_Answers', index=False)
-            
+            df.to_excel(writer, sheet_name="CDP_Answers", index=False)
+
             # 风险清单
             if self.risks:
-                risks_df = pd.DataFrame([
-                    {
-                        "Risk ID": r.risk_id,
-                        "Type": r.risk_type,
-                        "Category": r.risk_category,
-                        "Description": r.description,
-                        "Time Horizon": r.time_horizon,
-                        "Likelihood (1-5)": r.likelihood,
-                        "Impact (1-5)": r.impact_magnitude,
-                        "Risk Score": r.get_risk_score(),
-                        "Risk Level": r.get_risk_level(),
-                        "Financial Impact (CNY Millions)": r.financial_impact,
-                        "Response Strategy": r.response_strategy,
-                    }
-                    for r in self.risks
-                ])
-                risks_df.to_excel(writer, sheet_name='Climate_Risks', index=False)
-            
+                risks_df = pd.DataFrame(
+                    [
+                        {
+                            "Risk ID": r.risk_id,
+                            "Type": r.risk_type,
+                            "Category": r.risk_category,
+                            "Description": r.description,
+                            "Time Horizon": r.time_horizon,
+                            "Likelihood (1-5)": r.likelihood,
+                            "Impact (1-5)": r.impact_magnitude,
+                            "Risk Score": r.get_risk_score(),
+                            "Risk Level": r.get_risk_level(),
+                            "Financial Impact (CNY Millions)": r.financial_impact,
+                            "Response Strategy": r.response_strategy,
+                        }
+                        for r in self.risks
+                    ]
+                )
+                risks_df.to_excel(writer, sheet_name="Climate_Risks", index=False)
+
             # 机遇清单
             if self.opportunities:
-                opp_df = pd.DataFrame([
-                    {
-                        "Opportunity ID": o.opportunity_id,
-                        "Type": o.opportunity_type,
-                        "Description": o.description,
-                        "Time Horizon": o.time_horizon,
-                        "Likelihood (1-5)": o.likelihood,
-                        "Impact (1-5)": o.impact_magnitude,
-                        "Opportunity Score": o.likelihood * o.impact_magnitude,
-                        "Financial Benefit (CNY Millions)": o.financial_benefit,
-                        "Realization Strategy": o.realization_strategy,
-                    }
-                    for o in self.opportunities
-                ])
-                opp_df.to_excel(writer, sheet_name='Climate_Opportunities', index=False)
-            
+                opp_df = pd.DataFrame(
+                    [
+                        {
+                            "Opportunity ID": o.opportunity_id,
+                            "Type": o.opportunity_type,
+                            "Description": o.description,
+                            "Time Horizon": o.time_horizon,
+                            "Likelihood (1-5)": o.likelihood,
+                            "Impact (1-5)": o.impact_magnitude,
+                            "Opportunity Score": o.likelihood * o.impact_magnitude,
+                            "Financial Benefit (CNY Millions)": o.financial_benefit,
+                            "Realization Strategy": o.realization_strategy,
+                        }
+                        for o in self.opportunities
+                    ]
+                )
+                opp_df.to_excel(writer, sheet_name="Climate_Opportunities", index=False)
+
             # 汇总统计
-            stats_df = pd.DataFrame([
-                {"Metric": "Total Questions", "Value": len(CDP_QUESTIONNAIRE)},
-                {"Metric": "Answered Questions", "Value": len(self.answers)},
-                {"Metric": "Completion Rate", "Value": f"{len(self.answers) / len(CDP_QUESTIONNAIRE) * 100:.1f}%"},
-                {"Metric": "Average Confidence", "Value": f"{sum(a.confidence for a in self.answers.values()) / len(self.answers) * 100:.1f}%" if self.answers else "N/A"},
-                {"Metric": "Climate Risks Identified", "Value": len(self.risks)},
-                {"Metric": "Climate Opportunities Identified", "Value": len(self.opportunities)},
-            ])
-            stats_df.to_excel(writer, sheet_name='Statistics', index=False)
-        
+            stats_df = pd.DataFrame(
+                [
+                    {"Metric": "Total Questions", "Value": len(CDP_QUESTIONNAIRE)},
+                    {"Metric": "Answered Questions", "Value": len(self.answers)},
+                    {
+                        "Metric": "Completion Rate",
+                        "Value": f"{len(self.answers) / len(CDP_QUESTIONNAIRE) * 100:.1f}%",
+                    },
+                    {
+                        "Metric": "Average Confidence",
+                        "Value": (
+                            f"{sum(a.confidence for a in self.answers.values()) / len(self.answers) * 100:.1f}%"
+                            if self.answers
+                            else "N/A"
+                        ),
+                    },
+                    {"Metric": "Climate Risks Identified", "Value": len(self.risks)},
+                    {
+                        "Metric": "Climate Opportunities Identified",
+                        "Value": len(self.opportunities),
+                    },
+                ]
+            )
+            stats_df.to_excel(writer, sheet_name="Statistics", index=False)
+
         return output_path
-    
+
     def get_completion_report(self) -> Dict[str, Any]:
         """获取填报完成度报告
-        
+
         Returns:
             完成度报告
         """
         module_stats = {module: {"total": 0, "answered": 0} for module in CDPModule}
-        
+
         for question in CDP_QUESTIONNAIRE:
             module_stats[question.module]["total"] += 1
             if question.question_number in self.answers:
                 module_stats[question.module]["answered"] += 1
-        
+
         return {
             "overall": {
                 "total_questions": len(CDP_QUESTIONNAIRE),
                 "answered_questions": len(self.answers),
-                "completion_rate": len(self.answers) / len(CDP_QUESTIONNAIRE) if CDP_QUESTIONNAIRE else 0,
-                "average_confidence": sum(a.confidence for a in self.answers.values()) / len(self.answers) if self.answers else 0,
+                "completion_rate": (
+                    len(self.answers) / len(CDP_QUESTIONNAIRE) if CDP_QUESTIONNAIRE else 0
+                ),
+                "average_confidence": (
+                    sum(a.confidence for a in self.answers.values()) / len(self.answers)
+                    if self.answers
+                    else 0
+                ),
             },
             "by_module": {
                 module.value: {
                     "total": stats["total"],
                     "answered": stats["answered"],
-                    "completion_rate": stats["answered"] / stats["total"] if stats["total"] > 0 else 0,
+                    "completion_rate": (
+                        stats["answered"] / stats["total"] if stats["total"] > 0 else 0
+                    ),
                     "weight": CDP_SCORING_WEIGHTS[module],
                 }
                 for module, stats in module_stats.items()
@@ -1010,40 +1054,44 @@ class CDPAutoFiler:
                 if answer.confidence < 0.7
             ],
         }
-    
+
     def predict_cdp_score(self) -> Dict[str, Any]:
         """预测CDP评级
-        
+
         基于填报完成度和数据质量预测CDP评级。
-        
+
         Returns:
             预测评级详情
         """
         report = self.get_completion_report()
-        
+
         # 计算各模块得分
         module_scores = {}
         for module, stats in report["by_module"].items():
             # 基础分：完成度 * 100
             base_score = stats["completion_rate"] * 100
-            
+
             # 质量加成：该模块答案的平均置信度
             module_answers = [
                 self.answers[q.question_number]
                 for q in CDP_QUESTIONNAIRE
                 if q.module.value == module and q.question_number in self.answers
             ]
-            avg_confidence = sum(a.confidence for a in module_answers) / len(module_answers) if module_answers else 0
-            
+            avg_confidence = (
+                sum(a.confidence for a in module_answers) / len(module_answers)
+                if module_answers
+                else 0
+            )
+
             # 最终得分
             module_scores[module] = base_score * (0.7 + 0.3 * avg_confidence)
-        
+
         # 加权总分
         total_score = sum(
             module_scores[module.value] * CDP_SCORING_WEIGHTS[CDPModule(module.value)]
             for module in CDPModule
         )
-        
+
         # 确定预测等级
         if total_score >= 80:
             predicted_level = "A/A-"
@@ -1053,62 +1101,60 @@ class CDPAutoFiler:
             predicted_level = "C/C-"
         else:
             predicted_level = "D/D-"
-        
+
         return {
             "predicted_score": total_score,
             "predicted_level": predicted_level,
             "module_scores": module_scores,
             "recommendations": self._generate_score_recommendations(report, module_scores),
         }
-    
+
     def _generate_score_recommendations(
         self, report: Dict[str, Any], module_scores: Dict[str, float]
     ) -> List[str]:
         """生成提升CDP评分的建议
-        
+
         Args:
             report: 完成度报告
             module_scores: 模块得分
-            
+
         Returns:
             建议列表
         """
         recommendations = []
-        
+
         # 检查缺失的必填题
         if report["missing_required"]:
             recommendations.append(
                 f"优先完成{len(report['missing_required'])}道必填题: {', '.join(report['missing_required'][:3])}..."
             )
-        
+
         # 检查低分模块
         for module, score in module_scores.items():
             if score < 60:
-                recommendations.append(
-                    f"{module}模块得分较低({score:.1f})，建议完善该模块数据"
-                )
-        
+                recommendations.append(f"{module}模块得分较低({score:.1f})，建议完善该模块数据")
+
         # 检查范围3数据
         if "C4.2" not in self.answers or not self.answers["C4.2"].answer_value:
             recommendations.append("补充范围3排放数据可显著提升评分（权重25%）")
-        
+
         # 检查SBTi目标
         if "C5.1" not in self.answers or self.answers["C5.1"].answer_value != "Yes":
             recommendations.append("设定SBTi验证的减排目标可获得高分（权重15%）")
-        
+
         # 检查气候风险
         if not self.risks:
             recommendations.append("识别并披露气候相关风险（建议至少3-5项）")
-        
+
         return recommendations
 
 
 def create_cdp_filer(metrics: Any) -> CDPAutoFiler:
     """创建CDP自动填报器
-    
+
     Args:
         metrics: ESGMetrics对象
-        
+
     Returns:
         CDPAutoFiler实例
     """
@@ -1117,29 +1163,28 @@ def create_cdp_filer(metrics: Any) -> CDPAutoFiler:
 
 # 便捷函数
 def quick_generate_cdp_filing(
-    metrics: Any,
-    output_dir: str = "./",
-    file_prefix: str = "CDP_Filing"
+    metrics: Any, output_dir: str = "./", file_prefix: str = "CDP_Filing"
 ) -> Dict[str, str]:
     """快速生成CDP填报文件
-    
+
     Args:
         metrics: ESGMetrics对象
         output_dir: 输出目录
         file_prefix: 文件名前缀
-        
+
     Returns:
         生成的文件路径字典
     """
     filer = CDPAutoFiler(metrics)
     filer.auto_fill()
-    
+
     import os
+
     os.makedirs(output_dir, exist_ok=True)
-    
+
     json_path = os.path.join(output_dir, f"{file_prefix}_{metrics.year}.json")
     excel_path = os.path.join(output_dir, f"{file_prefix}_{metrics.year}.xlsx")
-    
+
     return {
         "json": filer.generate_json_file(json_path),
         "excel": filer.generate_excel_file(excel_path),

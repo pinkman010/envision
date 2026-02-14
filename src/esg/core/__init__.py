@@ -60,6 +60,29 @@
     ...       f"{report['resilience_assessment']['worst_case']:.1f}")
 """
 
+from src.esg.core.cdp_auto_filing import (
+    CDP_QUESTION_INDEX,
+    CDP_QUESTIONNAIRE,
+    CDP_SCORING_WEIGHTS,
+    CDPAnswer,
+    CDPAutoFiler,
+    CDPModule,
+    CDPQuestion,
+    CDPQuestionType,
+    ClimateOpportunity,
+    ClimateRisk,
+    create_cdp_filer,
+    quick_generate_cdp_filing,
+)
+from src.esg.core.climate_scenario import (
+    STANDARD_SCENARIOS,
+    ClimateScenario,
+    ClimateScenarioAnalyzer,
+    ScenarioImpact,
+    ScenarioType,
+    quick_analyze_scenarios,
+)
+
 # 先导入constants，避免循环依赖
 from src.esg.core.constants import (
     CARBON_INTENSITY_BENCHMARK_HIGH,
@@ -68,31 +91,6 @@ from src.esg.core.constants import (
     SBTI_STATUS_SCORES,
     WATER_INTENSITY_BENCHMARK_HIGH,
     WATER_INTENSITY_BENCHMARK_LOW,
-)
-from src.esg.core.cdp_auto_filing import (
-    CDPAutoFiler,
-    CDPAnswer,
-    CDPModule,
-    CDPQuestion,
-    CDPQuestionType,
-    CDP_QUESTIONNAIRE,
-    CDP_QUESTION_INDEX,
-    CDP_SCORING_WEIGHTS,
-    ClimateOpportunity,
-    ClimateRisk,
-    create_cdp_filer,
-    quick_generate_cdp_filing,
-)
-from src.esg.core.scope3_emissions import (
-    NEW_ENERGY_SECTOR_RELEVANCE,
-    SCOPE3_CATEGORY_INFO,
-    DataQuality,
-    Scope3Calculator,
-    Scope3Category,
-    Scope3CategoryData,
-    Scope3Inventory,
-    create_empty_inventory,
-    quick_calculate_scope3_summary,
 )
 from src.esg.core.engine import ESGAnalysisEngine
 from src.esg.core.models import (
@@ -106,24 +104,27 @@ from src.esg.core.models import (
     SBTiTarget,
     TCFDDisclosure,
 )
-from src.esg.core.scoring import (
-    ScoreCalculator,
-    calculate_carbon_intensity_score,
-    calculate_sbti_score,
-    get_score_calculator,
-)
 from src.esg.core.sbti_tracker import (
     SBTiTracker,
     create_sbti_tracker,
     quick_create_target,
 )
-from src.esg.core.climate_scenario import (
-    ClimateScenario,
-    ClimateScenarioAnalyzer,
-    ScenarioImpact,
-    ScenarioType,
-    STANDARD_SCENARIOS,
-    quick_analyze_scenarios,
+from src.esg.core.scope3_emissions import (
+    NEW_ENERGY_SECTOR_RELEVANCE,
+    SCOPE3_CATEGORY_INFO,
+    DataQuality,
+    Scope3Calculator,
+    Scope3Category,
+    Scope3CategoryData,
+    Scope3Inventory,
+    create_empty_inventory,
+    quick_calculate_scope3_summary,
+)
+from src.esg.core.scoring import (
+    ScoreCalculator,
+    calculate_carbon_intensity_score,
+    calculate_sbti_score,
+    get_score_calculator,
 )
 
 __all__ = [

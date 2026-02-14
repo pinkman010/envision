@@ -37,7 +37,7 @@ MODELS: Dict[str, str] = {
 }
 
 # ========== 版本信息 ==========
-VERSION = "Demo v1.2.0"
+VERSION = "Demo v1.3.5"
 APP_NAME = "ESG智能分析系统"
 APP_ICON = "🌿"
 

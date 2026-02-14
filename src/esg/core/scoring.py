@@ -3,7 +3,7 @@
 提供ESG各维度指标的评分计算功能。
 """
 
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from src.esg.core.constants import (
     BATTERY_CYCLE_LIFE_BENCHMARK,
@@ -17,12 +17,12 @@ from src.esg.core.constants import (
     G_DIMENSION_WEIGHTS,
     LTIFR_BENCHMARKS,
     SAFETY_INVESTMENT_BENCHMARKS,
-    SCORE_MAX,
     SCOPE3_COVERAGE_BENCHMARK_HIGH,
     SCOPE3_COVERAGE_BENCHMARK_LOW,
     SCOPE3_RATIO_ACCEPTABLE_MAX,
     SCOPE3_RATIO_IDEAL_MAX,
     SCOPE3_RATIO_IDEAL_MIN,
+    SCORE_MAX,
     TRIR_BENCHMARKS,
     TURBINE_AVAILABILITY_BENCHMARK,
     WATER_INTENSITY_BENCHMARK_HIGH,
@@ -44,10 +44,10 @@ if TYPE_CHECKING:
 # 三级指标（25%）：新能源特色指标
 E_DIMENSION_WEIGHTS = {
     # 一级指标 - 排放相关（45%）
-    "carbon_intensity": 0.15,          # 范围1+2碳强度
-    "scope3_coverage": 0.10,           # 范围3覆盖率（新增）
-    "scope3_ratio": 0.05,              # 范围3/1+2比例（新增）
-    "sbti_target": 0.15,               # SBTi目标
+    "carbon_intensity": 0.15,  # 范围1+2碳强度
+    "scope3_coverage": 0.10,  # 范围3覆盖率（新增）
+    "scope3_ratio": 0.05,  # 范围3/1+2比例（新增）
+    "sbti_target": 0.15,  # SBTi目标
     # 二级指标 - 运营效率（30%）
     "renewable_energy_ratio": 0.075,
     "energy_efficiency": 0.075,
@@ -82,33 +82,31 @@ S_DIMENSION_WEIGHTS = {
 
 
 def _calculate_weighted_score(
-    scores: List[Optional[float]],
-    weights: List[float],
-    default_score: float = DEFAULT_SCORE
+    scores: List[Optional[float]], weights: List[float], default_score: float = DEFAULT_SCORE
 ) -> float:
     """计算加权得分，支持权重归一化
-    
+
     当某些指标为None时，将其权重重新分配给其他有效指标。
-    
+
     Args:
         scores: 得分列表（可能包含None）
         weights: 权重列表（与scores对应）
         default_score: 无有效数据时的默认得分
-        
+
     Returns:
         加权得分
     """
     valid_items = [(s, w) for s, w in zip(scores, weights) if s is not None]
-    
+
     if not valid_items:
         return default_score
-    
+
     valid_scores, valid_weights = zip(*valid_items)
     total_weight = sum(valid_weights)
-    
+
     if total_weight == 0:
         return default_score
-    
+
     # 权重归一化并计算加权得分
     normalized_weights = [w / total_weight for w in valid_weights]
     return sum(s * nw for s, nw in zip(valid_scores, normalized_weights))
@@ -123,7 +121,7 @@ class ScoreCalculator:
 
     @staticmethod
     def calculate_scope3_coverage_score(
-        scope3_inventory: Optional["Scope3Inventory"]
+        scope3_inventory: Optional["Scope3Inventory"],
     ) -> Optional[float]:
         """计算范围3覆盖率评分
 
@@ -139,39 +137,38 @@ class ScoreCalculator:
         """
         if scope3_inventory is None:
             return None
-        
+
         # 导入在此处避免循环导入
         from src.esg.core.scope3_emissions import NEW_ENERGY_SECTOR_RELEVANCE
-        
+
         relevance_map = NEW_ENERGY_SECTOR_RELEVANCE.get(
-            scope3_inventory.sector,
-            NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
+            scope3_inventory.sector, NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
         )
-        
+
         if not relevance_map:
             return None
-        
+
         covered_weight = 0.0
         total_weight = 0.0
-        
+
         for cat, weight in relevance_map.items():
             total_weight += weight
             cat_data = scope3_inventory.categories.get(cat)
             if cat_data and cat_data.emissions is not None:
                 covered_weight += weight
-        
+
         if total_weight == 0:
             return None
-        
+
         # 计算覆盖率并映射到0-100分
         coverage = covered_weight / total_weight
-        
+
         # 覆盖率>80%得满分，<40%得0分，中间线性插值
         if coverage >= SCOPE3_COVERAGE_BENCHMARK_HIGH:
             return SCORE_MAX
         if coverage <= SCOPE3_COVERAGE_BENCHMARK_LOW:
             return 0.0
-        
+
         # 线性插值
         ratio = (coverage - SCOPE3_COVERAGE_BENCHMARK_LOW) / (
             SCOPE3_COVERAGE_BENCHMARK_HIGH - SCOPE3_COVERAGE_BENCHMARK_LOW
@@ -180,8 +177,7 @@ class ScoreCalculator:
 
     @staticmethod
     def calculate_scope3_ratio_score(
-        scope3_inventory: Optional["Scope3Inventory"],
-        scope12_emissions: Optional[float]
+        scope3_inventory: Optional["Scope3Inventory"], scope12_emissions: Optional[float]
     ) -> Optional[float]:
         """计算范围3/范围1+2比例评分
 
@@ -205,13 +201,13 @@ class ScoreCalculator:
         """
         if scope3_inventory is None or scope12_emissions is None:
             return None
-        
+
         scope3_total = scope3_inventory.get_total_emissions()
         if scope3_total is None or scope12_emissions <= 0:
             return None
-        
+
         ratio = scope3_total / scope12_emissions
-        
+
         if SCOPE3_RATIO_IDEAL_MIN <= ratio <= SCOPE3_RATIO_IDEAL_MAX:
             # 理想区间：满分
             return 100.0
@@ -227,8 +223,7 @@ class ScoreCalculator:
 
     @staticmethod
     def calculate_carbon_intensity_score(
-        intensity: Optional[float],
-        industry_sector: str = "new_energy_composite"
+        intensity: Optional[float], industry_sector: str = "new_energy_composite"
     ) -> Optional[float]:
         """计算碳强度得分（越低越好）
 
@@ -245,10 +240,9 @@ class ScoreCalculator:
             return None
 
         benchmark = CARBON_INTENSITY_BENCHMARKS.get(
-            industry_sector,
-            CARBON_INTENSITY_BENCHMARKS["new_energy_composite"]
+            industry_sector, CARBON_INTENSITY_BENCHMARKS["new_energy_composite"]
         )
-        
+
         excellent = benchmark["excellent"]
         poor = benchmark["poor"]
 
@@ -440,9 +434,7 @@ class ScoreCalculator:
             return None
         return min(value, SCORE_MAX)
 
-    def calculate_dimension_scores(
-        self, metrics, dimension: str
-    ) -> List[Optional[float]]:
+    def calculate_dimension_scores(self, metrics, dimension: str) -> List[Optional[float]]:
         """计算指定维度的所有指标得分
 
         Args:
@@ -463,16 +455,14 @@ class ScoreCalculator:
                 # 一级指标
                 self.calculate_carbon_intensity_score(
                     metrics.carbon_intensity,
-                    getattr(metrics, 'industry_sector', 'new_energy_composite')
+                    getattr(metrics, "industry_sector", "new_energy_composite"),
                 ),
-                self.calculate_scope3_coverage_score(
-                    getattr(metrics, 'scope3_inventory', None)
-                ),
+                self.calculate_scope3_coverage_score(getattr(metrics, "scope3_inventory", None)),
                 self.calculate_scope3_ratio_score(
-                    getattr(metrics, 'scope3_inventory', None),
-                    getattr(metrics, 'get_scope1_2_emissions', lambda: None)()
+                    getattr(metrics, "scope3_inventory", None),
+                    getattr(metrics, "get_scope1_2_emissions", lambda: None)(),
                 ),
-                self.calculate_sbti_score(getattr(metrics, 'sbti_target', None)),
+                self.calculate_sbti_score(getattr(metrics, "sbti_target", None)),
                 # 二级指标
                 self.safe_score(metrics.renewable_energy_ratio, SCORE_MAX),
                 self.safe_score(metrics.energy_efficiency, SCORE_MAX),
@@ -480,52 +470,36 @@ class ScoreCalculator:
                 self.calculate_water_intensity_score(metrics.water_intensity),
                 # 三级指标：新能源特色
                 self.safe_score(
-                    getattr(metrics, 'turbine_availability', None),
+                    getattr(metrics, "turbine_availability", None),
                     SCORE_MAX,
                     multiplier=SCORE_MAX / TURBINE_AVAILABILITY_BENCHMARK,
                 ),
-                self.calculate_curtailment_score(
-                    getattr(metrics, 'curtailment_rate', None)
-                ),
+                self.calculate_curtailment_score(getattr(metrics, "curtailment_rate", None)),
                 self.safe_score(
-                    getattr(metrics, 'battery_cycle_life', None),
+                    getattr(metrics, "battery_cycle_life", None),
                     SCORE_MAX,
                     multiplier=SCORE_MAX / BATTERY_CYCLE_LIFE_BENCHMARK,
                 ),
+                self.safe_score(getattr(metrics, "battery_recycling_rate", None), SCORE_MAX),
                 self.safe_score(
-                    getattr(metrics, 'battery_recycling_rate', None),
-                    SCORE_MAX
-                ),
-                self.safe_score(
-                    getattr(metrics, 'electrolysis_efficiency', None),
+                    getattr(metrics, "electrolysis_efficiency", None),
                     SCORE_MAX,
                     multiplier=SCORE_MAX / ELECTROLYSIS_EFFICIENCY_BENCHMARK,
                 ),
-                self.safe_score(
-                    getattr(metrics, 'energy_storage_safety_score', None),
-                    SCORE_MAX
-                ),
+                self.safe_score(getattr(metrics, "energy_storage_safety_score", None), SCORE_MAX),
             ]
         elif dimension == "S":
             scores = [
                 self.safe_score(metrics.female_ratio, SCORE_MAX, multiplier=SCORE_MAX),
+                self.safe_score(getattr(metrics, "female_executive_ratio", None), SCORE_MAX),
                 self.safe_score(
-                    getattr(metrics, 'female_executive_ratio', None),
-                    SCORE_MAX
+                    getattr(metrics, "training_hours", None), 40.0, multiplier=SCORE_MAX / 40.0
                 ),
+                self.safe_score(getattr(metrics, "local_employment_ratio", None), SCORE_MAX),
                 self.safe_score(
-                    getattr(metrics, 'training_hours', None),
-                    40.0,
-                    multiplier=SCORE_MAX / 40.0
-                ),
-                self.safe_score(
-                    getattr(metrics, 'local_employment_ratio', None),
-                    SCORE_MAX
-                ),
-                self.safe_score(
-                    getattr(metrics, 'community_investment_per_revenue', None),
+                    getattr(metrics, "community_investment_per_revenue", None),
                     1.0,
-                    multiplier=SCORE_MAX
+                    multiplier=SCORE_MAX,
                 ),
             ]
         elif dimension == "G":
@@ -533,37 +507,37 @@ class ScoreCalculator:
             # 传统治理（40%）：董事会独立性、ESG委员会独立性、道德培训、反腐败培训
             # 气候治理（40%）：气候治理架构、TCFD披露
             # 信息披露（20%）：ESG报告质量、举报人保护
-            
+
             # 传统治理指标
             traditional_scores = [
                 self.safe_score(metrics.board_independence_ratio, SCORE_MAX),
+                self.safe_score(getattr(metrics, "esg_committee_independence", None), SCORE_MAX),
+                self.safe_score(getattr(metrics, "ethics_training_coverage", None), SCORE_MAX),
                 self.safe_score(
-                    getattr(metrics, 'esg_committee_independence', None),
-                    SCORE_MAX
-                ),
-                self.safe_score(
-                    getattr(metrics, 'ethics_training_coverage', None),
-                    SCORE_MAX
-                ),
-                self.safe_score(
-                    getattr(metrics, 'anti_corruption_training_coverage', None),
-                    SCORE_MAX
+                    getattr(metrics, "anti_corruption_training_coverage", None), SCORE_MAX
                 ),
             ]
-            
+
             # 气候治理指标
-            climate_gov = getattr(metrics, 'climate_governance', None)
-            tcfd = getattr(metrics, 'tcfd_disclosure', None)
+            climate_gov = getattr(metrics, "climate_governance", None)
+            tcfd = getattr(metrics, "tcfd_disclosure", None)
             climate_governance_score = climate_gov.get_score() if climate_gov else None
             tcfd_score = tcfd.get_score() if tcfd else None
-            
+
             # 信息披露指标
             disclosure_scores = [
                 self.safe_score(metrics.esg_report_quality, SCORE_MAX),
-                100.0 if getattr(metrics, 'whistleblower_protection', None) else 
-                0.0 if getattr(metrics, 'whistleblower_protection', None) is not None else None,
+                (
+                    100.0
+                    if getattr(metrics, "whistleblower_protection", None)
+                    else (
+                        0.0
+                        if getattr(metrics, "whistleblower_protection", None) is not None
+                        else None
+                    )
+                ),
             ]
-            
+
             # 返回所有子维度分数列表
             # 顺序：传统治理(4) + 气候治理(2) + 信息披露(2)
             scores = traditional_scores + [climate_governance_score, tcfd_score] + disclosure_scores
@@ -598,11 +572,16 @@ class ScoreCalculator:
             scores = self.calculate_dimension_scores(metrics, dimension)
             weights = [
                 # 传统治理（40%）
-                0.10, 0.10, 0.10, 0.10,
+                0.10,
+                0.10,
+                0.10,
+                0.10,
                 # 气候治理（40%）
-                0.20, 0.20,
+                0.20,
+                0.20,
                 # 信息披露（20%）
-                0.10, 0.10,
+                0.10,
+                0.10,
             ]
             return _calculate_weighted_score(scores, weights, DEFAULT_SCORE)
         else:
@@ -624,8 +603,7 @@ def get_score_calculator() -> ScoreCalculator:
 
 
 def calculate_carbon_intensity_score(
-    intensity: Optional[float],
-    industry_sector: str = "new_energy_composite"
+    intensity: Optional[float], industry_sector: str = "new_energy_composite"
 ) -> Optional[float]:
     """便捷函数：计算碳强度得分"""
     return _calculator.calculate_carbon_intensity_score(intensity, industry_sector)
@@ -642,30 +620,27 @@ def calculate_water_intensity_score(intensity: Optional[float]) -> Optional[floa
 
 
 def calculate_scope3_coverage_score(
-    scope3_inventory: Optional["Scope3Inventory"]
+    scope3_inventory: Optional["Scope3Inventory"],
 ) -> Optional[float]:
     """便捷函数：计算范围3覆盖率评分"""
     return _calculator.calculate_scope3_coverage_score(scope3_inventory)
 
 
 def calculate_scope3_ratio_score(
-    scope3_inventory: Optional["Scope3Inventory"],
-    scope12_emissions: Optional[float]
+    scope3_inventory: Optional["Scope3Inventory"], scope12_emissions: Optional[float]
 ) -> Optional[float]:
     """便捷函数：计算范围3/范围1+2比例评分"""
     return _calculator.calculate_scope3_ratio_score(scope3_inventory, scope12_emissions)
 
 
-def calculate_climate_governance_score(
-    climate_gov: Optional[ClimateGovernance]
-) -> Optional[float]:
+def calculate_climate_governance_score(climate_gov: Optional[ClimateGovernance]) -> Optional[float]:
     """计算气候治理架构评分
-    
+
     评估企业在气候治理架构方面的建设情况。
-    
+
     Args:
         climate_gov: ClimateGovernance对象
-        
+
     Returns:
         气候治理架构得分(0-100)或None
     """
@@ -674,16 +649,14 @@ def calculate_climate_governance_score(
     return climate_gov.get_score()
 
 
-def calculate_tcfd_score(
-    tcfd: Optional[TCFDDisclosure]
-) -> Optional[float]:
+def calculate_tcfd_score(tcfd: Optional[TCFDDisclosure]) -> Optional[float]:
     """计算TCFD披露完整度评分
-    
+
     评估企业TCFD四支柱披露的完整度。
-    
+
     Args:
         tcfd: TCFDDisclosure对象
-        
+
     Returns:
         TCFD披露完整度得分(0-100)或None
     """
@@ -693,15 +666,15 @@ def calculate_tcfd_score(
 
 
 def calculate_climate_disclosure_quality_score(
-    quality: Optional[ClimateDisclosureQuality]
+    quality: Optional[ClimateDisclosureQuality],
 ) -> Optional[float]:
     """计算气候信息披露质量评分
-    
+
     评估企业气候信息披露的质量和完整性。
-    
+
     Args:
         quality: ClimateDisclosureQuality对象
-        
+
     Returns:
         气候信息披露质量得分(0-100)或None
     """

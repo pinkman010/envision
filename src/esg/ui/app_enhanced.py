@@ -1169,7 +1169,9 @@ def render_rag_page(config: Dict[str, Any]) -> None:
                     st.metric("知识库文档数", "SQLite版本不兼容")
                     with st.expander("查看错误详情"):
                         st.error(f"ChromaDB初始化失败: {error_msg}")
-                        st.info("💡 解决方案: Python 3.9 的 SQLite3 版本低于 ChromaDB 要求的 3.35.0")
+                        st.info(
+                            "💡 解决方案: Python 3.9 的 SQLite3 版本低于 ChromaDB 要求的 3.35.0"
+                        )
                         st.info("   方案1: 升级 Python 到 3.10+")
                         st.info("   方案2: 使用 Conda 环境: conda install python=3.10")
                 else:
@@ -1182,7 +1184,7 @@ def render_rag_page(config: Dict[str, Any]) -> None:
         # 添加文档上传功能
         st.markdown("---")
         st.markdown("### 📄 添加文档")
-        
+
         if store is None:
             st.warning("⚠️ 向量数据库未初始化，请检查配置")
         else:
@@ -1402,15 +1404,11 @@ def render_strategies_page(config: Dict[str, Any]) -> None:
             "选择报告语言",
             options=["中文", "英文", "繁体中文"],
             default=["中文"],
-            help="选择要生成的报告语言"
+            help="选择要生成的报告语言",
         )
 
     # 语言到枚举的映射
-    language_map = {
-        "中文": "zh_CN",
-        "英文": "en", 
-        "繁体中文": "zh_TW"
-    }
+    language_map = {"中文": "zh_CN", "英文": "en", "繁体中文": "zh_TW"}
 
     if st.button("📝 生成完整报告", use_container_width=True, type="primary"):
         try:
@@ -1442,13 +1440,19 @@ def render_strategies_page(config: Dict[str, Any]) -> None:
                 else:
                     # 使用多语言功能生成
                     from src.esg.extraction.multilingual import Language
-                    lang_enum = Language.ZH_CN if lang_code == "zh_CN" else (Language.EN if lang_code == "en" else Language.ZH_TW)
+
+                    lang_enum = (
+                        Language.ZH_CN
+                        if lang_code == "zh_CN"
+                        else (Language.EN if lang_code == "en" else Language.ZH_TW)
+                    )
                     reports = generator.generate_multilingual(result, [lang_enum])
                     report_md = reports[lang_enum]
                     file_name = f"{metrics.company_name}_ESG分析报告_{lang_code}.md"
             else:
                 # 多语言报告
                 from src.esg.extraction.multilingual import Language
+
                 lang_enums = []
                 for lang in report_languages:
                     lang_code = language_map[lang]
@@ -1458,12 +1462,16 @@ def render_strategies_page(config: Dict[str, Any]) -> None:
                         lang_enums.append(Language.EN)
                     else:
                         lang_enums.append(Language.ZH_TW)
-                
+
                 reports = generator.generate_multilingual(result, lang_enums)
-                
+
                 # 为每个语言生成下载按钮
                 for lang, content in reports.items():
-                    lang_label = "中文" if lang == Language.ZH_CN else ("英文" if lang == Language.EN else "繁体中文")
+                    lang_label = (
+                        "中文"
+                        if lang == Language.ZH_CN
+                        else ("英文" if lang == Language.EN else "繁体中文")
+                    )
                     st.download_button(
                         label=f"📥 下载{lang_label}报告",
                         data=content,

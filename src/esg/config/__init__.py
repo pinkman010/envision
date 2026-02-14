@@ -24,6 +24,9 @@ from .base import (
     VERSION,
 )
 
+# 传播策略配置
+from .communication import COMMUNICATION_CALENDAR
+
 # ESG配置
 from .esg import (
     AHP_CONSISTENCY_THRESHOLD,
@@ -45,9 +48,6 @@ from .esg import (
     NEW_ENERGY_SPECIFIC_METRICS,
     TOPIC_BUSINESS_MAP,
 )
-
-# 传播策略配置
-from .communication import COMMUNICATION_CALENDAR
 
 # 评估配置
 from .evaluation import (

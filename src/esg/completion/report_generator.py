@@ -1154,22 +1154,26 @@ class ReportGenerator:
                 else:
                     gap_value = gap_data.get("gap", 0)
                 if gap_value > 0:
-                    gaps.append({
-                        "dimension": dim,
-                        "gap": gap_value,
-                        "priority": "high" if gap_value > 15 else "medium",
-                        "description": f"{dim}维度存在{gap_value:.1f}分差距",
-                    })
+                    gaps.append(
+                        {
+                            "dimension": dim,
+                            "gap": gap_value,
+                            "priority": "high" if gap_value > 15 else "medium",
+                            "description": f"{dim}维度存在{gap_value:.1f}分差距",
+                        }
+                    )
             data["gaps"] = gaps
 
         # 添加建议数据
         if result.strategies:
             recommendations = []
             for s in result.strategies[:5]:  # 取前5条
-                recommendations.append({
-                    "priority": s.get("priority", "medium"),
-                    "description": s.get("title", ""),
-                })
+                recommendations.append(
+                    {
+                        "priority": s.get("priority", "medium"),
+                        "description": s.get("title", ""),
+                    }
+                )
             data["recommendations"] = recommendations
 
         return data

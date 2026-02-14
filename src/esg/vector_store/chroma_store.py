@@ -23,14 +23,14 @@ _CHROMADB_ERROR = None
 def _check_chromadb():
     """运行时检查ChromaDB是否可用"""
     global HAS_CHROMADB, _chromadb_module, _Settings_class, _CHROMADB_ERROR
-    
+
     if HAS_CHROMADB:
         return True
-    
+
     # 如果之前有过错误，直接返回False
     if _CHROMADB_ERROR is not None:
         return False
-        
+
     try:
         import chromadb
         from chromadb.config import Settings

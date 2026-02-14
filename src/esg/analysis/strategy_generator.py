@@ -119,6 +119,78 @@ class StrategyGenerator:
                     },
                 ],
             },
+            "scope3_management": {
+                "title": "加强范围3排放管理",
+                "description": "建立价值链碳排放核算体系，推动供应链减排",
+                "actions": [
+                    "识别并核算15类范围3排放源",
+                    "与重点供应商建立碳数据共享机制",
+                    "制定供应链减排目标和激励机制",
+                    "优先采购低碳产品和服务",
+                ],
+                "timeframe": "12-24个月",
+                "resources": ["供应链碳管理团队", "供应商管理平台", "核算工具"],
+                "target_audiences": ["供应链伙伴", "投资者", "监管机构"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {
+                        "channel_name": "供应商大会",
+                        "priority": "主渠道",
+                        "reason": "向供应商宣导范围3管理要求和合作机制",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露范围3排放数据和供应链减排进展",
+                    },
+                    {
+                        "channel_name": "供应商通讯",
+                        "priority": "辅助渠道",
+                        "reason": "定期更新碳管理要求和最佳实践",
+                    },
+                    {
+                        "channel_name": "CDP供应链",
+                        "priority": "辅助渠道",
+                        "reason": "通过CDP平台收集供应商环境数据",
+                    },
+                ],
+            },
+            "sbti_target_setting": {
+                "title": "设定科学碳目标(SBTi)",
+                "description": "承诺SBTi并制定1.5°C温控路径的减排目标",
+                "actions": [
+                    "承诺加入SBTi并提交目标设定申请",
+                    "开展全价值链碳盘查和情景分析",
+                    "制定1.5°C路径的短期和长期减排目标",
+                    "定期披露目标进展并获取第三方验证",
+                ],
+                "timeframe": "6-18个月",
+                "resources": ["碳管理团队", "SBTi顾问", "第三方核查"],
+                "target_audiences": ["投资者", "监管机构", "评级机构"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {
+                        "channel_name": "新闻发布会",
+                        "priority": "主渠道",
+                        "reason": "宣布SBTi承诺和目标，提升品牌影响",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露SBTi目标、进展和减排路径",
+                    },
+                    {
+                        "channel_name": "投资者路演",
+                        "priority": "辅助渠道",
+                        "reason": "阐述SBTi目标对长期价值的影响",
+                    },
+                    {
+                        "channel_name": "SBTi官网",
+                        "priority": "辅助渠道",
+                        "reason": "在SBTi平台展示承诺和进展",
+                    },
+                ],
+            },
             "renewable_energy": {
                 "title": "提升可再生能源使用比例",
                 "description": "通过自发自用和绿电采购提高可再生能源占比",
@@ -152,6 +224,114 @@ class StrategyGenerator:
                         "channel_name": "新闻发布会",
                         "priority": "辅助渠道",
                         "reason": "重大项目签约或并网时对外发布",
+                    },
+                ],
+            },
+            "turbine_performance": {
+                "title": "提升风机运营效率",
+                "description": "提高风机可利用率，降低弃风率，优化发电性能",
+                "actions": [
+                    "实施预测性维护减少故障停机",
+                    "优化风机控制策略提升发电效率",
+                    "升级电网接入设施降低弃风率",
+                    "开展风机性能监测和数据分析",
+                ],
+                "timeframe": "6-18个月",
+                "resources": ["运维团队", "技术升级预算", "数据分析平台"],
+                "target_audiences": ["投资者", "电网公司", "监管机构"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露风机可利用率、弃风率等关键指标",
+                    },
+                    {
+                        "channel_name": "投资者路演",
+                        "priority": "主渠道",
+                        "reason": "展示运营效率提升对收益的影响",
+                    },
+                    {
+                        "channel_name": "行业会议",
+                        "priority": "辅助渠道",
+                        "reason": "分享风机优化最佳实践",
+                    },
+                    {
+                        "channel_name": "技术白皮书",
+                        "priority": "辅助渠道",
+                        "reason": "发布风机性能优化研究成果",
+                    },
+                ],
+            },
+            "battery_lifecycle": {
+                "title": "优化电池全生命周期管理",
+                "description": "提升电池循环寿命，建立回收和梯次利用体系",
+                "actions": [
+                    "改进电池管理系统延长循环寿命",
+                    "建立电池健康状态监测和评估体系",
+                    "开展退役电池梯次利用试点项目",
+                    "与回收企业合作建立闭环回收体系",
+                ],
+                "timeframe": "12-36个月",
+                "resources": ["研发团队", "回收合作伙伴", "试点项目资金"],
+                "target_audiences": ["投资者", "监管机构", "供应链伙伴"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露电池循环寿命、回收率和梯次利用进展",
+                    },
+                    {
+                        "channel_name": "行业论坛",
+                        "priority": "主渠道",
+                        "reason": "分享电池循环经济最佳实践",
+                    },
+                    {
+                        "channel_name": "投资者路演",
+                        "priority": "辅助渠道",
+                        "reason": "阐述电池生命周期管理对成本的影响",
+                    },
+                    {
+                        "channel_name": "技术白皮书",
+                        "priority": "辅助渠道",
+                        "reason": "发布电池回收和梯次利用技术成果",
+                    },
+                ],
+            },
+            "hydrogen_production": {
+                "title": "提升绿氢生产效率",
+                "description": "提高电解效率，降低绿氢生产成本",
+                "actions": [
+                    "采用高效电解槽技术提升电解效率",
+                    "优化电解槽运行参数降低电耗",
+                    "利用可再生能源直供降低制氢成本",
+                    "开展电解槽核心材料研发",
+                ],
+                "timeframe": "12-36个月",
+                "resources": ["研发团队", "技术升级预算", "示范项目资金"],
+                "target_audiences": ["投资者", "政府", "下游客户"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露电解效率、氢气纯度和成本数据",
+                    },
+                    {
+                        "channel_name": "行业峰会",
+                        "priority": "主渠道",
+                        "reason": "展示绿氢技术突破和商业化进展",
+                    },
+                    {
+                        "channel_name": "投资者路演",
+                        "priority": "辅助渠道",
+                        "reason": "阐述绿氢业务的市场前景和投资价值",
+                    },
+                    {
+                        "channel_name": "技术发布会",
+                        "priority": "辅助渠道",
+                        "reason": "发布新一代电解槽技术成果",
                     },
                 ],
             },
@@ -229,6 +409,42 @@ class StrategyGenerator:
                     },
                 ],
             },
+            "executive_diversity": {
+                "title": "提升高管层多元化",
+                "description": "增加女性和少数群体在高管层和董事会的代表性",
+                "actions": [
+                    "制定高管继任计划中的多元化目标",
+                    "建立导师计划和领导力发展项目",
+                    "评估并优化高管招聘流程以减少偏见",
+                    "定期披露高管层多元化进展",
+                ],
+                "timeframe": "12-36个月",
+                "resources": ["董事会", "HR团队", "高管教练", "猎头公司"],
+                "target_audiences": ["投资者", "监管机构", "员工"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露高管层多元化数据和目标进展",
+                    },
+                    {
+                        "channel_name": "公司治理报告",
+                        "priority": "主渠道",
+                        "reason": "说明董事会和高管层多元化政策",
+                    },
+                    {
+                        "channel_name": "股东大会",
+                        "priority": "辅助渠道",
+                        "reason": "汇报高管继任和多元化进展",
+                    },
+                    {
+                        "channel_name": "投资者路演",
+                        "priority": "辅助渠道",
+                        "reason": "阐述多元化如何提升决策质量",
+                    },
+                ],
+            },
             "employee_development": {
                 "title": "加强员工培训与发展",
                 "description": "提升员工技能和职业发展机会",
@@ -262,6 +478,78 @@ class StrategyGenerator:
                         "channel_name": "员工内网",
                         "priority": "辅助渠道",
                         "reason": "提供在线学习资源和个人发展工具",
+                    },
+                ],
+            },
+            "safety_performance": {
+                "title": "提升安全绩效",
+                "description": "降低工伤率，建立零伤害安全文化",
+                "actions": [
+                    "建立安全管理体系（ISO 45001）",
+                    "开展全员安全培训和意识提升",
+                    "实施安全隐患排查和整改闭环",
+                    "加强承包商和供应商安全管理",
+                ],
+                "timeframe": "6-12个月",
+                "resources": ["安全团队", "培训预算", "第三方认证"],
+                "target_audiences": ["员工", "监管机构", "投资者"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {
+                        "channel_name": "员工安全培训",
+                        "priority": "主渠道",
+                        "reason": "直接开展安全操作规程和应急演练培训",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露TRIR、LTIFR等安全指标和改进进展",
+                    },
+                    {
+                        "channel_name": "内部通讯",
+                        "priority": "辅助渠道",
+                        "reason": "分享安全案例和表彰安全行为",
+                    },
+                    {
+                        "channel_name": "安全月活动",
+                        "priority": "辅助渠道",
+                        "reason": "集中开展安全宣传和主题活动",
+                    },
+                ],
+            },
+            "community_engagement": {
+                "title": "深化社区参与和投资",
+                "description": "提升社区投资占营收比例，建立互利共赢的社区关系",
+                "actions": [
+                    "制定社区投资战略和重点领域",
+                    "开展社区需求评估和利益相关方沟通",
+                    "建立社区投资项目监测和评估机制",
+                    "定期披露社区投资进展和影响",
+                ],
+                "timeframe": "6-12个月",
+                "resources": ["CSR团队", "项目预算", "社区伙伴"],
+                "target_audiences": ["社区/公众", "投资者", "监管机构"],
+                "communication_style": "亲和",
+                "recommended_channels": [
+                    {
+                        "channel_name": "社区活动",
+                        "priority": "主渠道",
+                        "reason": "直接参与社区建设和公益活动",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露社区投资额、项目和受益人数",
+                    },
+                    {
+                        "channel_name": "社交媒体",
+                        "priority": "辅助渠道",
+                        "reason": "分享社区活动故事和员工志愿者经历",
+                    },
+                    {
+                        "channel_name": "官网社区专栏",
+                        "priority": "辅助渠道",
+                        "reason": "展示社区项目地图和影响评估报告",
                     },
                 ],
             },
@@ -339,6 +627,114 @@ class StrategyGenerator:
                     },
                 ],
             },
+            "esg_governance_structure": {
+                "title": "完善ESG治理架构",
+                "description": "建立独立的ESG委员会，提升ESG监督效能",
+                "actions": [
+                    "设立董事会层面的ESG委员会",
+                    "明确ESG委员会职责和议事规则",
+                    "确保ESG委员会独立性（独立董事占比≥50%）",
+                    "建立ESG指标与高管薪酬挂钩机制",
+                ],
+                "timeframe": "6-12个月",
+                "resources": ["董事会", "治理顾问", "薪酬委员会"],
+                "target_audiences": ["投资者", "监管机构", "评级机构"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露ESG委员会构成、职责和年度工作",
+                    },
+                    {
+                        "channel_name": "公司章程修订公告",
+                        "priority": "主渠道",
+                        "reason": "正式公告ESG委员会设立和职责范围",
+                    },
+                    {
+                        "channel_name": "股东大会",
+                        "priority": "辅助渠道",
+                        "reason": "向股东说明ESG治理架构升级",
+                    },
+                    {
+                        "channel_name": "投资者路演",
+                        "priority": "辅助渠道",
+                        "reason": "阐述ESG治理如何提升长期价值",
+                    },
+                ],
+            },
+            "climate_governance": {
+                "title": "强化气候治理架构",
+                "description": "建立董事会气候委员会，将气候风险纳入治理核心",
+                "actions": [
+                    "设立董事会气候委员会或明确ESG委员会气候职责",
+                    "将气候指标纳入高管薪酬考核体系",
+                    "建立气候风险识别和管理流程",
+                    "定期向董事会汇报气候议题进展",
+                ],
+                "timeframe": "6-18个月",
+                "resources": ["董事会", "气候专家", "薪酬委员会"],
+                "target_audiences": ["投资者", "监管机构", "评级机构"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {
+                        "channel_name": "TCFD报告",
+                        "priority": "主渠道",
+                        "reason": "披露气候治理架构和风险管理",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "详细说明气候治理进展和目标",
+                    },
+                    {
+                        "channel_name": "股东大会",
+                        "priority": "辅助渠道",
+                        "reason": "汇报气候治理战略和重大决策",
+                    },
+                    {
+                        "channel_name": "投资者气候专项沟通",
+                        "priority": "辅助渠道",
+                        "reason": "针对气候投资者的专业交流",
+                    },
+                ],
+            },
+            "tcfd_disclosure": {
+                "title": "完善TCFD四支柱披露",
+                "description": "全面披露治理、战略、风险管理、指标与目标四支柱",
+                "actions": [
+                    "披露气候治理架构（董事会和管理层职责）",
+                    "分析气候相关风险和机遇对业务战略的影响",
+                    "披露气候风险识别、评估和管理流程",
+                    "设定并披露气候相关指标和目标（含范围3）",
+                ],
+                "timeframe": "12-24个月",
+                "resources": ["ESG团队", "气候专家", "第三方鉴证"],
+                "target_audiences": ["投资者", "监管机构", "评级机构"],
+                "communication_style": "技术",
+                "recommended_channels": [
+                    {
+                        "channel_name": "TCFD专项报告",
+                        "priority": "主渠道",
+                        "reason": "完整呈现TCFD四支柱披露",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "整合TCFD披露到ESG报告体系",
+                    },
+                    {
+                        "channel_name": "官网TCFD专栏",
+                        "priority": "辅助渠道",
+                        "reason": "提供TCFD报告下载和数据可视化",
+                    },
+                    {
+                        "channel_name": "投资者说明会",
+                        "priority": "辅助渠道",
+                        "reason": "解读TCFD战略和财务影响分析",
+                    },
+                ],
+            },
             "esg_disclosure": {
                 "title": "完善ESG信息披露",
                 "description": "提升ESG报告质量和透明度",
@@ -408,6 +804,78 @@ class StrategyGenerator:
                         "channel_name": "官网合规专栏",
                         "priority": "辅助渠道",
                         "reason": "公开商业行为准则和合规承诺",
+                    },
+                ],
+            },
+            "anti_corruption": {
+                "title": "强化反腐败与反贿赂体系",
+                "description": "建立全面的反腐败合规体系，覆盖全体员工和供应链",
+                "actions": [
+                    "制定反腐败政策和供应商行为准则",
+                    "对高风险岗位和供应商开展专项培训",
+                    "建立礼品申报和利益冲突管理制度",
+                    "定期开展反腐败风险评估和尽职调查",
+                ],
+                "timeframe": "6-12个月",
+                "resources": ["合规团队", "法务部门", "第三方审核"],
+                "target_audiences": ["员工", "监管机构", "投资者", "供应链伙伴"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露反腐败政策、培训和风险评估",
+                    },
+                    {
+                        "channel_name": "供应商大会",
+                        "priority": "主渠道",
+                        "reason": "宣导供应商行为准则和审核要求",
+                    },
+                    {
+                        "channel_name": "员工培训",
+                        "priority": "辅助渠道",
+                        "reason": "高风险岗位专项反腐败培训",
+                    },
+                    {
+                        "channel_name": "官网合规专栏",
+                        "priority": "辅助渠道",
+                        "reason": "公开反腐败承诺和举报渠道",
+                    },
+                ],
+            },
+            "whistleblower_protection": {
+                "title": "完善举报人保护机制",
+                "description": "建立安全、保密的举报渠道和全面的举报人保护体系",
+                "actions": [
+                    "建立多渠道举报平台（热线、邮箱、在线）",
+                    "制定举报人保护政策，明确禁止报复行为",
+                    "确保举报调查的独立性和保密性",
+                    "定期向董事会汇报举报受理和处理情况",
+                ],
+                "timeframe": "3-6个月",
+                "resources": ["合规团队", "IT部门", "外部供应商"],
+                "target_audiences": ["员工", "监管机构", "投资者"],
+                "communication_style": "正式",
+                "recommended_channels": [
+                    {
+                        "channel_name": "内部举报平台",
+                        "priority": "主渠道",
+                        "reason": "直接提供安全、匿名的举报入口",
+                    },
+                    {
+                        "channel_name": "年度ESG报告",
+                        "priority": "主渠道",
+                        "reason": "披露举报机制和保护政策",
+                    },
+                    {
+                        "channel_name": "员工培训",
+                        "priority": "辅助渠道",
+                        "reason": "宣导举报渠道和保护政策",
+                    },
+                    {
+                        "channel_name": "内部通讯",
+                        "priority": "辅助渠道",
+                        "reason": "定期宣传举报渠道更新和典型案例",
                     },
                 ],
             },
@@ -685,35 +1153,85 @@ class StrategyGenerator:
         return min(0.95, max(0.35, confidence))
 
     def _calculate_data_completeness(self, metrics: ESGMetrics) -> float:
-        """计算数据完整度"""
-        # 检查各维度数据是否存在
+        """计算数据完整度
+        
+        基于models.py中修复后的E/S/G维度权重配置，检查所有核心指标。
+        与E_DIMENSION_WEIGHTS、S_DIMENSION_WEIGHTS、G_DIMENSION_WEIGHTS对齐。
+        
+        Returns:
+            数据完整度 (0-1)
+        """
+        # ===== 环境维度 (E) - 对应E_DIMENSION_WEIGHTS的16个指标 =====
+        e_checks = [
+            # 一级指标：排放与气候（45%）
+            metrics.carbon_intensity,
+            metrics.scope3_coverage_percentage,
+            metrics.sbti_target,
+            # 二级指标：运营效率（30%）
+            metrics.renewable_energy_ratio,
+            metrics.energy_efficiency,
+            metrics.waste_recycling_rate,
+            metrics.water_intensity,
+            # 三级指标：新能源特色（25%）
+            metrics.turbine_availability,
+            metrics.curtailment_rate,
+            metrics.battery_cycle_life,
+            metrics.battery_recycling_rate,
+            metrics.electrolysis_efficiency,
+            metrics.energy_storage_safety_score,
+            # 基础排放数据（向后兼容）
+            metrics.carbon_emissions,
+            metrics.scope1_emissions,
+            metrics.scope2_emissions_location,
+        ]
+        
+        # ===== 社会维度 (S) - 对应S_DIMENSION_WEIGHTS的7个指标 =====
+        s_checks = [
+            # 一级指标：员工发展与多元化（45%）
+            metrics.female_ratio,
+            metrics.female_executive_ratio,
+            metrics.training_hours,
+            metrics.training_investment_per_employee,
+            metrics.employee_count,
+            # 二级指标：安全与福祉（30%）
+            metrics.trir,
+            metrics.ltifr if metrics.ltifr is not None else metrics.lost_time_injury_rate,
+            metrics.safety_investment_ratio,
+            metrics.safety_incidents,
+            # 三级指标：社区责任（25%）
+            metrics.community_investment_per_revenue,
+            metrics.local_employment_ratio,
+            metrics.community_investment,
+        ]
+        
+        # ===== 治理维度 (G) - 对应G_DIMENSION_WEIGHTS的10个指标 =====
+        g_checks = [
+            # 第一层：董事会与治理结构（35%）
+            metrics.board_independence_ratio,
+            metrics.esg_committee_independence,
+            # 第二层：合规与商业道德（30%）
+            metrics.ethics_training_coverage,
+            metrics.anti_corruption_training_coverage,
+            metrics.whistleblower_protection,
+            # 第三层：气候治理（20%）
+            metrics.climate_governance,
+            metrics.tcfd_disclosure,
+            # 第四层：透明度与问责（15%）
+            metrics.esg_report_quality,
+            metrics.esg_committee_independence,  # 同时作为ESG治理指标
+        ]
+        
         checks = {
-            "E": [
-                metrics.carbon_emissions,
-                metrics.renewable_energy_ratio,
-                metrics.energy_efficiency,
-                metrics.water_consumption,
-                metrics.waste_recycling_rate,
-            ],
-            "S": [
-                metrics.employee_count,
-                metrics.female_ratio,
-                metrics.training_hours,
-                metrics.safety_incidents,
-                metrics.community_investment,
-            ],
-            "G": [
-                metrics.board_independence_ratio,
-                metrics.ethics_training_coverage,
-                metrics.esg_report_quality,
-            ],
+            "E": e_checks,
+            "S": s_checks,
+            "G": g_checks,
         }
-
+        
         total_fields = sum(len(fields) for fields in checks.values())
         filled_fields = sum(
             1 for fields in checks.values() for field in fields if field is not None
         )
-
+        
         return filled_fields / total_fields if total_fields > 0 else 0.5
 
     def _calculate_expected_impact(self, gap: float, confidence: float) -> float:

@@ -1,12 +1,13 @@
 """RAG问答引擎
 
 实现基于检索增强生成的智能问答功能。
+支持流式输出，提升用户体验。
 """
 
 import json
 import re
-from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import requests
 
@@ -22,6 +23,8 @@ class RAGResponse:
     reasoning: str  # 思考过程
     sources: List[Dict]  # 参考来源
     confidence: float  # 置信度
+    is_streaming: bool = False  # 是否为流式响应
+    stream_generator: Optional[Generator[str, None, None]] = None  # 流式生成器
 
 
 class RAGEngine:
@@ -39,11 +42,27 @@ class RAGEngine:
         self.ollama_url = OLLAMA_URL
         self.timeout = OLLAMA_TIMEOUT
 
-    def query(self, question: str, top_k: int = 5) -> RAGResponse:
-        """执行RAG查询"""
+    def query(
+        self, question: str, top_k: int = 5, stream: bool = False
+    ) -> Union[RAGResponse, Generator[str, None, None]]:
+        """执行RAG查询
+
+        Args:
+            question: 用户问题
+            top_k: 检索文档数量
+            stream: 是否使用流式输出
+
+        Returns:
+            RAGResponse 或 流式生成器
+        """
         relevant_docs = self.store.search(question, top_k=top_k)
 
         if not relevant_docs:
+            if stream:
+                # 流式模式下返回错误信息生成器
+                def empty_stream():
+                    yield "抱歉，在知识库中未找到相关信息。"
+                return empty_stream()
             return RAGResponse(
                 answer="抱歉，在知识库中未找到相关信息。",
                 reasoning="知识库为空。",
@@ -52,9 +71,14 @@ class RAGEngine:
             )
 
         prompt = self._build_prompt(question, relevant_docs)
-        answer, reasoning = self._generate(prompt)
         confidence = self._calculate_confidence(relevant_docs)
 
+        if stream:
+            # 返回流式生成器
+            return self._generate_stream(prompt, relevant_docs, confidence)
+
+        # 非流式模式
+        answer, reasoning = self._generate(prompt)
         return RAGResponse(
             answer=answer, reasoning=reasoning, sources=relevant_docs, confidence=confidence
         )
@@ -93,18 +117,9 @@ class RAGEngine:
 请严格按照以上格式输出。"""
 
     def _generate(self, prompt: str) -> Tuple[str, str]:
-        """生成回答"""
+        """生成回答（非流式）"""
         try:
-            # 针对 deepseek-r1 模型启用特殊推理模式
-            options = {
-                "temperature": 0.7,
-                "num_ctx": 4096,
-            }
-
-            # 如果是 deepseek-r1 模型，启用推理模式
-            if "deepseek-r1" in self.model.lower():
-                # 某些版本的 deepseek-r1 支持这些选项
-                options["num_predict"] = 2048
+            options = self._build_options()
 
             response = requests.post(
                 f"{self.ollama_url}/api/generate",
@@ -114,8 +129,6 @@ class RAGEngine:
             response.raise_for_status()
 
             text = response.json().get("response", "")
-
-            # 尝试多种方式提取思考过程
             reasoning, answer = self._extract_thinking_and_answer(text)
 
             return answer, reasoning
@@ -123,14 +136,67 @@ class RAGEngine:
         except Exception as e:
             return f"生成失败: {str(e)}", ""
 
+    def _generate_stream(
+        self, prompt: str, sources: List[Dict], confidence: float
+    ) -> Generator[str, None, None]:
+        """流式生成回答
+
+        Args:
+            prompt: 构建好的提示词
+            sources: 参考文档来源
+            confidence: 置信度
+
+        Yields:
+            生成的文本片段
+        """
+        try:
+            options = self._build_options()
+
+            # 使用流式API
+            response = requests.post(
+                f"{self.ollama_url}/api/generate",
+                json={"model": self.model, "prompt": prompt, "stream": True, "options": options},
+                timeout=self.timeout,
+                stream=True,
+            )
+            response.raise_for_status()
+
+            # 解析流式响应
+            full_text = ""
+            for line in response.iter_lines():
+                if line:
+                    try:
+                        data = json.loads(line.decode('utf-8'))
+                        chunk = data.get("response", "")
+                        full_text += chunk
+                        yield chunk
+                    except json.JSONDecodeError:
+                        continue
+
+        except Exception as e:
+            yield f"\n[生成失败: {str(e)}]"
+
+    def _build_options(self) -> Dict[str, Any]:
+        """构建LLM选项
+
+        Returns:
+            选项字典
+        """
+        options = {
+            "temperature": 0.7,
+            "num_ctx": 4096,
+        }
+
+        # 针对 deepseek-r1 模型启用特殊推理模式
+        if "deepseek-r1" in self.model.lower():
+            options["num_predict"] = 2048
+
+        return options
+
     def _extract_thinking_and_answer(self, text: str) -> Tuple[str, str]:
         """提取思考过程和答案
 
-        尝试多种格式提取思考过程：
-        1. <thinking>...</thinking> 标签
-        2. <think>...</think> 标签
-        3. 思考：... 答案：... 格式
-        4. 如果没有明确标签，尝试识别推理段落
+        尝试多种格式提取思考过程，支持流式文本的增量解析。
         """
         text = text.strip()
 
@@ -141,7 +207,6 @@ class RAGEngine:
             answer = re.sub(
                 r"<thinking>.*?</thinking>", "", text, flags=re.DOTALL | re.IGNORECASE
             ).strip()
-            # 移除 <answer> 标签
             answer = re.sub(r"</?answer>", "", answer, flags=re.IGNORECASE).strip()
             return reasoning, answer
 
@@ -169,17 +234,39 @@ class RAGEngine:
                 answer = answer_match.group(1).strip()
                 return reasoning, answer
 
-        # 尝试通过段落结构识别（如果文本很长，可能前半部分是思考）
+        # 尝试通过段落结构识别
         paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
         if len(paragraphs) >= 2 and len(text) > 500:
-            # 假设前一半是思考过程，后一半是答案
             mid = len(paragraphs) // 2
             reasoning = "\n\n".join(paragraphs[:mid])
             answer = "\n\n".join(paragraphs[mid:])
             return reasoning, answer
 
-        # 如果都没有匹配到，返回默认提示和完整文本
+        # 默认返回
         return "模型未按照预期格式输出思考过程。以下是完整回答：", text
+
+    def query_with_stream(
+        self, question: str, top_k: int = 5
+    ) -> Tuple[List[Dict], Generator[str, None, None], float]:
+        """流式查询（兼容Streamlit的write_stream）
+
+        Args:
+            question: 用户问题
+            top_k: 检索文档数量
+
+        Returns:
+            (sources, stream_generator, confidence)
+        """
+        relevant_docs = self.store.search(question, top_k=top_k)
+        confidence = self._calculate_confidence(relevant_docs)
+
+        if not relevant_docs:
+            def empty_stream():
+                yield "抱歉，在知识库中未找到相关信息。"
+            return [], empty_stream(), 0.0
+
+        prompt = self._build_prompt(question, relevant_docs)
+        return relevant_docs, self._generate_stream(prompt, relevant_docs, confidence), confidence
 
     def _calculate_confidence(self, documents: List[Dict]) -> float:
         """计算置信度"""

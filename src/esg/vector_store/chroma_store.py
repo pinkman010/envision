@@ -97,13 +97,13 @@ class ChromaDBStore:
         self.client: Optional[Any] = None
         self.collection: Optional[Any] = None
 
-        # 初始化 Ollama 嵌入客户端
+        # 初始化 Ollama 嵌入客户端（修复：传递超时配置）
         model = embedding_model or MODELS.get("embedding", "nomic-embed-text")
-        self.embedding = OllamaClient(model=model, url=OLLAMA_URL)
+        self.embedding = OllamaClient(model=model, url=OLLAMA_URL, timeout=OLLAMA_TIMEOUT)
         self.embedding_timeout = OLLAMA_TIMEOUT
 
-        # 初始化数据库（如果 ChromaDB 可用）
-        if HAS_CHROMADB:
+        # 运行时检查 ChromaDB 是否可用（修复：先检查再初始化）
+        if _check_chromadb():
             self._init_db()
         else:
             logger.warning("ChromaDB 未安装，向量存储功能不可用")
@@ -151,23 +151,27 @@ class ChromaDBStore:
     def _generate_id(self, doc: Dict[str, Any]) -> str:
         """为文档生成唯一 ID
 
-        基于文档来源和前50个字符内容生成 MD5 哈希。
+        基于文档来源、前100个字符内容和位置信息生成 MD5 哈希。
+        修复：增加哈希基准长度，添加位置信息，降低冲突风险。
 
         Args:
-            doc: 文档字典，包含 text 和 source 字段
+            doc: 文档字典，包含 text、source 和 position 字段
 
         Returns:
             str: MD5 哈希值作为文档 ID
         """
         text = doc.get("text", "")
         source = doc.get("source", "unknown")
-        id_string = f"{source}_{text[:50]}"
+        position = doc.get("position", "")
+        # 修复1：增加哈希基准到100字符，添加位置信息
+        id_string = f"{source}_{position}_{text[:100]}"
         return hashlib.md5(id_string.encode("utf-8")).hexdigest()
 
-    def add_documents(self, documents: List[Dict[str, Any]]) -> int:
+    def add_documents(self, documents: List[Dict[str, Any]], batch_size: int = 100) -> int:
         """添加文档到向量存储
 
         将文档转换为向量并存储到 ChromaDB 中。
+        修复：添加批量大小限制，避免内存溢出。
 
         Args:
             documents: 文档列表，每个文档应包含:
@@ -175,6 +179,7 @@ class ChromaDBStore:
                 - source: 文档来源（可选）
                 - position: 文档位置信息（可选）
                 - 其他自定义元数据字段
+            batch_size: 每批处理的文档数量，默认100
 
         Returns:
             int: 成功添加的文档数量
@@ -185,6 +190,19 @@ class ChromaDBStore:
         if not self.collection:
             raise RuntimeError("向量存储未初始化，无法添加文档")
 
+        total_added = 0
+        
+        # 修复2：分批处理，避免大内存占用
+        for batch_start in range(0, len(documents), batch_size):
+            batch = documents[batch_start:batch_start + batch_size]
+            added = self._add_batch(batch)
+            total_added += added
+            logger.debug(f"已处理批次 {batch_start//batch_size + 1}, 添加 {added} 个文档")
+        
+        return total_added
+    
+    def _add_batch(self, documents: List[Dict[str, Any]]) -> int:
+        """添加一批文档（内部方法）"""
         ids: List[str] = []
         embeddings: List[List[float]] = []
         texts: List[str] = []
@@ -234,6 +252,21 @@ class ChromaDBStore:
                 return 0
 
         return len(ids)
+    
+    def add_document(self, text: str, source: str = "unknown", **metadata) -> Optional[str]:
+        """添加单个文档（便捷方法）
+
+        Args:
+            text: 文档文本
+            source: 文档来源
+            **metadata: 其他元数据
+
+        Returns:
+            str: 文档ID，失败返回None
+        """
+        doc = {"text": text, "source": source, **metadata}
+        count = self.add_documents([doc])
+        return self._generate_id(doc) if count > 0 else None
 
     def search(
         self, query: str, top_k: int = 5, filter_dict: Optional[Dict[str, Any]] = None
@@ -268,7 +301,12 @@ class ChromaDBStore:
             query_emb = self.embedding.embed(query)
 
             # 执行搜索
-            n_results = min(top_k, self.collection.count())
+            total_docs = self.collection.count()
+            n_results = min(top_k, total_docs)
+            
+            # 修复3：如果请求数量大于实际数量，记录警告
+            if top_k > total_docs:
+                logger.warning(f"请求 top_k={top_k} 但知识库只有 {total_docs} 个文档，将返回全部")
             results = self.collection.query(
                 query_embeddings=[query_emb],
                 n_results=n_results,
@@ -292,7 +330,13 @@ class ChromaDBStore:
             return formatted_results
 
         except Exception as e:
-            logger.error(f"搜索失败: {e}")
+            # 修复4：记录详细错误信息，方便排查
+            logger.error(f"搜索失败: {e}", exc_info=True)
+            # 根据错误类型返回不同信息
+            if "embedding" in str(e).lower():
+                logger.error("嵌入生成失败，请检查Ollama服务状态")
+            elif "connection" in str(e).lower():
+                logger.error("连接失败，请检查网络或ChromaDB服务")
             return []
 
     def delete_document(self, doc_id: str) -> bool:

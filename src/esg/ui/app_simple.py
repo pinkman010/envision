@@ -533,7 +533,7 @@ def create_metrics_from_extraction(result: Any) -> ESGMetrics:
 
 
 def display_metrics_summary(metrics: ESGMetrics) -> None:
-    """显示指标摘要
+    """显示指标摘要 - 与models.py修复后的E/S/G维度权重配置对齐
 
     Args:
         metrics: ESG指标
@@ -541,25 +541,94 @@ def display_metrics_summary(metrics: ESGMetrics) -> None:
     with st.expander("📊 查看提取的指标", expanded=True):
         cols = st.columns(3)
 
-        # 环境指标
+        # 环境指标 (E) - 16个核心指标
         with cols[0]:
             st.markdown("**🌱 环境 (E)**")
-            st.write(f"碳排放: {metrics.carbon_emissions or 'N/A'} 吨")
+            
+            # 一级指标：排放与气候（45%权重）
+            st.caption("排放与气候")
+            st.write(f"碳强度: {metrics.carbon_intensity or 'N/A'} 吨CO₂e/百万营收")
+            st.write(f"范围3覆盖率: {metrics.scope3_coverage_percentage or 'N/A'} %")
+            st.write(f"SBTi状态: {metrics.sbti_target.status if metrics.sbti_target else 'N/A'}")
+            
+            # 二级指标：运营效率（30%权重）
+            st.caption("运营效率")
             st.write(f"可再生能源: {metrics.renewable_energy_ratio or 'N/A'} %")
             st.write(f"能源效率: {metrics.energy_efficiency or 'N/A'} %")
+            st.write(f"废物回收率: {metrics.waste_recycling_rate or 'N/A'} %")
+            st.write(f"水资源强度: {metrics.water_intensity or 'N/A'} 立方米/百万营收")
+            
+            # 三级指标：新能源特色（25%权重）
+            st.caption("新能源特色")
+            if metrics.turbine_availability:
+                st.write(f"风机可利用率: {metrics.turbine_availability} %")
+            if metrics.battery_cycle_life:
+                st.write(f"电池循环寿命: {metrics.battery_cycle_life} 次")
+            if metrics.electrolysis_efficiency:
+                st.write(f"电解效率: {metrics.electrolysis_efficiency} %")
+            if metrics.energy_storage_safety_score:
+                st.write(f"储能安全评分: {metrics.energy_storage_safety_score} 分")
+            
+            # 基础排放数据
+            st.caption("基础排放")
+            st.write(f"总碳排放: {metrics.carbon_emissions or 'N/A'} 吨")
 
-        # 社会指标
+        # 社会指标 (S) - 11个核心指标
         with cols[1]:
             st.markdown("**👥 社会 (S)**")
-            st.write(f"员工数: {metrics.employee_count or 'N/A'} 人")
-            st.write(f"女性比例: {metrics.female_ratio or 'N/A'} %")
-            st.write(f"培训时长: {metrics.training_hours or 'N/A'} 小时")
+            
+            # 一级指标：员工发展与多元化（45%权重）
+            st.caption("多元化")
+            st.write(f"员工总数: {metrics.employee_count or 'N/A'} 人")
+            st.write(f"女性员工比例: {metrics.female_ratio or 'N/A'} %")
+            st.write(f"高管女性比例: {metrics.female_executive_ratio or 'N/A'} %")
+            st.write(f"人均培训时长: {metrics.training_hours or 'N/A'} 小时")
+            
+            # 二级指标：安全与福祉（30%权重）
+            st.caption("安全与福祉")
+            if metrics.trir:
+                st.write(f"TRIR: {metrics.trir} 每百万工时")
+            if metrics.ltifr or metrics.lost_time_injury_rate:
+                st.write(f"LTIFR: {metrics.ltifr or metrics.lost_time_injury_rate} 每百万工时")
+            if metrics.safety_investment_ratio:
+                st.write(f"安全投入占比: {metrics.safety_investment_ratio} %")
+            st.write(f"安全事故数: {metrics.safety_incidents or 'N/A'} 起")
+            
+            # 三级指标：社区责任（25%权重）
+            st.caption("社区责任")
+            if metrics.community_investment_per_revenue:
+                st.write(f"社区投资占营收: {metrics.community_investment_per_revenue} %")
+            if metrics.local_employment_ratio:
+                st.write(f"本地雇佣比例: {metrics.local_employment_ratio} %")
+            st.write(f"社区投资总额: {metrics.community_investment or 'N/A'} 元")
 
-        # 治理指标
+        # 治理指标 (G) - 10个核心指标
         with cols[2]:
             st.markdown("**⚖️ 治理 (G)**")
-            st.write(f"独董比例: {metrics.board_independence_ratio or 'N/A'} %")
-            st.write(f"伦理培训: {metrics.ethics_training_coverage or 'N/A'} %")
+            
+            # 第一层：董事会与治理结构（35%权重）
+            st.caption("治理结构")
+            st.write(f"董事会独立性: {metrics.board_independence_ratio or 'N/A'} %")
+            st.write(f"ESG委员会独立性: {metrics.esg_committee_independence or 'N/A'} %")
+            
+            # 第二层：合规与商业道德（30%权重）
+            st.caption("合规与道德")
+            st.write(f"道德培训覆盖率: {metrics.ethics_training_coverage or 'N/A'} %")
+            st.write(f"反腐败培训覆盖率: {metrics.anti_corruption_training_coverage or 'N/A'} %")
+            if metrics.whistleblower_protection is not None:
+                st.write(f"举报人保护: {'有' if metrics.whistleblower_protection else '无'}")
+            
+            # 第三层：气候治理（20%权重）
+            st.caption("气候治理")
+            if metrics.climate_governance:
+                st.write(f"气候委员会: {'✅' if metrics.climate_governance.board_climate_committee else '❌'}")
+                st.write(f"高管薪酬挂钩: {'✅' if metrics.climate_governance.exec_comp_linked_to_climate else '❌'}")
+            if metrics.tcfd_disclosure:
+                st.write(f"TCFD披露: {'✅' if metrics.tcfd_disclosure.governance_disclosed else '❌'}")
+            
+            # 第四层：透明度与问责（15%权重）
+            st.caption("透明度")
+            st.write(f"ESG报告质量: {metrics.esg_report_quality or 'N/A'} 分")
 
 
 def display_analysis_result(result: AnalysisResult, config: Dict[str, Any]) -> None:

@@ -645,24 +645,53 @@ class ReportGenerator:
         metrics = result.metrics
         dimension_completeness = {}
 
+        # ===== 环境维度 (E) - 16个核心指标 =====
         e_fields = [
-            metrics.carbon_emissions,
+            metrics.carbon_intensity,
+            metrics.scope3_coverage_percentage,
+            metrics.sbti_target,
             metrics.renewable_energy_ratio,
             metrics.energy_efficiency,
-            metrics.water_consumption,
             metrics.waste_recycling_rate,
+            metrics.water_intensity,
+            metrics.turbine_availability,
+            metrics.curtailment_rate,
+            metrics.battery_cycle_life,
+            metrics.battery_recycling_rate,
+            metrics.electrolysis_efficiency,
+            metrics.energy_storage_safety_score,
+            metrics.carbon_emissions,
+            metrics.scope1_emissions,
+            metrics.scope2_emissions_location,
         ]
+        
+        # ===== 社会维度 (S) - 11个核心指标 =====
         s_fields = [
-            metrics.employee_count,
             metrics.female_ratio,
+            metrics.female_executive_ratio,
             metrics.training_hours,
+            metrics.training_investment_per_employee,
+            metrics.employee_count,
+            metrics.trir,
+            metrics.ltifr if metrics.ltifr is not None else metrics.lost_time_injury_rate,
+            metrics.safety_investment_ratio,
             metrics.safety_incidents,
+            metrics.community_investment_per_revenue,
+            metrics.local_employment_ratio,
             metrics.community_investment,
         ]
+        
+        # ===== 治理维度 (G) - 9个核心指标 =====
         g_fields = [
             metrics.board_independence_ratio,
+            metrics.esg_committee_independence,
             metrics.ethics_training_coverage,
+            metrics.anti_corruption_training_coverage,
+            metrics.whistleblower_protection,
+            metrics.climate_governance,
+            metrics.tcfd_disclosure,
             metrics.esg_report_quality,
+            metrics.esg_committee_independence,
         ]
 
         dimension_completeness["E"] = sum(1 for f in e_fields if f is not None) / len(e_fields)
@@ -670,13 +699,13 @@ class ReportGenerator:
         dimension_completeness["G"] = sum(1 for f in g_fields if f is not None) / len(g_fields)
 
         lines.extend(
-            ["### 数据完整度", "", "| 维度 | 完整度 | 可视化 |", "|:----:|:------:|--------|"]
+            ["### 数据完整度", "", "| 维度 | 检查项 | 完整度 | 可视化 |", "|:----:|:------:|:------:|--------|"]
         )
 
-        for dim in ["E", "S", "G"]:
+        for dim, field_count in [("E", len(e_fields)), ("S", len(s_fields)), ("G", len(g_fields))]:
             completeness = dimension_completeness[dim]
             bar = "█" * int(completeness * 10) + "░" * (10 - int(completeness * 10))
-            lines.append(f"| **{dim}** | {completeness:.0%} | {bar} |")
+            lines.append(f"| **{dim}** | {field_count}项 | {completeness:.0%} | {bar} |")
 
         lines.append("")
 
@@ -1126,14 +1155,24 @@ class ReportGenerator:
             "executive_summary": self._generate_summary_text(result),
         }
 
-        # 添加碳足迹数据
-        if metrics.carbon_emissions:
+        # 添加碳足迹数据 - 使用专业计算方法
+        emissions_breakdown = metrics.get_emissions_breakdown()
+        if emissions_breakdown:
             data["carbon_footprint"] = {
-                "scope1": metrics.carbon_emissions * 0.6,  # 估算
-                "scope2": metrics.carbon_emissions * 0.3,
-                "scope3": metrics.carbon_emissions * 0.1,
+                "scope1": emissions_breakdown.get("scope1", 0) or 0,
+                "scope2": emissions_breakdown.get("scope2_used", 0) or 0,
+                "scope3": emissions_breakdown.get("scope3_summary", 0) or 0,
+                "total": emissions_breakdown.get("total_calculated") or metrics.carbon_emissions or 0,
+                "intensity": metrics.carbon_intensity or (metrics.carbon_emissions / (metrics.employee_count or 1) * 1000 if metrics.carbon_emissions else 0),
+            }
+        elif metrics.carbon_emissions:
+            # 回退到简化计算
+            data["carbon_footprint"] = {
+                "scope1": metrics.scope1_emissions or metrics.carbon_emissions * 0.6,
+                "scope2": (metrics.scope2_emissions_location or metrics.scope2_emissions_market or metrics.carbon_emissions * 0.3),
+                "scope3": metrics.scope3_emissions or metrics.carbon_emissions * 0.1,
                 "total": metrics.carbon_emissions,
-                "intensity": metrics.carbon_emissions / (metrics.employee_count or 1) * 1000,
+                "intensity": metrics.carbon_intensity or (metrics.carbon_emissions / (metrics.employee_count or 1) * 1000),
             }
 
         # 添加合规数据

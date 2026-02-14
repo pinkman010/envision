@@ -30,7 +30,7 @@ install-dev:
 
 # Testing
 test:
-	pytest src/tests/ -v --tb=short
+	PYTHONPATH=. pytest src/tests/ -v --tb=short
 
 test-unit:
 	pytest src/tests/ -v -m "not integration and not e2e" --tb=short

@@ -1,6 +1,9 @@
 # 过滤敏感配置文件（核心，永不提交）
 .env
 .env.*
+
+# 过滤Python可编辑安装生成的元数据
+*.egg-info/
 # 过滤Python编译冗余文件
 __pycache__/
 *.pyc

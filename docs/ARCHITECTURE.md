@@ -94,13 +94,19 @@ envision/
 
 ### 2.2 模块划分
 
-#### 2.2.1 核心模块（src/core/）
+#### 2.2.1 核心模块（src/esg/core/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
-| models.py | 数据模型定义 | ESGMetrics, AnalysisResult |
+| models.py | 数据模型定义 | ESGMetrics, AnalysisResult, CompanyData |
 | engine.py | ESG分析引擎 | ESGAnalysisEngine |
 | compliance_checker.py | 合规性检查 | ComplianceChecker |
+| constants.py | 常量定义 | ESG常量、阈值 |
+| scoring.py | 评分计算 | ScoreCalculator |
+| cdp_auto_filing.py | CDP自动申报 | CDPAutoFiler |
+| climate_scenario.py | 气候情景分析 | ClimateScenarioAnalyzer |
+| sbti_tracker.py | SBTi追踪 | SBTiTracker |
+| scope3_emissions.py | 范围3排放计算 | Scope3EmissionsCalculator |
 
 #### 2.2.2 提取模块（src/esg/extraction/）
 
@@ -112,7 +118,7 @@ envision/
 | carbon_footprint.py | 碳足迹计算 | CarbonFootprintCalculator |
 | multilingual.py | 多语言处理 | MultilingualProcessor |
 
-#### 2.2.3 分析模块（src/analysis/）
+#### 2.2.3 分析模块（src/esg/analysis/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
@@ -121,29 +127,41 @@ envision/
 | strategy_generator.py | 策略生成 | StrategyGenerator |
 | topic_analyzer.py | 议题分析 | TopicAnalyzer |
 | competitor_analyzer.py | 竞争分析 | CompetitorAnalyzer |
+| auto_updater.py | 自动更新 | AutoUpdater |
+| channel_advisor.py | 通道顾问 | ChannelAdvisor |
+| materiality_matrix.py | 物质性矩阵 | MaterialityMatrix |
+| timing_advisor.py | 时机顾问 | TimingAdvisor |
+| topic_updater.py | 主题更新 | TopicUpdater |
 
-#### 2.2.4 RAG模块（src/rag/）
+#### 2.2.4 RAG模块（src/esg/rag/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
 | engine.py | RAG引擎 | RAGEngine |
 | chat_history.py | 聊天历史 | ChatHistory |
 
-#### 2.2.5 向量存储（src/vector_store/）
+#### 2.2.5 向量存储（src/esg/vector_store/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
 | chroma_store.py | ChromaDB封装 | ChromaDBStore |
 | document_loader.py | 文档加载 | DocumentLoader |
 
-#### 2.2.6 融合模块（src/fusion/）
+#### 2.2.6 融合模块（src/esg/fusion/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
 | ahp.py | AHP层次分析法 | AHPFusionEngine |
 | rule_engine.py | 规则引擎 | RuleEngine |
 
-#### 2.2.7 安全模块（src/security/）
+#### 2.2.7 补全模块（src/esg/completion/）
+
+| 模块 | 职责 | 关键类 |
+|------|------|--------|
+| data_completion.py | 数据补全 | DataCompleter |
+| report_generator.py | 报告生成 | ReportGenerator |
+
+#### 2.2.8 安全模块（src/esg/security/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
@@ -151,7 +169,7 @@ envision/
 | encryption.py | 数据加密 | EncryptionManager |
 | csrf.py | CSRF防护 | CSRFProtection |
 
-#### 2.2.8 配置模块（src/config/）
+#### 2.2.9 配置模块（src/esg/config/）
 
 | 模块 | 职责 | 关键类/配置项 |
 |------|------|--------|
@@ -161,8 +179,18 @@ envision/
 | communication.py | 传播策略 | COMMUNICATION_CALENDAR 沟通日历 |
 | evaluation.py | 评估配置 | EVALUATION_PERSPECTIVES, BENCHMARK_COMPANIES |
 | visualization.py | 可视化配置 | 图表颜色、主题配置 |
+| logging_config.py | 日志配置 | 日志级别、格式 |
 
-#### 2.2.9 工具模块（src/utils/）
+#### 2.2.10 UI模块（src/esg/ui/）
+
+| 模块 | 职责 | 关键类 |
+|------|------|--------|
+| app_simple.py | 简洁版UI | SimpleESGApp |
+| app_enhanced.py | 增强版UI | EnhancedESGApp |
+| components.py | UI组件 | 图表、表格组件 |
+| state.py | 状态管理 | AppState |
+
+#### 2.2.11 工具模块（src/esg/utils/）
 
 | 模块 | 职责 | 关键类 |
 |------|------|--------|
@@ -172,6 +200,14 @@ envision/
 | html_sanitizer.py | HTML净化 | HTMLSanitizer |
 | validators.py | 数据验证 | 验证函数集 |
 | file_utils.py | 文件工具 | 工具函数集 |
+
+#### 2.2.12 验证器子模块（src/esg/utils/validators/）
+
+| 模块 | 职责 | 关键类 |
+|------|------|--------|
+| base.py | 基础验证器 | BaseValidator |
+| esg_metrics.py | ESG指标验证 | ESGMetricsValidator |
+| fields.py | 字段验证 | FieldValidator |
 
 ## 3. 数据流
 
@@ -369,23 +405,181 @@ class CustomMetricExtractor(MetricExtractor):
 - 架构变更更新本文档
 - 版本发布更新CHANGELOG
 
-## 10. 演进路线
+## 10. 模块详细说明（v1.3.5）
 
-### 10.1 短期目标（v1.3）
+本节详细列出所有.py文件及其功能说明。
+
+### 10.1 核心模块（src/esg/core/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 核心模块初始化 | - |
+| `models.py` | 数据模型定义 | ESGMetrics, AnalysisResult, CompanyData |
+| `engine.py` | ESG分析引擎 | ESGAnalysisEngine |
+| `compliance_checker.py` | 合规性检查 | ComplianceChecker |
+| `constants.py` | 常量定义 | ESG常量、阈值 |
+| `scoring.py` | 评分计算 | ScoreCalculator |
+| `cdp_auto_filing.py` | CDP自动申报 | CDPAutoFiler |
+| `climate_scenario.py` | 气候情景分析 | ClimateScenarioAnalyzer |
+| `sbti_tracker.py` | SBTi追踪 | SBTiTracker |
+| `scope3_emissions.py` | 范围3排放计算 | Scope3EmissionsCalculator |
+
+### 10.2 提取模块（src/esg/extraction/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 提取模块初始化 | - |
+| `pdf_extractor.py` | PDF文本提取 | PDFExtractor, PDFContent |
+| `pdf_extractor_async.py` | 异步PDF提取 | AsyncPDFExtractor |
+| `metric_extractor.py` | 指标提取 | MetricExtractor |
+| `carbon_footprint.py` | 碳足迹计算 | CarbonFootprintCalculator |
+| `multilingual.py` | 多语言处理 | MultilingualProcessor |
+
+### 10.3 分析模块（src/esg/analysis/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 分析模块初始化 | - |
+| `gap_analyzer.py` | 差距分析 | GapAnalyzer |
+| `business_mapper.py` | 业务映射 | BusinessMapper |
+| `strategy_generator.py` | 策略生成 | StrategyGenerator |
+| `topic_analyzer.py` | 议题分析 | TopicAnalyzer |
+| `competitor_analyzer.py` | 竞争分析 | CompetitorAnalyzer |
+| `auto_updater.py` | 自动更新 | AutoUpdater |
+| `channel_advisor.py` | 通道顾问 | ChannelAdvisor |
+| `materiality_matrix.py` | 物质性矩阵 | MaterialityMatrix |
+| `timing_advisor.py` | 时机顾问 | TimingAdvisor |
+| `topic_updater.py` | 主题更新 | TopicUpdater |
+
+### 10.4 RAG模块（src/esg/rag/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | RAG模块初始化 | - |
+| `engine.py` | RAG引擎 | RAGEngine |
+| `chat_history.py` | 聊天历史 | ChatHistory |
+
+### 10.5 向量存储（src/esg/vector_store/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 向量存储模块初始化 | - |
+| `chroma_store.py` | ChromaDB封装 | ChromaDBStore |
+| `document_loader.py` | 文档加载 | DocumentLoader |
+
+### 10.6 融合模块（src/esg/fusion/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 融合模块初始化 | - |
+| `ahp.py` | AHP层次分析法 | AHPFusionEngine |
+| `rule_engine.py` | 规则引擎 | RuleEngine |
+
+### 10.7 补全模块（src/esg/completion/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 补全模块初始化 | - |
+| `data_completion.py` | 数据补全 | DataCompleter |
+| `report_generator.py` | 报告生成 | ReportGenerator |
+
+### 10.8 安全模块（src/esg/security/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 安全模块初始化 | - |
+| `auth.py` | 认证授权 | AuthManager, User |
+| `encryption.py` | 数据加密 | EncryptionManager |
+| `csrf.py` | CSRF防护 | CSRFProtection |
+
+### 10.9 配置模块（src/esg/config/）
+
+| 文件 | 职责 | 关键类/配置项 |
+|------|------|------------|
+| `__init__.py` | 配置模块初始化 | - |
+| `base.py` | 基础配置 | PROJECT_ROOT, ANALYSIS_YEARS, 版本信息 |
+| `esg.py` | ESG维度配置 | ESG_DIMENSIONS, ESG_COLORS, 指标阈值 |
+| `standards.py` | 标准配置 | ISSB, GRI 标准条款 |
+| `communication.py` | 传播策略 | COMMUNICATION_CALENDAR 沟通日历 |
+| `evaluation.py` | 评估配置 | EVALUATION_PERSPECTIVES, BENCHMARK_COMPANIES |
+| `visualization.py` | 可视化配置 | 图表颜色、主题配置 |
+| `logging_config.py` | 日志配置 | 日志级别、格式 |
+
+### 10.10 UI模块（src/esg/ui/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | UI模块初始化 | - |
+| `app_simple.py` | 简洁版UI | SimpleESGApp |
+| `app_enhanced.py` | 增强版UI | EnhancedESGApp |
+| `components.py` | UI组件 | 图表、表格组件 |
+| `state.py` | 状态管理 | AppState |
+
+### 10.11 工具模块（src/esg/utils/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 工具模块初始化 | - |
+| `performance_monitor.py` | 性能监控 | PerformanceMonitor |
+| `cache_manager.py` | 缓存管理 | CacheManager |
+| `ollama_client.py` | LLM客户端 | OllamaClient |
+| `html_sanitizer.py` | HTML净化 | HTMLSanitizer |
+| `validators.py` | 数据验证 | 验证函数集 |
+| `file_utils.py` | 文件工具 | 工具函数集 |
+
+#### 10.11.1 验证器子模块（src/esg/utils/validators/）
+
+| 文件 | 职责 | 关键类/函数 |
+|------|------|------------|
+| `__init__.py` | 验证器初始化 | - |
+| `base.py` | 基础验证器 | BaseValidator |
+| `esg_metrics.py` | ESG指标验证 | ESGMetricsValidator |
+| `fields.py` | 字段验证 | FieldValidator |
+
+### 10.12 测试模块（src/tests/）
+
+| 文件 | 职责 |
+|------|------|
+| `test_competitor_feature.py` | 竞争功能测试 |
+| `test_compliance.py` | 合规测试 |
+| `test_comprehensive.py` | 综合测试 |
+| `test_e2e.py` | 端到端测试 |
+| `test_edge_cases.py` | 边界用例测试 |
+| `test_exceptions.py` | 异常处理测试 |
+| `test_ollama_client.py` | Ollama客户端测试 |
+| `test_pdf_extractor.py` | PDF提取测试 |
+| `test_rag_engine.py` | RAG引擎测试 |
+| `test_topic_updater.py` | 主题更新测试 |
+| `test_validators.py` | 验证器测试 |
+
+### 10.13 脚本模块（src/scripts/）
+
+| 文件 | 职责 |
+|------|------|
+| `check_docstring_coverage.py` | 文档字符串覆盖率检查 |
+
+## 11. 演进路线
+
+### 11.1 短期目标（v1.3）
 
 - [x] 多语言报告支持（中文、英文、繁体中文）
-- [ ] 数据可视化仪表板
+- [x] 数据可视化仪表板
 - [ ] API接口完善
 - [ ] 更多语言支持（日语、韩语、德语、法语、西班牙语）- 后续版本
 
-### 10.2 中期目标（v2.0）
+### 11.2 中期目标（v2.0）
 
 - [ ] 支持更多ESG标准
 - [ ] 机器学习模型集成
 - [ ] 实时数据同步
 
-### 10.3 长期目标（v3.0）
+### 11.3 长期目标（v3.0）
 
 - [ ] 区块链存证
 - [ ] 行业对比平台
 - [ ] 预测性分析
+
+---
+
+**版本**: v1.3.5  
+**更新日期**: 2026-02-14

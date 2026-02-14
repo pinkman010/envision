@@ -5,6 +5,42 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.3.5] - 2026-02-14
+
+### 🚀 新增功能
+
+#### 数据可视化仪表板
+- 增强版UI添加数据可视化仪表板
+- 支持雷达图、双向条形图、热力图等多种图表
+- 交互式数据展示
+
+#### 核心模块增强
+- 新增CDP自动申报模块 (cdp_auto_filing.py)
+- 新增气候情景分析模块 (climate_scenario.py)
+- 新增SBTi追踪模块 (sbti_tracker.py)
+- 新增Scope3排放模块 (scope3_emissions.py)
+
+#### 工具模块增强
+- 新增性能监控模块 (performance_monitor.py)
+- 新增缓存管理模块 (cache_manager.py)
+- 新增HTML净化模块 (html_sanitizer.py)
+- 新增文件工具模块 (file_utils.py)
+- 新增验证器基础模块 (validators/)
+
+### 🔧 改进
+
+- 优化UI组件加载性能
+- 改进数据提取准确性
+- 增强错误处理机制
+- 更新版本号为v1.3.5
+
+### 📚 文档
+
+- 更新架构设计文档，添加详细的.py文件说明
+- 更新README.md版本信息
+
+---
+
 ## [1.3.0] - 2026-02-13
 
 ### 🚀 新增功能

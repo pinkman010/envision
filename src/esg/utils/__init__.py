@@ -19,7 +19,7 @@ from src.esg.utils.file_utils import (
 # Ollama 客户端
 from src.esg.utils.ollama_client import OllamaClient
 
-# 数据校验工具
+# 数据校验工具（从validators包导入）
 from src.esg.utils.validators import (
     ALLOWED_PDF_EXTENSIONS,
     ALLOWED_PDF_MIME_TYPES,

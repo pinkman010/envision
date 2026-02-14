@@ -48,7 +48,12 @@ ISSB_S1_CLAUSES = [
         "requirement_type": REQUIREMENT_MANDATORY,
         "check_items": ["定量指标披露", "目标设定", "绩效追踪机制"],
         "description": "披露用于评估和管理可持续发展相关风险和机遇的指标和目标",
-        "related_metrics": ["carbon_emissions", "renewable_energy_ratio", "employee_count", "training_hours"],
+        "related_metrics": [
+            "carbon_emissions",
+            "renewable_energy_ratio",
+            "employee_count",
+            "training_hours",
+        ],
     },
     {
         "standard_id": "ISSB-S1-05",

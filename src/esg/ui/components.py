@@ -828,7 +828,7 @@ def render_gap_table(gap_data: Dict[str, Any]) -> None:
         )
 
     df = pd.DataFrame(table_data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 
 
 def render_business_unit_risk_matrix(matrix_data: List[Dict[str, Any]]) -> None:
@@ -863,7 +863,7 @@ def render_business_unit_risk_matrix(matrix_data: List[Dict[str, Any]]) -> None:
         df_data.append(row_data)
 
     df = pd.DataFrame(df_data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 
 
 # ============== 辅助函数 ==============

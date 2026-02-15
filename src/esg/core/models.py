@@ -2,120 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
-if TYPE_CHECKING:
-    from src.esg.core.scope3_emissions import Scope3Inventory
-
-
-@dataclass
-class ClimateGovernance:
-    """气候治理架构
-
-    评估企业在气候治理方面的架构建设情况，
-    符合TCFD/ISSB要求的气候治理评估标准。
-
-    Attributes:
-        board_climate_committee: 董事会气候委员会设立
-        exec_comp_linked_to_climate: 高管薪酬与气候目标挂钩
-        climate_risk_identification_process: 气候风险识别流程
-        regular_climate_reporting_to_board: 定期向董事会汇报气候议题
-    """
-
-    board_climate_committee: bool = False  # 董事会气候委员会
-    exec_comp_linked_to_climate: bool = False  # 高管薪酬与气候目标挂钩
-    climate_risk_identification_process: bool = False  # 气候风险识别流程
-    regular_climate_reporting_to_board: bool = False  # 定期向董事会汇报
-
-    def get_score(self) -> float:
-        """计算气候治理架构评分（0-100）
-
-        Returns:
-            气候治理架构得分
-        """
-        score = 0.0
-        if self.board_climate_committee:
-            score += 30.0
-        if self.exec_comp_linked_to_climate:
-            score += 30.0
-        if self.climate_risk_identification_process:
-            score += 20.0
-        if self.regular_climate_reporting_to_board:
-            score += 20.0
-        return score
-
-
-@dataclass
-class TCFDDisclosure:
-    """TCFD披露评估
-
-    评估企业TCFD（气候相关财务披露工作组）
-    四支柱披露完整度。
-
-    Attributes:
-        governance_disclosed: 治理支柱已披露
-        strategy_disclosed: 战略支柱已披露
-        risk_management_disclosed: 风险管理支柱已披露
-        metrics_targets_disclosed: 指标与目标支柱已披露
-    """
-
-    governance_disclosed: bool = False
-    strategy_disclosed: bool = False
-    risk_management_disclosed: bool = False
-    metrics_targets_disclosed: bool = False
-
-    def get_score(self) -> float:
-        """计算TCFD披露完整度评分（0-100）
-
-        Returns:
-            TCFD披露完整度得分
-        """
-        score = 0.0
-        if self.governance_disclosed:
-            score += 25.0
-        if self.strategy_disclosed:
-            score += 25.0
-        if self.risk_management_disclosed:
-            score += 25.0
-        if self.metrics_targets_disclosed:
-            score += 25.0
-        return score
-
-
-@dataclass
-class ClimateDisclosureQuality:
-    """气候信息披露质量
-
-    评估企业气候信息披露的质量和完整性。
-
-    Attributes:
-        scope123_full_disclosure: 范围1+2+3完整披露
-        third_party_verification: 第三方核证
-        historical_data_comparability: 历史数据可比性
-        forward_looking_targets: 前瞻性目标披露
-    """
-
-    scope123_full_disclosure: bool = False  # 范围1+2+3完整披露
-    third_party_verification: bool = False  # 第三方核证
-    historical_data_comparability: bool = False  # 历史数据可比性
-    forward_looking_targets: bool = False  # 前瞻性目标披露
-
-    def get_score(self) -> float:
-        """计算气候信息披露质量评分（0-100）
-
-        Returns:
-            气候信息披露质量得分
-        """
-        score = 0.0
-        if self.scope123_full_disclosure:
-            score += 40.0
-        if self.third_party_verification:
-            score += 30.0
-        if self.historical_data_comparability:
-            score += 20.0
-        if self.forward_looking_targets:
-            score += 10.0
-        return score
+from typing import Any, Dict, List, Optional
 
 
 # 常量定义
@@ -151,7 +38,6 @@ E_DIMENSION_WEIGHTS = {
     "carbon_intensity": 0.15,  # 范围1+2碳强度
     "scope3_coverage": 0.10,  # 范围3覆盖率
     "scope3_ratio": 0.05,  # 范围3/1+2比例
-    "sbti_target": 0.15,  # SBTi目标
     # 二级指标 - 运营效率（30%）
     "renewable_energy_ratio": 0.075,
     "energy_efficiency": 0.075,
@@ -174,18 +60,6 @@ SCOPE3_RATIO_ACCEPTABLE_MAX = 50.0  # 可接受区间最大值
 # 范围3覆盖率评分基准
 SCOPE3_COVERAGE_BENCHMARK_HIGH = 0.80  # 高覆盖率基准（80%）
 SCOPE3_COVERAGE_BENCHMARK_LOW = 0.40  # 低覆盖率基准（40%）
-
-# SBTi状态评分
-SBTI_STATUS_SCORES = {
-    "committed": 20,
-    "target_set": 60,
-    "validated": 80,
-    "validated_1.5c": 100,
-    "validated_wb2c": 90,
-    "validated_2c": 80,
-    "not_committed": 0,
-    "removed": 0,
-}
 
 # S维度评分权重配置（分层加权，与E维度对齐）
 S_DIMENSION_WEIGHTS = {
@@ -215,11 +89,7 @@ G_DIMENSION_WEIGHTS = {
     "whistleblower_protection": 0.05, # 举报人保护机制
     "business_ethics": 0.10,          # 商业道德体系（新增）
     
-    # 第三层：气候治理（20%）← 新能源特色
-    "climate_governance": 0.12,       # 气候治理架构
-    "tcfd_disclosure": 0.08,          # TCFD披露完整度
-    
-    # 第四层：透明度与问责（15%）
+    # 第三层：透明度与问责（15%）
     "esg_report_quality": 0.08,       # ESG报告质量
     "stakeholder_engagement": 0.07,   # 利益相关方参与（新增）
 }
@@ -274,152 +144,21 @@ def _calculate_weighted_score(
 @dataclass
 class SBTiTarget:
     """SBTi气候目标数据类
-
-    存储企业SBTi承诺状态、减排目标和进度追踪。
-
+    
+    存储科学碳目标倡议(SBTi)相关信息。
+    
     Attributes:
-        status: SBTi状态（committed/target_set/validated等）
-        target_type: 目标类型（absolute/intensity/renewable）
-        baseline_year: 基准年
-        target_year: 目标年
-        baseline_emissions: 基准年排放量（吨CO2e）
-        target_emissions: 目标排放量（吨CO2e）
-        reduction_rate: 目标减排率（0-1）
-        current_emissions: 当前排放量
-        current_year: 当前年份
-        validation_date: SBTi验证日期
-        pathway: 温升路径（1.5c/wb2c/2c）
-        scope_coverage: 覆盖范围（1+2/1+2+3）
+        target_type: 目标类型（如 'absolute', 'intensity'）
+        target_year: 目标年份
+        reduction_percentage: 减排百分比
+        baseline_year: 基准年份
+        verification_status: 验证状态
     """
-
-    status: str = "not_committed"  # SBTi状态
-    target_type: str = ""  # 目标类型
-    baseline_year: int = 0  # 基准年
-    target_year: int = 0  # 目标年
-    baseline_emissions: Optional[float] = None  # 基准年排放量
-    target_emissions: Optional[float] = None  # 目标排放量
-    reduction_rate: Optional[float] = None  # 目标减排率（0-1）
-    current_emissions: Optional[float] = None  # 当前排放量
-    current_year: Optional[int] = None  # 当前年份
-    validation_date: Optional[str] = None  # SBTi验证日期
-    pathway: str = ""  # 温升路径
-    scope_coverage: str = "1+2"  # 覆盖范围
-
-    def get_progress_rate(self) -> Optional[float]:
-        """计算当前减排进度
-
-        Returns:
-            当前减排率（相对于基准年），范围0-1
-        """
-        if (
-            self.baseline_emissions is None
-            or self.current_emissions is None
-            or self.baseline_emissions == 0
-        ):
-            return None
-
-        reduction = self.baseline_emissions - self.current_emissions
-        return reduction / self.baseline_emissions
-
-    def get_progress_score(self) -> float:
-        """计算减排进度评分（0-100）
-
-        基于当前减排进度与目标减排率的比值评分。
-
-        Returns:
-            进度评分（0-100）
-        """
-        progress = self.get_progress_rate()
-        if progress is None or self.reduction_rate is None or self.reduction_rate == 0:
-            return 0.0
-
-        # 计算完成度（当前减排率 / 目标减排率）
-        completion = progress / self.reduction_rate
-
-        # 计算年份进度
-        if self.baseline_year and self.target_year and self.current_year:
-            year_progress = (self.current_year - self.baseline_year) / (
-                self.target_year - self.baseline_year
-            )
-            # 如果减排进度超前于年份进度，给予奖励
-            if completion >= year_progress and year_progress > 0:
-                completion = min(1.0, completion * 1.1)  # 10%奖励系数
-
-        return min(100.0, completion * 100)
-
-    def get_status_score(self) -> float:
-        """获取SBTi状态评分
-
-        Returns:
-            SBTi状态对应的基础评分（0-100）
-        """
-        return SBTI_STATUS_SCORES.get(self.status, 0)
-
-    def get_overall_score(self) -> float:
-        """获取SBTi综合评分
-
-        综合状态评分（40%）和进度评分（60%）
-
-        Returns:
-            综合评分（0-100）
-        """
-        status_score = self.get_status_score()
-        progress_score = self.get_progress_score()
-
-        # 如果未承诺，直接返回0
-        if self.status in ("not_committed", "removed"):
-            return 0.0
-
-        # 如果已设定目标但未验证，只考虑进度
-        if self.status == "target_set":
-            return progress_score * 0.6 + status_score * 0.4
-
-        # 已验证：状态40% + 进度60%
-        return status_score * 0.4 + progress_score * 0.6
-
-    def is_on_track(self) -> Optional[bool]:
-        """判断是否按进度推进
-
-        Returns:
-            True: 按计划推进，False: 落后，None: 无法判断
-        """
-        if not all([self.baseline_year, self.target_year, self.current_year, self.reduction_rate]):
-            return None
-
-        progress = self.get_progress_rate()
-        if progress is None:
-            return None
-
-        # 计算应达到的减排率（线性插值）
-        year_progress = (self.current_year - self.baseline_year) / (
-            self.target_year - self.baseline_year
-        )
-        expected_reduction = self.reduction_rate * year_progress
-
-        # 允许10%的偏差
-        return progress >= expected_reduction * 0.9
-
-    def to_dict(self) -> Dict[str, Any]:
-        """转换为字典"""
-        return {
-            "status": self.status,
-            "target_type": self.target_type,
-            "baseline_year": self.baseline_year,
-            "target_year": self.target_year,
-            "baseline_emissions": self.baseline_emissions,
-            "target_emissions": self.target_emissions,
-            "reduction_rate": self.reduction_rate,
-            "current_emissions": self.current_emissions,
-            "current_year": self.current_year,
-            "validation_date": self.validation_date,
-            "pathway": self.pathway,
-            "scope_coverage": self.scope_coverage,
-            "progress_rate": self.get_progress_rate(),
-            "progress_score": self.get_progress_score(),
-            "status_score": self.get_status_score(),
-            "overall_score": self.get_overall_score(),
-            "on_track": self.is_on_track(),
-        }
+    target_type: Optional[str] = None
+    target_year: Optional[int] = None
+    reduction_percentage: Optional[float] = None
+    baseline_year: Optional[int] = None
+    verification_status: Optional[str] = None
 
 
 @dataclass
@@ -512,13 +251,12 @@ class ESGMetrics:
     carbon_intensity: Optional[float] = None  # 碳强度（范围1+2+3 / 营收）
     carbon_intensity_scope12: Optional[float] = None  # 仅范围1+2的碳强度
 
-    # 范围3完整核算
-    scope3_inventory: Optional[Any] = None  # Scope3Inventory对象
+    # 范围3数据质量
     scope3_data_quality_score: Optional[float] = None  # 范围3数据质量评分
     scope3_coverage_percentage: Optional[float] = None  # 范围3数据覆盖率
 
     # SBTi目标
-    sbti_target: Optional[SBTiTarget] = None
+    sbti_target: Optional["SBTiTarget"] = None
 
     # 环境指标 (E) - 能源
     renewable_energy_ratio: Optional[float] = None
@@ -558,12 +296,6 @@ class ESGMetrics:
     anti_corruption_training_coverage: Optional[float] = None
     whistleblower_protection: Optional[bool] = None
 
-    # 治理指标 (G) - 气候治理
-    climate_governance: Optional[ClimateGovernance] = None
-    tcfd_disclosure: Optional[TCFDDisclosure] = None
-    climate_disclosure_quality: Optional[ClimateDisclosureQuality] = None
-    climate_disclosure_quality_score: Optional[float] = None  # 0-100
-
     # 新能源特色指标
     turbine_availability: Optional[float] = None
     curtailment_rate: Optional[float] = None
@@ -585,7 +317,6 @@ class ESGMetrics:
         """计算总碳排放量
 
         优先使用分离的范围1/2/3排放数据，如不存在则使用carbon_emissions字段。
-        如果scope3_inventory存在，优先使用其完整核算数据。
 
         Args:
             include_scope3: 是否包含范围3排放
@@ -593,18 +324,6 @@ class ESGMetrics:
         Returns:
             总碳排放量或None
         """
-        # 优先使用scope3_inventory的完整核算数据
-        if include_scope3 and self.scope3_inventory is not None:
-            scope3 = self.scope3_inventory.get_total_emissions()
-            scope1 = self.scope1_emissions or 0
-            scope2 = (
-                self.scope2_emissions_market
-                if self.scope2_emissions_market is not None
-                else self.scope2_emissions_location or 0
-            )
-            if scope1 > 0 or scope2 > 0:
-                return scope1 + scope2 + (scope3 or 0)
-
         # 如果scope1和scope2（任一方法）存在，计算总和
         if self.scope1_emissions is not None:
             total = self.scope1_emissions
@@ -677,16 +396,6 @@ class ESGMetrics:
         ratio = (intensity - excellent) / (poor - excellent)
         return 100.0 * (1 - ratio)
 
-    def _calculate_sbti_score(self) -> Optional[float]:
-        """计算SBTi目标评分
-
-        Returns:
-            SBTi综合评分(0-100)或None（如未设置目标）
-        """
-        if self.sbti_target is None:
-            return None
-        return self.sbti_target.get_overall_score()
-
     def _calculate_water_intensity_score(self) -> Optional[float]:
         """计算水资源强度得分（越低越好）
 
@@ -710,55 +419,6 @@ class ESGMetrics:
         )
         return 100.0 * (1 - ratio)
 
-    def _calculate_scope3_coverage_score(self) -> Optional[float]:
-        """计算范围3覆盖率评分
-
-        基于行业重要性权重计算范围3覆盖率评分。
-        - 100分：所有重要类别都有数据
-        - 线性递减：按缺失的重要类别数量扣分
-
-        Returns:
-            覆盖率评分(0-100)或None
-        """
-        if self.scope3_inventory is None:
-            return None
-
-        from src.esg.core.scope3_emissions import NEW_ENERGY_SECTOR_RELEVANCE
-
-        relevance_map = NEW_ENERGY_SECTOR_RELEVANCE.get(
-            self.scope3_inventory.sector, NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
-        )
-
-        if not relevance_map:
-            return None
-
-        covered_weight = 0.0
-        total_weight = 0.0
-
-        for cat, weight in relevance_map.items():
-            total_weight += weight
-            cat_data = self.scope3_inventory.categories.get(cat)
-            if cat_data and cat_data.emissions is not None:
-                covered_weight += weight
-
-        if total_weight == 0:
-            return None
-
-        # 计算覆盖率并映射到0-100分
-        coverage = covered_weight / total_weight
-
-        # 覆盖率>80%得满分，<40%得0分，中间线性插值
-        if coverage >= SCOPE3_COVERAGE_BENCHMARK_HIGH:
-            return 100.0
-        if coverage <= SCOPE3_COVERAGE_BENCHMARK_LOW:
-            return 0.0
-
-        # 线性插值
-        ratio = (coverage - SCOPE3_COVERAGE_BENCHMARK_LOW) / (
-            SCOPE3_COVERAGE_BENCHMARK_HIGH - SCOPE3_COVERAGE_BENCHMARK_LOW
-        )
-        return 100.0 * ratio
-
     def _calculate_scope3_ratio_score(self) -> Optional[float]:
         """计算范围3/范围1+2比例评分
 
@@ -770,10 +430,7 @@ class ESGMetrics:
         Returns:
             比例评分(0-100)或None
         """
-        if self.scope3_inventory is None:
-            return None
-
-        scope3_total = self.scope3_inventory.get_total_emissions()
+        scope3_total = self.scope3_emissions
         scope12_emissions = self.get_scope1_2_emissions()
 
         if scope3_total is None or scope12_emissions is None or scope12_emissions <= 0:
@@ -830,16 +487,12 @@ class ESGMetrics:
             # 三级指标（25%）：新能源特色指标
 
             carbon_score = self._calculate_carbon_intensity_score()
-            scope3_coverage_score = self._calculate_scope3_coverage_score()
             scope3_ratio_score = self._calculate_scope3_ratio_score()
-            sbti_score = self._calculate_sbti_score()
-
             scores = [
                 # 一级指标
                 carbon_score,
-                scope3_coverage_score,
+                None,  # scope3_coverage_score 已移除
                 scope3_ratio_score,
-                sbti_score,
                 # 二级指标
                 self._safe_score(self.renewable_energy_ratio, 100.0),
                 self._safe_score(self.energy_efficiency, 100.0),
@@ -916,16 +569,7 @@ class ESGMetrics:
             )
             business_ethics = self._calculate_business_ethics_score()
             
-            # 第三层：气候治理
-            climate_gov_score = (
-                self._calculate_climate_governance_detailed_score() 
-                if self.climate_governance is not None else None
-            )
-            tcfd_score = (
-                self.tcfd_disclosure.get_score() if self.tcfd_disclosure is not None else None
-            )
-            
-            # 第四层：透明度与问责
+            # 第三层：透明度与问责
             report_quality = self._safe_score(self.esg_report_quality, 100.0)
             stakeholder_score = self._calculate_stakeholder_engagement_score()
 
@@ -939,9 +583,6 @@ class ESGMetrics:
                 whistleblower_score,
                 business_ethics,
                 # 第三层
-                climate_gov_score,
-                tcfd_score,
-                # 第四层
                 report_quality,
                 stakeholder_score,
             ]
@@ -1305,41 +946,6 @@ class ESGMetrics:
         normalized_weights = [w / total_weight for w in weights]
         return sum(s * nw for s, nw in zip(scores, normalized_weights))
 
-    def _calculate_climate_governance_detailed_score(self) -> Optional[float]:
-        """计算气候治理详细得分（0-100）
-        
-        将ClimateGovernance的4个布尔值细化为加权评分。
-        
-        Returns:
-            气候治理详细得分(0-100)或None
-        """
-        if self.climate_governance is None:
-            return None
-        
-        # ClimateGovernance原有4个布尔值，各25%权重
-        scores = []
-        if self.climate_governance.board_climate_committee:
-            scores.append(100.0)
-        else:
-            scores.append(0.0)
-        
-        if self.climate_governance.exec_comp_linked_to_climate:
-            scores.append(100.0)
-        else:
-            scores.append(0.0)
-        
-        if self.climate_governance.climate_risk_identification_process:
-            scores.append(100.0)
-        else:
-            scores.append(0.0)
-        
-        if self.climate_governance.regular_climate_reporting_to_board:
-            scores.append(100.0)
-        else:
-            scores.append(0.0)
-        
-        return sum(scores) / len(scores) if scores else None
-
     def _calculate_stakeholder_engagement_score(self) -> Optional[float]:
         """计算利益相关方参与得分（0-100）
         
@@ -1425,7 +1031,6 @@ class ESGMetrics:
                 self.battery_recycling_rate,
                 self.electrolysis_efficiency,
                 self.energy_storage_safety_score,
-                self.scope3_inventory is not None,
             ],
             "S": [
                 self.employee_count,
@@ -1446,10 +1051,6 @@ class ESGMetrics:
                 self.esg_committee_independence,
                 self.anti_corruption_training_coverage,
                 self.whistleblower_protection,
-                self.climate_governance is not None,
-                self.tcfd_disclosure is not None,
-                self.climate_disclosure_quality is not None,
-                self.climate_disclosure_quality_score,
             ],
         }
         return any(v is not None and v is not False for v in checks.get(dimension, []))
@@ -1487,65 +1088,7 @@ class ESGMetrics:
             "total_reported": self.carbon_emissions,
         }
 
-        # 如果存在scope3_inventory，添加详细分解
-        if self.scope3_inventory is not None:
-            breakdown["scope3_detail"] = {
-                "total": self.scope3_inventory.get_total_emissions(),
-                "upstream": self.scope3_inventory.get_upstream_emissions(),
-                "downstream": self.scope3_inventory.get_downstream_emissions(),
-                "data_quality_score": self.scope3_inventory.get_data_quality_score(),
-                "coverage_percentage": self.scope3_inventory.get_coverage_percentage(),
-                "significant_categories": [
-                    {
-                        "id": cat.value,
-                        "name": cat.name,
-                        "emissions": (
-                            self.scope3_inventory.categories[cat].emissions
-                            if cat in self.scope3_inventory.categories
-                            else None
-                        ),
-                    }
-                    for cat in self.scope3_inventory.get_significant_categories(threshold=0.05)
-                ],
-            }
-
-            # 添加CDP对齐评分
-            cdp_score = self.scope3_inventory.get_cdp_alignment_score()
-            breakdown["scope3_detail"]["cdp_alignment"] = cdp_score
-
         return breakdown
-
-    def get_climate_scenario_analysis(self) -> Optional[Dict[str, Any]]:
-        """获取TCFD气候情景分析
-
-        执行标准NGFS情景分析，评估企业在不同温升路径下的战略韧性。
-
-        Returns:
-            TCFD格式气候情景分析报告，或None（如果分析失败）
-
-        报告结构:
-            - scenarios_analyzed: 分析的情景列表
-            - temperature_rise_range: 温升范围
-            - resilience_assessment: 韧性评估（最佳/最差/平均）
-            - financial_impacts: 各情景财务影响
-            - scenario_details: 详细情景分析
-            - strategic_implications: 战略建议
-            - tcfd_alignment: TCFD对齐情况
-
-        使用示例:
-            >>> metrics = ESGMetrics(company_name="示例公司", year="2024")
-            >>> report = metrics.get_climate_scenario_analysis()
-            >>> print(f"韧性评分范围: {report['resilience_assessment']['best_case']:.1f} - "
-            ...       f"{report['resilience_assessment']['worst_case']:.1f}")
-        """
-        try:
-            # 延迟导入以避免循环依赖
-            from src.esg.core.climate_scenario import ClimateScenarioAnalyzer
-
-            analyzer = ClimateScenarioAnalyzer(self)
-            return analyzer.generate_tcfd_report()
-        except Exception:
-            return None
 
 
 @dataclass

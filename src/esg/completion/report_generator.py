@@ -688,8 +688,8 @@ class ReportGenerator:
             metrics.ethics_training_coverage,
             metrics.anti_corruption_training_coverage,
             metrics.whistleblower_protection,
-            metrics.climate_governance,
-            metrics.tcfd_disclosure,
+            getattr(metrics, 'climate_governance', None),
+            getattr(metrics, 'tcfd_disclosure', None),
             metrics.esg_report_quality,
             metrics.esg_committee_independence,
         ]

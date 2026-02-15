@@ -639,43 +639,43 @@ class GapAnalyzer:
         if metrics.whistleblower_protection is not None:
             scores["whistleblower_protection"] = 100.0 if metrics.whistleblower_protection else 0.0
         
-        # 气候治理架构
-        if metrics.climate_governance is not None:
+        # 气候治理架构 - 添加属性存在检查
+        if hasattr(metrics, 'climate_governance') and metrics.climate_governance is not None:
             cg_scores = []
-            if metrics.climate_governance.board_climate_committee:
+            if hasattr(metrics.climate_governance, 'board_climate_committee') and metrics.climate_governance.board_climate_committee:
                 cg_scores.append(100.0)
             else:
                 cg_scores.append(0.0)
-            if metrics.climate_governance.exec_comp_linked_to_climate:
+            if hasattr(metrics.climate_governance, 'exec_comp_linked_to_climate') and metrics.climate_governance.exec_comp_linked_to_climate:
                 cg_scores.append(100.0)
             else:
                 cg_scores.append(0.0)
-            if metrics.climate_governance.climate_risk_identification_process:
+            if hasattr(metrics.climate_governance, 'climate_risk_identification_process') and metrics.climate_governance.climate_risk_identification_process:
                 cg_scores.append(100.0)
             else:
                 cg_scores.append(0.0)
-            if metrics.climate_governance.regular_climate_reporting_to_board:
+            if hasattr(metrics.climate_governance, 'regular_climate_reporting_to_board') and metrics.climate_governance.regular_climate_reporting_to_board:
                 cg_scores.append(100.0)
             else:
                 cg_scores.append(0.0)
             scores["climate_governance_framework"] = sum(cg_scores) / len(cg_scores)
         
-        # TCFD披露
-        if metrics.tcfd_disclosure is not None:
+        # TCFD披露 - 添加属性存在检查
+        if hasattr(metrics, 'tcfd_disclosure') and metrics.tcfd_disclosure is not None:
             tcfd_scores = []
-            if metrics.tcfd_disclosure.governance_disclosed:
+            if hasattr(metrics.tcfd_disclosure, 'governance_disclosed') and metrics.tcfd_disclosure.governance_disclosed:
                 tcfd_scores.append(100.0)
             else:
                 tcfd_scores.append(0.0)
-            if metrics.tcfd_disclosure.strategy_disclosed:
+            if hasattr(metrics.tcfd_disclosure, 'strategy_disclosed') and metrics.tcfd_disclosure.strategy_disclosed:
                 tcfd_scores.append(100.0)
             else:
                 tcfd_scores.append(0.0)
-            if metrics.tcfd_disclosure.risk_management_disclosed:
+            if hasattr(metrics.tcfd_disclosure, 'risk_management_disclosed') and metrics.tcfd_disclosure.risk_management_disclosed:
                 tcfd_scores.append(100.0)
             else:
                 tcfd_scores.append(0.0)
-            if metrics.tcfd_disclosure.metrics_targets_disclosed:
+            if hasattr(metrics.tcfd_disclosure, 'metrics_targets_disclosed') and metrics.tcfd_disclosure.metrics_targets_disclosed:
                 tcfd_scores.append(100.0)
             else:
                 tcfd_scores.append(0.0)

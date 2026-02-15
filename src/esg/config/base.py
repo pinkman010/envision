@@ -24,7 +24,7 @@ REPORTS_DIR = DATA_DIR / "reports"
 
 # 向量和数据库存储
 VECTOR_DIR = PROJECT_ROOT / "storage" / "vector"
-DB_DIR = VECTOR_DIR
+DB_DIR = PROJECT_ROOT / "storage" / "chroma_db"  # 使用独立的目录避免版本冲突
 
 # ========== Ollama 配置 ==========
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
@@ -37,30 +37,9 @@ MODELS: Dict[str, str] = {
 }
 
 # ========== 版本信息 ==========
-VERSION = "Demo v1.3.6"
+VERSION = "1.4.0"
 APP_NAME = "ESG智能分析系统"
 APP_ICON = "🌿"
-
-# ========== 数据版本控制配置 ==========
-DATA_VERSION_CONFIG = {
-    "version_format": "{major}.{minor}.{patch}",
-    "current_version": "1.0.0",
-    "version_history_file": "data/.version_history.json",
-    "backup_count": 5,
-    "auto_backup": True,
-    "compatibility_matrix": {
-        "1.0.0": {"compatible_with": ["0.9.x", "1.0.x"], "breaking_changes": []}
-    },
-}
-
-# ========== 数据血缘追踪配置 ==========
-DATA_LINEAGE_CONFIG = {
-    "enabled": True,
-    "track_sources": True,
-    "track_transformations": True,
-    "storage_type": "json",  # 可选: json, sqlite
-    "lineage_file": "data/.lineage.json",
-}
 
 # ========== 分析时间配置 ==========
 ANALYSIS_YEARS: list = ["2025", "2024", "2023"]

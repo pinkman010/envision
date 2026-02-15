@@ -4,6 +4,14 @@
 兼容新版和旧版 ChromaDB API。
 """
 
+# 修复SQLite版本问题：在导入chromadb之前替换sqlite3
+try:
+    import pysqlite3
+    import sys
+    sys.modules['sqlite3'] = pysqlite3
+except ImportError:
+    pass
+
 import hashlib
 import logging
 import os
@@ -24,12 +32,9 @@ def _check_chromadb():
     """运行时检查ChromaDB是否可用"""
     global HAS_CHROMADB, _chromadb_module, _Settings_class, _CHROMADB_ERROR
 
+    # 如果已经成功过，直接返回
     if HAS_CHROMADB:
         return True
-
-    # 如果之前有过错误，直接返回False
-    if _CHROMADB_ERROR is not None:
-        return False
 
     try:
         import chromadb
@@ -37,18 +42,19 @@ def _check_chromadb():
 
         _chromadb_module = chromadb
         _Settings_class = Settings
+        
+        # 不再测试初始化，直接标记为可用
+        # 真正的初始化在 _init_db() 中进行
         HAS_CHROMADB = True
+        _CHROMADB_ERROR = None
         return True
     except ImportError as e:
-        _CHROMADB_ERROR = str(e)
-        return False
-    except RuntimeError as e:
-        # 处理sqlite3版本问题 - 这是一个常见的环境问题
-        _CHROMADB_ERROR = f"SQLite3版本不兼容: {str(e)[:100]}"
+        _CHROMADB_ERROR = f"未安装: {str(e)}"
+        HAS_CHROMADB = False
         return False
     except Exception as e:
-        # 处理其他未知错误
         _CHROMADB_ERROR = str(e)[:100]
+        HAS_CHROMADB = False
         return False
 
 
@@ -122,8 +128,18 @@ class ChromaDBStore:
             return
 
         try:
-            # 确保数据库目录存在
-            os.makedirs(self.db_dir, exist_ok=True)
+            # 清理旧版本的整个数据库目录（兼容性问题）
+            import shutil
+            if self.db_dir.exists():
+                try:
+                    shutil.rmtree(self.db_dir)
+                    logger.info(f"已删除旧数据库目录: {self.db_dir}")
+                except Exception as e:
+                    logger.warning(f"无法删除旧数据库目录，将尝试使用现有数据库: {e}")
+            
+            # 如果目录不存在，创建新目录
+            if not self.db_dir.exists():
+                os.makedirs(self.db_dir, exist_ok=True)
 
             # 尝试新版 API (ChromaDB >= 0.4.0)
             try:
@@ -187,6 +203,11 @@ class ChromaDBStore:
         Raises:
             RuntimeError: 当向量存储未初始化时
         """
+        # 尝试重新初始化（如果之前失败）
+        if not self.collection:
+            logger.warning("向量存储未初始化，尝试重新初始化...")
+            self._init_db()
+        
         if not self.collection:
             raise RuntimeError("向量存储未初始化，无法添加文档")
 
@@ -286,12 +307,15 @@ class ChromaDBStore:
                 - text: 文档文本
                 - metadata: 文档元数据
                 - score: 相似度分数 (0-1，越高越相似)
-
-        Raises:
-            RuntimeError: 当向量存储未初始化时
         """
+        # 尝试重新初始化（如果之前失败）
         if not self.collection:
-            raise RuntimeError("向量存储未初始化，无法搜索")
+            logger.warning("向量存储未初始化，尝试重新初始化...")
+            self._init_db()
+        
+        if not self.collection:
+            logger.error("向量存储初始化失败")
+            return []
 
         if self.collection.count() == 0:
             return []
@@ -391,6 +415,63 @@ class ChromaDBStore:
             bool: ChromaDB 是否已安装且已初始化
         """
         return HAS_CHROMADB and self.collection is not None
+
+    def auto_load_from_directory(self, directory: str, force_reload: bool = False) -> int:
+        """自动从目录加载所有PDF文件并向量化
+
+        Args:
+            directory: 要扫描的目录路径
+            force_reload: 是否强制重新加载（忽略已有文档）
+
+        Returns:
+            int: 成功加载的文档数量
+        """
+        from pathlib import Path
+        from src.esg.vector_store.document_loader import DocumentLoader
+        
+        # 如果不强制重载且已有文档，返回0
+        if not force_reload and self.collection.count() > 0:
+            logger.info(f"知识库已有 {self.collection.count()} 个文档，跳过加载")
+            return 0
+        
+        dir_path = Path(directory)
+        
+        # 如果是相对路径，转换为绝对路径
+        if not dir_path.is_absolute():
+            from src.esg.config import PROJECT_ROOT
+            dir_path = PROJECT_ROOT / directory
+        
+        if not dir_path.exists():
+            logger.warning(f"目录不存在: {dir_path}")
+            return 0
+        
+        # 获取所有PDF文件
+        pdf_files = list(dir_path.glob("*.pdf"))
+        if not pdf_files:
+            logger.info(f"目录中没有PDF文件: {dir_path}")
+            return 0
+        
+        logger.info(f"找到 {len(pdf_files)} 个PDF文件，开始向量化...")
+        
+        # 创建不指定data_dir的加载器，这样load_pdf不会重复添加data路径
+        loader = DocumentLoader(data_dir=None)
+        total_added = 0
+        
+        for pdf_file in pdf_files:
+            try:
+                logger.info(f"正在处理: {pdf_file.name}")
+                # 直接使用绝对路径
+                chunks = loader.load_pdf(str(pdf_file.absolute()))
+                if chunks:
+                    count = self.add_documents(chunks)
+                    total_added += count
+                    logger.info(f"已添加 {count} 个文档片段: {pdf_file.name}")
+            except Exception as e:
+                logger.error(f"处理文件失败 {pdf_file.name}: {e}")
+                continue
+        
+        logger.info(f"自动加载完成，共添加 {total_added} 个文档")
+        return total_added
 
 
 # 别名，用于向后兼容

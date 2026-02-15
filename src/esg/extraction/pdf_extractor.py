@@ -15,8 +15,8 @@ from typing import Dict, List, Optional, Union
 logger = logging.getLogger(__name__)
 
 # 安全：定义允许的根目录（防止路径遍历攻击）
-# 获取项目根目录（当前文件的祖父目录）
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# 获取项目根目录（当前文件的曾祖父目录）
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 # 系统临时目录
 TEMP_DIR = Path(tempfile.gettempdir()).resolve()
 # 允许访问的目录列表

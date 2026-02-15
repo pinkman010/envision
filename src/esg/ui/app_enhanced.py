@@ -1,10 +1,15 @@
 """增强版ESG分析UI
 
-提供4个模块的高级ESG分析界面：
-1. 议题全景图 - 展示ESG议题热度和趋势
-2. 权重配置 - AHP层次分析法配置维度权重
-3. 差距诊断 - 对标行业标杆进行差距分析
-4. AI策略建议 - 基于差距生成改进策略
+提供9个模块的高级ESG分析界面：
+1. 首页 - 数据导入与概览
+2. 议题全景图 - 展示ESG议题热度和趋势
+3. 实质性矩阵 - 双重重要性评估
+4. 竞争对手分析 - 行业最佳实践对标
+5. 权重配置 - AHP层次分析法配置维度权重
+6. 差距诊断 - 对标行业标杆进行差距分析
+7. AI策略建议 - 基于差距生成改进策略
+8. 沟通时机 - 推荐最佳ESG披露时机
+9. RAG智能问答 - 基于知识库的AI问答
 """
 
 import tempfile
@@ -84,6 +89,8 @@ def render_sidebar() -> Dict[str, Any]:
         pages = {
             "home": "🏠 首页",
             "topics": "📊 议题全景图",
+            "materiality": "📋 实质性矩阵",
+            "competitor": "🔍 竞争对手分析",
             "weights": "⚖️ 权重配置",
             "gap": "📉 差距诊断",
             "strategies": "💡 AI策略建议",
@@ -136,19 +143,6 @@ def render_sidebar() -> Dict[str, Any]:
             manager.reset()
             st.rerun()
 
-        # 数据状态指示
-        st.markdown("---")
-        st.markdown("### 📋 数据状态")
-
-        status_icon = "✅" if manager.has_metrics() else "❌"
-        st.write(f"{status_icon} ESG指标数据")
-
-        status_icon = "✅" if manager.has_analysis_result() else "❌"
-        st.write(f"{status_icon} 分析结果")
-
-        status_icon = "✅" if manager.has_gap_analysis() else "❌"
-        st.write(f"{status_icon} 差距分析")
-
         return {
             "industry": industry,
             "year": year,
@@ -170,16 +164,42 @@ def render_home_page(config: Dict[str, Any]) -> None:
     # 功能概览
     st.markdown("## 🎯 功能概览")
 
-    cols = st.columns(4)
-
     features = [
         ("📊", "议题全景图", "了解行业ESG议题热度和趋势"),
+        ("📋", "实质性矩阵", "评估ESG实质性议题双重重要性"),
+        ("🔍", "竞争对手分析", "行业最佳实践对标与竞争情报"),
         ("⚖️", "权重配置", "使用AHP方法定制维度权重"),
         ("📉", "差距诊断", "对标标杆企业进行差距分析"),
         ("💡", "AI策略建议", "获取AI生成的改进策略"),
+        ("📅", "沟通时机", "推荐最佳ESG披露时机"),
+        ("💬", "RAG智能问答", "基于知识库的AI问答助手"),
     ]
 
-    for col, (icon, title, desc) in zip(cols, features):
+    # 第一行：4个功能
+    cols = st.columns(4)
+    for col, (icon, title, desc) in zip(cols, features[:4]):
+        with col:
+            st.markdown(
+                f"""
+            <div style="
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                border: 1px solid #e8e8e8;
+                text-align: center;
+                height: 100%;
+            ">
+                <div style="font-size: 2.5em; margin-bottom: 10px;">{icon}</div>
+                <div style="font-weight: bold; margin-bottom: 8px;">{title}</div>
+                <div style="font-size: 0.85em; color: #888;">{desc}</div>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+    # 第二行：4个功能
+    cols = st.columns(4)
+    for col, (icon, title, desc) in zip(cols, features[4:]):
         with col:
             st.markdown(
                 f"""
@@ -395,6 +415,7 @@ def render_metrics_overview() -> None:
             render_gauge_chart(overall, "ESG综合评分"),
             use_container_width=True,
             height=250,
+            config=None,
         )
 
     for i, dim in enumerate(["E", "S", "G"]):
@@ -507,6 +528,7 @@ def render_topics_page(config: Dict[str, Any]) -> None:
         ),
         use_container_width=True,
         height=450,
+        config=None,
     )
 
     # 议题分析
@@ -621,6 +643,7 @@ def render_weights_page(config: Dict[str, Any]) -> None:
             title="权重配置可视化",
         ),
         use_container_width=True,
+        config=None,
     )
 
 
@@ -856,6 +879,7 @@ def render_gap_page(config: Dict[str, Any]) -> None:
                 title="与标杆对比",
             ),
             use_container_width=True,
+            config=None,
         )
 
     with cols[1]:
@@ -872,6 +896,7 @@ def render_gap_page(config: Dict[str, Any]) -> None:
                 right_label=benchmark,
             ),
             use_container_width=True,
+            config=None,
         )
 
     # 维度差距卡片
@@ -1106,14 +1131,26 @@ def render_rag_page(config: Dict[str, Any]) -> None:
     Args:
         config: 配置参数
     """
-    render_header(title="RAG智能问答", subtitle="基于知识库的AI智能问答，展示COT深度思考过程")
+    from src.esg.config import RAW_DATA_DIR
+    
+    render_header(title="RAG智能问答", subtitle="基于知识库的AI智能问答")
 
-    # 初始化RAG引擎
+    # 初始化RAG引擎和向量存储
     try:
+        from src.esg.vector_store import ChromaDBStore
+        store = ChromaDBStore()
+        
+        # 自动加载数据（如果知识库为空）
+        if store.is_available() and store.count() == 0:
+            with st.spinner("🔄 正在自动加载知识库..."):
+                loaded_count = store.auto_load_from_directory(str(RAW_DATA_DIR))
+                if loaded_count > 0:
+                    st.success(f"✅ 已自动加载 {loaded_count} 个文档到知识库")
+        
         rag_engine = RAGEngine()
     except Exception as e:
-        st.error(f"RAG引擎初始化失败: {e}")
-        st.info("请确保向量数据库已配置并且包含文档数据")
+        st.error(f"初始化失败: {e}")
+        st.info("请确保向量数据库已正确配置")
         return
 
     # 页面说明
@@ -1122,119 +1159,59 @@ def render_rag_page(config: Dict[str, Any]) -> None:
     💡 **RAG (Retrieval-Augmented Generation)** 功能说明：
     - 使用 DeepSeek-R1 本地大语言模型
     - 基于 ChromaDB 向量数据库进行知识检索
-    - 展示 AI 的 COT (Chain of Thought) 深度思考过程
     - 答案基于知识库中的ESG相关文档
+    - 知识库会自动扫描 data/01_raw 目录下的PDF文件
     """
     )
 
-    # 两列布局
-    col1, col2 = st.columns([2, 1])
-
+    # 显示知识库状态
+    st.markdown("### 📊 知识库状态")
+    
+    col1, col2, col3 = st.columns(3)
     with col1:
-        # 问题输入
-        st.markdown("### ❓ 输入问题")
-        question = st.text_area(
-            "请输入您关于ESG的问题",
-            placeholder="例如：什么是ESG评级？企业如何提高ESG评分？",
-            height=100,
-        )
-
-        # 参数配置
-        col_topk, col_button = st.columns([1, 1])
-        with col_topk:
-            top_k = st.slider("检索文档数", 1, 10, 5, help="从知识库中检索的相关文档数量")
-        with col_button:
-            st.markdown("<br>", unsafe_allow_html=True)
-            submit_button = st.button("🚀 开始问答", use_container_width=True, type="primary")
-
-    with col2:
-        # 系统状态
-        st.markdown("### 📊 系统状态")
-
-        # 显示模型信息
         st.metric("使用模型", "DeepSeek-R1")
-
-        # 初始化向量存储
-        from src.esg.vector_store import ChromaDBStore, get_chromadb_error
-
-        try:
-            store = ChromaDBStore()
-            if store.is_available():
-                collection_count = store.count()
-                st.metric("知识库文档数", collection_count)
-            else:
-                # 显示具体的错误信息
-                error_msg = get_chromadb_error()
-                if error_msg and "sqlite" in error_msg.lower():
-                    st.metric("知识库文档数", "SQLite版本不兼容")
-                    with st.expander("查看错误详情"):
-                        st.error(f"ChromaDB初始化失败: {error_msg}")
-                        st.info(
-                            "💡 解决方案: Python 3.9 的 SQLite3 版本低于 ChromaDB 要求的 3.35.0"
-                        )
-                        st.info("   方案1: 升级 Python 到 3.10+")
-                        st.info("   方案2: 使用 Conda 环境: conda install python=3.10")
-                else:
-                    st.metric("知识库文档数", "未初始化")
-                store = None
-        except Exception as e:
-            st.metric("知识库文档数", f"错误: {str(e)[:20]}")
-            store = None
-
-        # 添加文档上传功能
-        st.markdown("---")
-        st.markdown("### 📄 添加文档")
-
-        if store is None:
-            st.warning("⚠️ 向量数据库未初始化，请检查配置")
+    with col2:
+        if store.is_available():
+            doc_count = store.count()
+            st.metric("知识库文档数", doc_count)
         else:
-            uploaded_file = st.file_uploader("上传PDF到知识库", type=["pdf"])
-            if uploaded_file:
-                with st.spinner("正在处理文档..."):
-                    try:
-                        from src.esg.vector_store.document_loader import DocumentLoader
+            st.metric("知识库文档数", "未初始化")
+    with col3:
+        st.metric("数据源目录", "data/01_raw")
 
-                        loader = DocumentLoader()
+    # 问题输入区域
+    st.markdown("### ❓ 输入问题")
+    question = st.text_area(
+        "请输入您关于ESG的问题",
+        placeholder="例如：什么是ESG评级？企业如何提高ESG评分？",
+        height=100,
+    )
 
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                            tmp.write(uploaded_file.getvalue())
-                            tmp_path = tmp.name
-
-                        chunks = loader.load_pdf(tmp_path)
-                        store.add_documents(chunks)
-
-                        Path(tmp_path).unlink(missing_ok=True)
-                        st.success(f"✅ 已添加 {len(chunks)} 个文档片段")
-                    except Exception as e:
-                        st.error(f"添加失败: {e}")
-
-    # 执行问答
-    if submit_button and question:
-        with st.spinner("🔍 正在检索知识库并生成答案..."):
-            try:
-                response = rag_engine.query(question, top_k=top_k)
-
-                # 保存到会话状态
-                st.session_state.last_rag_response = response
-
-            except Exception as e:
-                st.error(f"问答失败: {e}")
-                return
+    # 问答按钮
+    if st.button("🚀 开始问答", use_container_width=True, type="primary"):
+        if not question:
+            st.warning("请输入问题")
+        elif not store.is_available():
+            st.error("向量数据库未初始化")
+        elif store.count() == 0:
+            st.warning("知识库为空，请确保 data/01_raw 目录下有PDF文件")
+        else:
+            with st.spinner("🔍 正在检索知识库并生成答案..."):
+                try:
+                    # 检索所有文档
+                    response = rag_engine.query(question, top_k=store.count())
+                    st.session_state.last_rag_response = response
+                except Exception as e:
+                    st.error(f"问答失败: {e}")
 
     # 显示结果
     if "last_rag_response" in st.session_state:
         response = st.session_state.last_rag_response
 
         st.markdown("---")
-        st.markdown("### 📝 问答结果")
+        st.markdown("### 💡 答案")
 
-        # COT思考过程（可展开）
-        with st.expander("🔍 查看AI思考过程 (COT)", expanded=True):
-            st.markdown("**深度思考过程：**")
-            st.markdown(f"```\n{response.reasoning}\n```")
-
-        # 最终答案
-        st.markdown("**💡 答案：**")
+        # 直接显示答案
         st.markdown(response.answer)
 
         # 参考来源
@@ -1667,6 +1644,271 @@ def render_timing_page(config: Dict[str, Any]) -> None:
             st.rerun()
 
 
+# ============== 第二阶段模块: 实质性矩阵 ==============
+
+
+def render_materiality_page(config: Dict[str, Any]) -> None:
+    """渲染实质性议题矩阵页面
+    
+    Args:
+        config: 配置参数
+    """
+    render_header(title="实质性议题矩阵", subtitle="评估和管理ESG实质性议题的双重重要性")
+    
+    # 初始化实质性矩阵
+    try:
+        from src.esg.analysis.materiality_matrix import MaterialityMatrix
+        matrix = MaterialityMatrix()
+    except Exception as e:
+        st.error(f"实质性矩阵初始化失败: {e}")
+        return
+    
+    manager = get_state_manager()
+    
+    # 功能说明
+    st.info("""
+    📊 **实质性议题矩阵** 基于双重重要性（财务重要性+影响重要性）原则，
+    帮助企业识别和管理最关键的ESG议题。
+    - 横轴: 财务重要性 (对企业财务的影响)
+    - 纵轴: 影响重要性 (对企业利益相关方和环境的影响)
+    """)
+    
+    # 议题评分配置
+    st.markdown("### ⚙️ 议题评分配置")
+    
+    # 获取所有议题
+    topics = matrix.get_all_topics()
+    
+    # 按维度分组显示
+    for dim in ["E", "S", "G"]:
+        dim_topics = [t for t in topics if t.dimension == dim]
+        if dim_topics:
+            with st.expander(f"{ESG_DIMENSION_NAMES[dim]}议题配置 ({dim})", expanded=True):
+                cols = st.columns(3)
+                for idx, topic in enumerate(dim_topics):
+                    with cols[idx % 3]:
+                        # 财务重要性
+                        new_financial = st.slider(
+                            f"{topic.name} - 财务重要性",
+                            0, 10, topic.financial_score,
+                            key=f"financial_{topic.topic_id}"
+                        )
+                        # 影响重要性
+                        new_impact = st.slider(
+                            f"{topic.name} - 影响重要性",
+                            0, 10, topic.impact_score,
+                            key=f"impact_{topic.topic_id}"
+                        )
+                        if new_financial != topic.financial_score or new_impact != topic.impact_score:
+                            matrix.update_topic_scores(topic.topic_id, new_financial, new_impact)
+    
+    # 矩阵可视化
+    st.markdown("### 📊 实质性议题矩阵可视化")
+    
+    # 创建散点图数据
+    matrix_data = matrix.get_matrix_data()
+    
+    if matrix_data:
+        import plotly.express as px
+        
+        df = {
+            "x": [d["x"] for d in matrix_data],
+            "y": [d["y"] for d in matrix_data],
+            "size": [d["size"] for d in matrix_data],
+            "color": [d["color"] for d in matrix_data],
+            "name": [d["name"] for d in matrix_data],
+            "dimension": [d["dimension"] for d in matrix_data],
+            "quadrant": [matrix.QUADRANT_LABELS.get(d["quadrant"], "") for d in matrix_data],
+        }
+        
+        fig = px.scatter(
+            df, x="x", y="y", size="size", color="dimension",
+            hover_name="name", text="name",
+            labels={"x": "财务重要性", "y": "影响重要性"},
+            title="ESG实质性议题矩阵"
+        )
+        
+        # 添加象限分隔线
+        fig.add_hline(y=5, line_dash="dash", line_color="gray")
+        fig.add_vline(x=5, line_dash="dash", line_color="gray")
+        
+        fig.update_traces(textposition="top center")
+        fig.update_layout(height=500)
+        
+        st.plotly_chart(fig, use_container_width=True, config=None)
+    
+    # 象限统计
+    st.markdown("### 📋 象限统计")
+    
+    quadrant_summary = matrix.get_quadrant_summary()
+    cols = st.columns(4)
+    
+    for idx, (quadrant, count) in enumerate(quadrant_summary.items()):
+        with cols[idx]:
+            label = matrix.QUADRANT_LABELS.get(quadrant, quadrant)
+            color = matrix.QUADRANT_COLORS.get(quadrant, "#999")
+            st.markdown(
+                f"""
+                <div style="
+                    background: {color}15;
+                    border-radius: 8px;
+                    padding: 12px;
+                    border-left: 4px solid {color};
+                ">
+                    <div style="font-size: 0.85em; color: #666;">{label}</div>
+                    <div style="font-size: 1.5em; font-weight: bold;">{count}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+    
+    # 优先级列表
+    st.markdown("### 🎯 优先级议题列表")
+    
+    priority_list = matrix.get_priority_list()
+    
+    priority_data = []
+    for topic in priority_list[:10]:
+        priority_data.append({
+            "议题": topic["name"],
+            "维度": topic["dimension"],
+            "财务重要性": topic["financial_score"],
+            "影响重要性": topic["impact_score"],
+            "象限": matrix.QUADRANT_LABELS.get(topic["quadrant"], ""),
+            "优先级": topic["priority"],
+        })
+    
+    if priority_data:
+        st.dataframe(priority_data, use_container_width=True, hide_index=True)
+    
+    # 披露建议
+    st.markdown("### 📝 披露级别建议")
+    
+    for topic in priority_list[:5]:
+        level = matrix.get_recommended_disclosure_level(topic["topic_id"])
+        st.markdown(f"**{topic['name']}**: {level}")
+
+
+# ============== 第二阶段模块: 竞争对手分析 ==============
+
+
+def render_competitor_page(config: Dict[str, Any]) -> None:
+    """渲染竞争对手分析页面
+    
+    Args:
+        config: 配置参数
+    """
+    render_header(title="竞争对手分析", subtitle="行业最佳实践对标与竞争情报分析")
+    
+    # 初始化竞争对手分析器
+    try:
+        from src.esg.analysis.competitor_analyzer import CompetitorAnalyzer
+        analyzer = CompetitorAnalyzer()
+    except Exception as e:
+        st.error(f"竞争对手分析器初始化失败: {e}")
+        return
+    
+    manager = get_state_manager()
+    
+    # 功能说明
+    st.info("""
+    🔍 **竞争对手分析** 基于行业最佳实践数据，
+    生成深度对标分析和竞争情报，帮助企业了解与标杆的差距及改进方向。
+    """)
+    
+    # 检查是否有指标数据
+    has_metrics = manager.has_metrics()
+    
+    # 标杆企业选择
+    st.markdown("### 🎯 选择对标企业")
+    
+    competitors = analyzer.get_competitor_list()
+    if not competitors:
+        competitors = ["维斯塔斯", "西门子歌美萨克", "通用电气"]
+    
+    benchmark_company = st.selectbox(
+        "选择标杆企业",
+        competitors,
+        index=0
+    )
+    
+    # 如果有当前指标数据，显示差距分析
+    if has_metrics:
+        metrics = manager.get_metrics()
+        
+        # 构建gap_data
+        scores = metrics.get_all_dimension_scores()
+        gap_data = {}
+        for dim in ["E", "S", "G"]:
+            # 假设标杆分数为85
+            gap_data[dim] = {
+                "current": scores[dim],
+                "target": 85,
+                "gap": 85 - scores[dim]
+            }
+        
+        # 生成分析报告
+        with st.spinner("📊 正在生成对标分析..."):
+            analysis = analyzer.generate_analysis(metrics, benchmark_company, gap_data)
+        
+        st.markdown("### 📈 对标分析报告")
+        st.markdown(analysis)
+        
+        # 对比表格
+        st.markdown("### 📊 维度对比")
+        
+        table_data = analyzer.generate_comparison_table(metrics, benchmark_company, gap_data)
+        
+        if table_data:
+            st.dataframe(table_data, use_container_width=True, hide_index=True)
+        
+        # 整体对比
+        st.markdown("### 🏆 整体排名")
+        
+        comparison = analyzer.get_overall_comparison(metrics)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("当前排名", f"{comparison['current_company']['rank']}/{comparison['current_company']['total_companies']}")
+        with col2:
+            st.metric("ESG综合评分", f"{comparison['current_company']['overall_score']:.1f}")
+        with col3:
+            # 显示差距最大的维度
+            max_gap_dim = max(gap_data.items(), key=lambda x: x[1].get("gap", 0))
+            dim_name = ESG_DIMENSION_NAMES.get(max_gap_dim[0], max_gap_dim[0])
+            st.metric("最大差距维度", dim_name)
+        
+    else:
+        st.warning("⚠️ 请先在首页导入企业ESG数据以进行差距分析")
+    
+    # 标杆企业最佳实践
+    st.markdown("---")
+    st.markdown(f"### 🏅 {benchmark_company}最佳实践")
+    
+    for dim in ["E", "S", "G"]:
+        strategy = analyzer.get_strategy_by_dimension(benchmark_company, dim)
+        if strategy:
+            with st.expander(f"{ESG_DIMENSION_NAMES[dim]} ({dim})"):
+                st.markdown(f"**策略领域**: {strategy.strategy_area}")
+                st.markdown(f"**最佳实践**: {strategy.best_practice_description}")
+                st.markdown(f"**关键成果**: {strategy.key_results}")
+                st.markdown(f"**实施周期**: {strategy.implementation_timeline}")
+                st.markdown(f"**预计投资**: {strategy.investment}")
+                st.markdown(f"**创新亮点**: {strategy.innovation_highlights}")
+    
+    # 创新亮点
+    st.markdown("---")
+    st.markdown("### 💡 行业创新亮点")
+    
+    highlights = analyzer.get_innovation_highlights(benchmark_company)
+    
+    if highlights:
+        for highlight in highlights:
+            st.markdown(f"- {highlight}")
+    else:
+        st.info("暂无创新亮点数据")
+
+
 # ============== 辅助函数 ==============
 
 
@@ -1811,6 +2053,10 @@ def render_app() -> None:
         render_home_page(config)
     elif current_page == "topics":
         render_topics_page(config)
+    elif current_page == "materiality":
+        render_materiality_page(config)
+    elif current_page == "competitor":
+        render_competitor_page(config)
     elif current_page == "weights":
         render_weights_page(config)
     elif current_page == "gap":

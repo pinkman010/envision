@@ -1213,9 +1213,9 @@ class StrategyGenerator:
             metrics.ethics_training_coverage,
             metrics.anti_corruption_training_coverage,
             metrics.whistleblower_protection,
-            # 第三层：气候治理（20%）
-            metrics.climate_governance,
-            metrics.tcfd_disclosure,
+            # 第三层：气候治理（20%）- 添加hasattr检查
+            getattr(metrics, 'climate_governance', None),
+            getattr(metrics, 'tcfd_disclosure', None),
             # 第四层：透明度与问责（15%）
             metrics.esg_report_quality,
             metrics.esg_committee_independence,  # 同时作为ESG治理指标

@@ -10,8 +10,6 @@ from .base import (
     APP_ICON,
     APP_NAME,
     DATA_DIR,
-    DATA_LINEAGE_CONFIG,
-    DATA_VERSION_CONFIG,
     DB_DIR,
     MOCK_DATA_DIR,
     MODELS,
@@ -97,8 +95,6 @@ __all__ = [
     "VERSION",
     "APP_NAME",
     "APP_ICON",
-    "DATA_VERSION_CONFIG",
-    "DATA_LINEAGE_CONFIG",
     "ANALYSIS_YEARS",
     # esg
     "ESG_DIMENSIONS",

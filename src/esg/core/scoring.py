@@ -3,7 +3,7 @@
 提供ESG各维度指标的评分计算功能。
 """
 
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from src.esg.core.constants import (
     BATTERY_CYCLE_LIFE_BENCHMARK,
@@ -17,49 +17,32 @@ from src.esg.core.constants import (
     G_DIMENSION_WEIGHTS,
     LTIFR_BENCHMARKS,
     SAFETY_INVESTMENT_BENCHMARKS,
-    SCOPE3_COVERAGE_BENCHMARK_HIGH,
-    SCOPE3_COVERAGE_BENCHMARK_LOW,
-    SCOPE3_RATIO_ACCEPTABLE_MAX,
-    SCOPE3_RATIO_IDEAL_MAX,
-    SCOPE3_RATIO_IDEAL_MIN,
     SCORE_MAX,
     TRIR_BENCHMARKS,
     TURBINE_AVAILABILITY_BENCHMARK,
     WATER_INTENSITY_BENCHMARK_HIGH,
     WATER_INTENSITY_BENCHMARK_LOW,
 )
-from src.esg.core.models import (
-    ClimateDisclosureQuality,
-    ClimateGovernance,
-    SBTiTarget,
-    TCFDDisclosure,
-)
 
-if TYPE_CHECKING:
-    from src.esg.core.scope3_emissions import Scope3Inventory
-
-# E维度指标权重配置（含范围3评分）
-# 一级指标（45%）：碳强度15% + 范围3覆盖率10% + 范围3/1+2比例5% + SBTi目标15%
+# E维度指标权重配置
+# 一级指标（30%）：碳强度30%
 # 二级指标（30%）：可再生能源、能源效率、废弃物回收、水资源（各7.5%）
-# 三级指标（25%）：新能源特色指标
+# 三级指标（40%）：新能源特色指标
 E_DIMENSION_WEIGHTS = {
-    # 一级指标 - 排放相关（45%）
-    "carbon_intensity": 0.15,  # 范围1+2碳强度
-    "scope3_coverage": 0.10,  # 范围3覆盖率（新增）
-    "scope3_ratio": 0.05,  # 范围3/1+2比例（新增）
-    "sbti_target": 0.15,  # SBTi目标
+    # 一级指标 - 排放相关（30%）
+    "carbon_intensity": 0.30,  # 范围1+2碳强度
     # 二级指标 - 运营效率（30%）
     "renewable_energy_ratio": 0.075,
     "energy_efficiency": 0.075,
     "waste_recycling_rate": 0.075,
     "water_intensity": 0.075,
-    # 三级指标 - 新能源特色（25%）
-    "turbine_availability": 0.05,
-    "curtailment_rate": 0.05,
-    "battery_cycle_life": 0.05,
-    "battery_recycling_rate": 0.025,
-    "electrolysis_efficiency": 0.025,
-    "energy_storage_safety": 0.05,
+    # 三级指标 - 新能源特色（40%）
+    "turbine_availability": 0.10,
+    "curtailment_rate": 0.10,
+    "battery_cycle_life": 0.075,
+    "battery_recycling_rate": 0.05,
+    "electrolysis_efficiency": 0.05,
+    "energy_storage_safety": 0.025,
 }
 
 # S维度指标权重配置
@@ -120,108 +103,6 @@ class ScoreCalculator:
     """
 
     @staticmethod
-    def calculate_scope3_coverage_score(
-        scope3_inventory: Optional["Scope3Inventory"],
-    ) -> Optional[float]:
-        """计算范围3覆盖率评分
-
-        基于行业重要性权重计算范围3覆盖率评分。
-        - 100分：所有重要类别（权重>0.05）都有数据
-        - 线性递减：按缺失的重要类别数量扣分
-
-        Args:
-            scope3_inventory: 范围3排放清单对象
-
-        Returns:
-            覆盖率评分(0-100)或None
-        """
-        if scope3_inventory is None:
-            return None
-
-        # 导入在此处避免循环导入
-        from src.esg.core.scope3_emissions import NEW_ENERGY_SECTOR_RELEVANCE
-
-        relevance_map = NEW_ENERGY_SECTOR_RELEVANCE.get(
-            scope3_inventory.sector, NEW_ENERGY_SECTOR_RELEVANCE.get("wind_power")
-        )
-
-        if not relevance_map:
-            return None
-
-        covered_weight = 0.0
-        total_weight = 0.0
-
-        for cat, weight in relevance_map.items():
-            total_weight += weight
-            cat_data = scope3_inventory.categories.get(cat)
-            if cat_data and cat_data.emissions is not None:
-                covered_weight += weight
-
-        if total_weight == 0:
-            return None
-
-        # 计算覆盖率并映射到0-100分
-        coverage = covered_weight / total_weight
-
-        # 覆盖率>80%得满分，<40%得0分，中间线性插值
-        if coverage >= SCOPE3_COVERAGE_BENCHMARK_HIGH:
-            return SCORE_MAX
-        if coverage <= SCOPE3_COVERAGE_BENCHMARK_LOW:
-            return 0.0
-
-        # 线性插值
-        ratio = (coverage - SCOPE3_COVERAGE_BENCHMARK_LOW) / (
-            SCOPE3_COVERAGE_BENCHMARK_HIGH - SCOPE3_COVERAGE_BENCHMARK_LOW
-        )
-        return SCORE_MAX * ratio
-
-    @staticmethod
-    def calculate_scope3_ratio_score(
-        scope3_inventory: Optional["Scope3Inventory"], scope12_emissions: Optional[float]
-    ) -> Optional[float]:
-        """计算范围3/范围1+2比例评分
-
-        评分逻辑：
-        - 范围3/1+2比例越高，说明企业意识到供应链排放重要性
-        - 但比例过高(>50)可能说明范围1+2控制不佳
-        - 理想区间：5-20倍（新能源制造业典型范围）
-
-        评分：
-        - 0-5倍：50分（范围3意识不足）
-        - 5-20倍：100分（理想区间）
-        - 20-50倍：75分（范围3较高但可接受）
-        - >50倍：50分（范围1+2控制可能不佳）
-
-        Args:
-            scope3_inventory: 范围3排放清单对象
-            scope12_emissions: 范围1+2排放总量
-
-        Returns:
-            比例评分(0-100)或None
-        """
-        if scope3_inventory is None or scope12_emissions is None:
-            return None
-
-        scope3_total = scope3_inventory.get_total_emissions()
-        if scope3_total is None or scope12_emissions <= 0:
-            return None
-
-        ratio = scope3_total / scope12_emissions
-
-        if SCOPE3_RATIO_IDEAL_MIN <= ratio <= SCOPE3_RATIO_IDEAL_MAX:
-            # 理想区间：满分
-            return 100.0
-        elif ratio < SCOPE3_RATIO_IDEAL_MIN:
-            # 0-5倍：映射到50-100分
-            return 50.0 + (ratio / SCOPE3_RATIO_IDEAL_MIN) * 50.0
-        elif ratio <= SCOPE3_RATIO_ACCEPTABLE_MAX:
-            # 20-50倍：映射到100-75分
-            return 100.0 - (ratio - SCOPE3_RATIO_IDEAL_MAX) / 30.0 * 25.0
-        else:
-            # >50倍：递减到50分
-            return max(50.0, 75.0 - (ratio - SCOPE3_RATIO_ACCEPTABLE_MAX) / 50.0 * 25.0)
-
-    @staticmethod
     def calculate_carbon_intensity_score(
         intensity: Optional[float], industry_sector: str = "new_energy_composite"
     ) -> Optional[float]:
@@ -256,22 +137,6 @@ class ScoreCalculator:
         # 线性插值计算得分
         ratio = (intensity - excellent) / (poor - excellent)
         return SCORE_MAX * (1 - ratio)
-
-    @staticmethod
-    def calculate_sbti_score(sbti_target: Optional[SBTiTarget]) -> Optional[float]:
-        """计算SBTi目标评分
-
-        综合SBTi状态评分和减排进度评分。
-
-        Args:
-            sbti_target: SBTi目标对象
-
-        Returns:
-            SBTi综合评分(0-100)或None
-        """
-        if sbti_target is None:
-            return None
-        return sbti_target.get_overall_score()
 
     @staticmethod
     def calculate_water_intensity_score(intensity: Optional[float]) -> Optional[float]:
@@ -447,22 +312,16 @@ class ScoreCalculator:
         scores: List[Optional[float]] = []
 
         if dimension == "E":
-            # 环境维度评分（分层加权结构，含范围3评分）
-            # 一级指标（45%）：碳强度15% + 范围3覆盖率10% + 范围3比例5% + SBTi目标15%
+            # 环境维度评分（分层加权结构）
+            # 一级指标（30%）：碳强度30%
             # 二级指标（30%）：可再生能源、能源效率、废弃物回收、水资源
-            # 三级指标（25%）：新能源特色指标
+            # 三级指标（40%）：新能源特色指标
             scores = [
                 # 一级指标
                 self.calculate_carbon_intensity_score(
                     metrics.carbon_intensity,
                     getattr(metrics, "industry_sector", "new_energy_composite"),
                 ),
-                self.calculate_scope3_coverage_score(getattr(metrics, "scope3_inventory", None)),
-                self.calculate_scope3_ratio_score(
-                    getattr(metrics, "scope3_inventory", None),
-                    getattr(metrics, "get_scope1_2_emissions", lambda: None)(),
-                ),
-                self.calculate_sbti_score(getattr(metrics, "sbti_target", None)),
                 # 二级指标
                 self.safe_score(metrics.renewable_energy_ratio, SCORE_MAX),
                 self.safe_score(metrics.energy_efficiency, SCORE_MAX),
@@ -609,75 +468,6 @@ def calculate_carbon_intensity_score(
     return _calculator.calculate_carbon_intensity_score(intensity, industry_sector)
 
 
-def calculate_sbti_score(sbti_target: Optional[SBTiTarget]) -> Optional[float]:
-    """便捷函数：计算SBTi评分"""
-    return _calculator.calculate_sbti_score(sbti_target)
-
-
 def calculate_water_intensity_score(intensity: Optional[float]) -> Optional[float]:
     """便捷函数：计算水资源强度得分"""
     return _calculator.calculate_water_intensity_score(intensity)
-
-
-def calculate_scope3_coverage_score(
-    scope3_inventory: Optional["Scope3Inventory"],
-) -> Optional[float]:
-    """便捷函数：计算范围3覆盖率评分"""
-    return _calculator.calculate_scope3_coverage_score(scope3_inventory)
-
-
-def calculate_scope3_ratio_score(
-    scope3_inventory: Optional["Scope3Inventory"], scope12_emissions: Optional[float]
-) -> Optional[float]:
-    """便捷函数：计算范围3/范围1+2比例评分"""
-    return _calculator.calculate_scope3_ratio_score(scope3_inventory, scope12_emissions)
-
-
-def calculate_climate_governance_score(climate_gov: Optional[ClimateGovernance]) -> Optional[float]:
-    """计算气候治理架构评分
-
-    评估企业在气候治理架构方面的建设情况。
-
-    Args:
-        climate_gov: ClimateGovernance对象
-
-    Returns:
-        气候治理架构得分(0-100)或None
-    """
-    if climate_gov is None:
-        return None
-    return climate_gov.get_score()
-
-
-def calculate_tcfd_score(tcfd: Optional[TCFDDisclosure]) -> Optional[float]:
-    """计算TCFD披露完整度评分
-
-    评估企业TCFD四支柱披露的完整度。
-
-    Args:
-        tcfd: TCFDDisclosure对象
-
-    Returns:
-        TCFD披露完整度得分(0-100)或None
-    """
-    if tcfd is None:
-        return None
-    return tcfd.get_score()
-
-
-def calculate_climate_disclosure_quality_score(
-    quality: Optional[ClimateDisclosureQuality],
-) -> Optional[float]:
-    """计算气候信息披露质量评分
-
-    评估企业气候信息披露的质量和完整性。
-
-    Args:
-        quality: ClimateDisclosureQuality对象
-
-    Returns:
-        气候信息披露质量得分(0-100)或None
-    """
-    if quality is None:
-        return None
-    return quality.get_score()

@@ -30,6 +30,9 @@ STATE_KEYS = {
     "ahp_result": "ahp_result",
     "topic_filter": "topic_filter",
     "selected_topics": "selected_topics",
+    # 第一阶段新增：幽灵功能集成
+    "chat_history": "chat_history",  # 聊天历史管理
+    "completion_result": "completion_result",  # 数据补全结果
 }
 
 
@@ -235,6 +238,24 @@ class StateManager:
     def has_strategies(self) -> bool:
         """检查是否已有策略"""
         return bool(self._state.get("strategies"))
+
+    # === 第一阶段新增：幽灵功能集成 ===
+
+    def get_chat_history(self) -> Any:
+        """获取聊天历史"""
+        return self._state.get("chat_history")
+
+    def set_chat_history(self, chat_history: Any) -> None:
+        """设置聊天历史"""
+        self._state["chat_history"] = chat_history
+
+    def get_completion_result(self) -> Any:
+        """获取数据补全结果"""
+        return self._state.get("completion_result")
+
+    def set_completion_result(self, result: Any) -> None:
+        """设置数据补全结果"""
+        self._state["completion_result"] = result
 
 
 # 全局状态管理器实例

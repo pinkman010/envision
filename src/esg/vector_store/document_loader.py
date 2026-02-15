@@ -57,9 +57,12 @@ class DocumentLoader:
         """初始化文档加载器
 
         Args:
-            data_dir: 数据目录路径，默认使用配置中的 DATA_DIR
+            data_dir: 数据目录路径，默认使用配置中的 DATA_DIR。如果传 None，则不自动拼接路径
         """
-        self.data_dir = Path(data_dir) if data_dir else DATA_DIR
+        if data_dir is None:
+            self.data_dir = None
+        else:
+            self.data_dir = Path(data_dir) if data_dir else DATA_DIR
 
     def load_json(
         self,
@@ -421,6 +424,9 @@ class DocumentLoader:
             Path: 解析后的绝对路径
         """
         path = Path(filepath)
+        # 如果data_dir为None，则直接返回原路径
+        if self.data_dir is None:
+            return path
         if not path.is_absolute():
             path = self.data_dir / path
         return path

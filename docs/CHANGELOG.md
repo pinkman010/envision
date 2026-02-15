@@ -5,18 +5,26 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [1.3.6] - 2026-02-14
+## [1.4.0] - 2026-02-15
 
-### 🔧 改进
+### ♻️ 重构
 
-#### 代码重构
-- 合并 `config/standards.py` 和 `core/compliance_checker.py` 中的重复 ComplianceChecker 类
-- 简化 `config/standards.py` 为纯配置文件，从 core 模块导入
-- 删除重复的 `utils/validators.py` 文件，整合到 `utils/validators/` 包
+#### 模块精简
+- **移除安全模块**: 删除 `src/esg/security/` 目录（包含 auth.py, encryption.py, csrf.py）
+- **移除性能监控**: 删除 `src/esg/utils/performance_monitor.py`
+- **精简依赖**: 从 pyproject.toml 移除 cryptography、bcrypt、PyJWT、prometheus-client
+
+#### 功能优化
+- 更新 pdf_extractor_async.py，移除对性能监控模块的依赖
+- 更新项目文档，移除安全相关描述
+- 添加系统评价说明：本系统专注于ESG数据分析功能
 
 ### 📚 文档
 
-- 更新版本号为 v1.3.6
+- 更新版本号为 v1.4.0
+- 更新所有.md文件版本信息（README.md, ARCHITECTURE.md, CHANGELOG.md）
+- 更新项目结构说明
+- 更新技术栈列表
 
 ---
 

@@ -211,7 +211,7 @@ def print_results(stats_pair, top_n=10):
         return
         
     print("\n" + "="*80)
-    print(f"{'Python 项目代码统计报告':^80}")
+    print(f"{'envision 项目代码统计报告':^80}")
     print("="*80)
     
     # 1. 全部文件统计

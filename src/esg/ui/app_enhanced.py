@@ -415,7 +415,6 @@ def render_metrics_overview() -> None:
             render_gauge_chart(overall, "ESG综合评分"),
             use_container_width=True,
             height=250,
-            config=None,
         )
 
     for i, dim in enumerate(["E", "S", "G"]):
@@ -528,7 +527,6 @@ def render_topics_page(config: Dict[str, Any]) -> None:
         ),
         use_container_width=True,
         height=450,
-        config=None,
     )
 
     # 议题分析
@@ -643,7 +641,6 @@ def render_weights_page(config: Dict[str, Any]) -> None:
             title="权重配置可视化",
         ),
         use_container_width=True,
-        config=None,
     )
 
 
@@ -879,7 +876,6 @@ def render_gap_page(config: Dict[str, Any]) -> None:
                 title="与标杆对比",
             ),
             use_container_width=True,
-            config=None,
         )
 
     with cols[1]:
@@ -896,7 +892,6 @@ def render_gap_page(config: Dict[str, Any]) -> None:
                 right_label=benchmark,
             ),
             use_container_width=True,
-            config=None,
         )
 
     # 维度差距卡片
@@ -1735,7 +1730,7 @@ def render_materiality_page(config: Dict[str, Any]) -> None:
         fig.update_traces(textposition="top center")
         fig.update_layout(height=500)
         
-        st.plotly_chart(fig, use_container_width=True, config=None)
+        st.plotly_chart(fig, use_container_width=True)
     
     # 象限统计
     st.markdown("### 📋 象限统计")

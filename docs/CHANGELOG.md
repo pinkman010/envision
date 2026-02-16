@@ -5,7 +5,84 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.4.5] - 2026-02-16
+
+### ♻️ 重构
+
+#### 模块精简
+- **移除安全模块**: 删除 `src/esg/security/` 目录（包含 auth.py, encryption.py, csrf.py）
+- **移除性能监控**: 删除 `src/esg/utils/performance_monitor.py`
+- **移除缓存管理**: 删除 `src/esg/utils/cache_manager.py`
+- **移除HTML净化**: 删除 `src/esg/utils/html_sanitizer.py`
+- **移除文件工具**: 删除 `src/esg/utils/file_utils.py`
+- **移除验证器模块**: 删除 `src/esg/utils/validators/` 目录
+- **移除规则引擎**: 删除 `src/esg/fusion/rule_engine.py`
+- **移除碳足迹模块**: 删除 `src/esg/extraction/carbon_footprint.py`
+- **移除异步PDF提取**: 删除 `src/esg/extraction/pdf_extractor_async.py`
+- **移除自动更新器**: 删除 `src/esg/analysis/auto_updater.py`
+- **移除渠道顾问**: 删除 `src/esg/analysis/channel_advisor.py`
+- **移除话题更新器**: 删除 `src/esg/analysis/topic_updater.py`
+- **移除核心引擎**: 删除 `src/esg/core/engine.py`
+- **移除简洁版UI**: 删除 `src/esg/ui/app_simple.py`
+
+#### 精简依赖
+- 从 pyproject.toml 移除 cryptography、bcrypt、PyJWT、prometheus-client
+
+### 🚀 新增功能
+
+#### 竞争对手分析模块
+- 新增 `competitor.py` 页面
+- 支持标杆企业对标分析
+- 显示最佳实践和行业创新亮点
+
+#### 实质性矩阵模块
+- 新增 `materiality.py` 页面
+- 支持行业议题热度分析
+- 新能源行业特色指标映射
+
+#### 代码统计工具
+- 新增 `src/scripts/code_counter.py`
+- 支持代码行数统计
+- 支持多语言文件统计
+
+### 🔧 改进
+
+#### 差距分析增强
+- 扩展 INDICATOR_MAPPING 覆盖完整E/S/G维度
+- 新增环境维度：碳强度、范围3覆盖率、SBTi目标、运营效率、新能源特色指标
+- 新增社会维度：性别多元化、员工培训、安全绩效、社区责任
+- 新增治理维度：董事会独立性、ESG委员会、合规培训、气候治理、报告质量
+
+#### 策略生成器增强
+- 新增行业最佳实践库
+- 增强差距分析报告生成
+- 支持多维度对比表格
+
+#### 合规检查器增强
+- 完善ISSB S1/S2标准合规检查
+- 增强GRI标准支持
+- 扩展SASB行业覆盖
+
+#### 评分系统优化
+- 完善碳强度评分逻辑
+- 优化维度评分计算
+- 统一评分基准
+
+#### 用户界面优化
+- 增强版UI新增"议题全景"和"竞争分析"入口
+- 改进指标数据展示
+- 优化用户体验
+
+### 📚 文档
+
+- 更新版本号为 v1.4.5
+- 更新所有.md文件版本信息（README.md, ARCHITECTURE.md）
+- 更新项目结构说明
+
+---
+
 ## [1.4.0] - 2026-02-15
+
 
 ### ♻️ 重构
 

@@ -5,21 +5,28 @@
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make install      - Install production dependencies"
-	@echo "  make install-dev  - Install development dependencies"
-	@echo "  make test         - Run all tests"
-	@echo "  make test-unit    - Run unit tests only"
+	@echo "  make install           - Install production dependencies"
+	@echo "  make install-dev       - Install development dependencies"
+	@echo "  make test             - Run all tests"
+	@echo "  make test-unit        - Run unit tests only"
 	@echo "  make test-integration - Run integration tests"
-	@echo "  make test-e2e     - Run end-to-end tests"
-	@echo "  make lint         - Run all linters"
-	@echo "  make format       - Format code with black and isort"
-	@echo "  make type-check   - Run type checking with mypy"
-	@echo "  make security     - Run security checks"
-	@echo "  make clean        - Clean build artifacts"
-	@echo "  make build        - Build package"
-	@echo "  make docs         - Generate documentation"
-	@echo "  make run          - Run the application"
-	@echo "  make pre-commit   - Install and run pre-commit hooks"
+	@echo "  make test-e2e         - Run end-to-end tests"
+	@echo "  make test-quick       - Run tests with fail-fast mode"
+	@echo "  make test-coverage    - Run tests with HTML coverage report"
+	@echo "  make test-coverage-quick - Run tests with coverage (quiet mode)"
+	@echo "  make test-coverage-xml - Run tests with XML coverage report"
+	@echo "  make test-summary     - Run tests with coverage summary"
+	@echo "  make test-failed      - Run last failed tests"
+	@echo "  make test-last-failed - Run last failed tests (verbose)"
+	@echo "  make lint            - Run all linters"
+	@echo "  make format          - Format code with black and isort"
+	@echo "  make type-check      - Run type checking with mypy"
+	@echo "  make security        - Run security checks"
+	@echo "  make clean           - Clean build artifacts"
+	@echo "  make build           - Build package"
+	@echo "  make docs            - Generate documentation"
+	@echo "  make run             - Run the application"
+	@echo "  make pre-commit      - Install and run pre-commit hooks"
 
 # Installation
 install:
@@ -41,8 +48,39 @@ test-integration:
 test-e2e:
 	pytest src/tests/ -v -m e2e --tb=short
 
+test-quick:
+	pytest src/tests/ -v --tb=short -x
+
 test-coverage:
-	pytest src/tests/ --cov=src --cov-report=html --cov-report=term-missing
+	pytest src/tests/ --cov=src/esg --cov-report=html --cov-report=term-missing
+
+test-coverage-quick:
+	pytest src/tests/ --cov=src/esg --cov-report=term-missing -q
+
+test-coverage-xml:
+	pytest src/tests/ --cov=src/esg --cov-report=xml
+
+test-summary:
+	@echo "========================================"
+	@echo "Running Test Coverage Summary"
+	@echo "========================================"
+	pytest src/tests/ --cov=src/esg --cov-report=term-missing -q
+	@echo ""
+	@echo "========================================"
+	@echo "Core Module Coverage (Target: 80%)"
+	@echo "========================================"
+	@pytest src/tests/ --cov=src/esg.core --cov-report=term -q 2>/dev/null || true
+	@echo ""
+	@echo "========================================"
+	@echo "Analysis Module Coverage"
+	@echo "========================================"
+	@pytest src/tests/ --cov=src/esg.analysis --cov-report=term -q 2>/dev/null || true
+
+test-failed:
+	pytest src/tests/ --lf -v --tb=short
+
+test-last-failed:
+	pytest src/tests/ --lf -v
 
 # Linting and Formatting
 lint:
@@ -110,13 +148,13 @@ docs-serve:
 
 # Running
 run:
-	streamlit run main.py
+	streamlit run src/main.py
 
 run-simple:
-	streamlit run main.py -- --mode simple
+	streamlit run src/main.py -- --mode simple
 
 run-enhanced:
-	streamlit run main.py -- --mode enhanced
+	streamlit run src/main.py -- --mode enhanced
 
 # Development utilities
 run-tests-watch:

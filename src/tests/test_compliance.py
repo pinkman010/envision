@@ -2,6 +2,8 @@
 
 import logging
 
+import pytest
+
 from src.esg.config.standards import DISCLOSURE_STANDARDS
 from src.esg.core.compliance_checker import ComplianceChecker
 from src.esg.core.models import ESGMetrics
@@ -123,10 +125,3 @@ def test_report_generator():
     with open("test_report_sample.md", "w", encoding="utf-8") as f:
         f.write(report)
     logger.info("\n测试报告已保存到: test_report_sample.md")
-
-
-if __name__ == "__main__":
-    test_config_loading()
-    test_compliance_checker()
-    test_report_generator()
-    logger.info("\n=== 所有测试完成 ===")

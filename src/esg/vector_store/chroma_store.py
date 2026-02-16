@@ -6,9 +6,11 @@
 
 # 修复SQLite版本问题：在导入chromadb之前替换sqlite3
 try:
-    import pysqlite3
     import sys
-    sys.modules['sqlite3'] = pysqlite3
+
+    import pysqlite3
+
+    sys.modules["sqlite3"] = pysqlite3
 except ImportError:
     pass
 
@@ -16,7 +18,7 @@ import hashlib
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 from src.esg.config import DB_DIR, MODELS, OLLAMA_TIMEOUT, OLLAMA_URL
 from src.esg.utils.ollama_client import OllamaClient
@@ -42,7 +44,7 @@ def _check_chromadb():
 
         _chromadb_module = chromadb
         _Settings_class = Settings
-        
+
         # 不再测试初始化，直接标记为可用
         # 真正的初始化在 _init_db() 中进行
         HAS_CHROMADB = True
@@ -130,13 +132,29 @@ class ChromaDBStore:
         try:
             # 清理旧版本的整个数据库目录（兼容性问题）
             import shutil
+            import time
+
             if self.db_dir.exists():
                 try:
-                    shutil.rmtree(self.db_dir)
-                    logger.info(f"已删除旧数据库目录: {self.db_dir}")
+                    # Windows文件锁定解决：先关闭可能的数据库连接
+                    self.client = None
+                    self.collection = None
+                    time.sleep(0.5)  # 等待文件句柄释放
+
+                    # 尝试删除，失败则重试一次
+                    try:
+                        shutil.rmtree(self.db_dir)
+                        logger.info(f"已删除旧数据库目录: {self.db_dir}")
+                    except Exception as e_first:
+                        time.sleep(1)  # 等待更长时间
+                        try:
+                            shutil.rmtree(self.db_dir)
+                            logger.info(f"已删除旧数据库目录（重试成功）: {self.db_dir}")
+                        except Exception as e_retry:
+                            logger.warning(f"无法删除旧数据库目录，将尝试使用现有数据库: {e_retry}")
                 except Exception as e:
                     logger.warning(f"无法删除旧数据库目录，将尝试使用现有数据库: {e}")
-            
+
             # 如果目录不存在，创建新目录
             if not self.db_dir.exists():
                 os.makedirs(self.db_dir, exist_ok=True)
@@ -207,32 +225,33 @@ class ChromaDBStore:
         if not self.collection:
             logger.warning("向量存储未初始化，尝试重新初始化...")
             self._init_db()
-        
+
         if not self.collection:
             raise RuntimeError("向量存储未初始化，无法添加文档")
 
         total_added = 0
-        
+
         # 修复2：分批处理，避免大内存占用
         for batch_start in range(0, len(documents), batch_size):
-            batch = documents[batch_start:batch_start + batch_size]
+            batch = documents[batch_start : batch_start + batch_size]
             added = self._add_batch(batch)
             total_added += added
             logger.debug(f"已处理批次 {batch_start//batch_size + 1}, 添加 {added} 个文档")
-        
-        return total_added
-    
-    def _add_batch(self, documents: List[Dict[str, Any]]) -> int:
-        """添加一批文档（内部方法）"""
-        ids: List[str] = []
-        embeddings: List[List[float]] = []
-        texts: List[str] = []
-        metadatas: List[Dict[str, Any]] = []
 
-        for doc in documents:
+        return total_added
+
+    def _add_batch(self, documents: List[Dict[str, Any]]) -> int:
+        """添加一批文档（内部方法）
+
+        优化：使用列表推导式和生成器表达式替代嵌套循环，提高性能。
+        """
+
+        # 使用生成器表达式过滤空文档
+        def process_document(doc: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+            """处理单个文档，返回处理结果或None"""
             text = doc.get("text", "")
             if not text or not text.strip():
-                continue
+                return None
 
             doc_id = self._generate_id(doc)
 
@@ -240,40 +259,52 @@ class ChromaDBStore:
                 # 生成嵌入向量
                 emb = self.embedding.embed(text)
 
-                ids.append(doc_id)
-                embeddings.append(emb)
-                texts.append(text)
-
                 # 构建元数据
                 metadata = {
                     "source": doc.get("source", "unknown"),
                     "position": doc.get("position", ""),
                 }
-                # 添加其他自定义元数据字段
-                for key, value in doc.items():
-                    if key not in ("text", "source", "position") and isinstance(
-                        value, (str, int, float, bool)
-                    ):
-                        metadata[key] = value
+                # 添加其他自定义元数据字段（使用字典推导式）
+                metadata.update(
+                    {
+                        key: value
+                        for key, value in doc.items()
+                        if key not in ("text", "source", "position")
+                        and isinstance(value, (str, int, float, bool))
+                    }
+                )
 
-                metadatas.append(metadata)
+                return {"id": doc_id, "embedding": emb, "text": text, "metadata": metadata}
 
+            except (OSError, RuntimeError, ValueError) as e:
+                logger.warning(f"文档嵌入失败 [source={doc.get('source', 'unknown')}]: {e}")
+                return None
             except Exception as e:
                 logger.warning(f"文档嵌入失败 [source={doc.get('source', 'unknown')}]: {e}")
-                continue
+                return None
+
+        # 使用列表推导式处理文档
+        processed_docs = [
+            result for result in (process_document(doc) for doc in documents) if result is not None
+        ]
+
+        if not processed_docs:
+            return 0
 
         # 批量添加到 ChromaDB
-        if ids:
-            try:
-                self.collection.add(
-                    ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas
-                )
-            except Exception as e:
-                logger.error(f"批量添加文档失败: {e}")
-                return 0
+        try:
+            self.collection.add(
+                ids=[d["id"] for d in processed_docs],
+                embeddings=[d["embedding"] for d in processed_docs],
+                documents=[d["text"] for d in processed_docs],
+                metadatas=[d["metadata"] for d in processed_docs],
+            )
+        except Exception as e:
+            logger.error(f"批量添加文档失败: {e}")
+            return 0
 
-        return len(ids)
-    
+        return len(processed_docs)
+
     def add_document(self, text: str, source: str = "unknown", **metadata) -> Optional[str]:
         """添加单个文档（便捷方法）
 
@@ -312,7 +343,7 @@ class ChromaDBStore:
         if not self.collection:
             logger.warning("向量存储未初始化，尝试重新初始化...")
             self._init_db()
-        
+
         if not self.collection:
             logger.error("向量存储初始化失败")
             return []
@@ -327,7 +358,7 @@ class ChromaDBStore:
             # 执行搜索
             total_docs = self.collection.count()
             n_results = min(top_k, total_docs)
-            
+
             # 修复3：如果请求数量大于实际数量，记录警告
             if top_k > total_docs:
                 logger.warning(f"请求 top_k={top_k} 但知识库只有 {total_docs} 个文档，将返回全部")
@@ -427,36 +458,38 @@ class ChromaDBStore:
             int: 成功加载的文档数量
         """
         from pathlib import Path
+
         from src.esg.vector_store.document_loader import DocumentLoader
-        
+
         # 如果不强制重载且已有文档，返回0
         if not force_reload and self.collection.count() > 0:
             logger.info(f"知识库已有 {self.collection.count()} 个文档，跳过加载")
             return 0
-        
+
         dir_path = Path(directory)
-        
+
         # 如果是相对路径，转换为绝对路径
         if not dir_path.is_absolute():
             from src.esg.config import PROJECT_ROOT
+
             dir_path = PROJECT_ROOT / directory
-        
+
         if not dir_path.exists():
             logger.warning(f"目录不存在: {dir_path}")
             return 0
-        
+
         # 获取所有PDF文件
         pdf_files = list(dir_path.glob("*.pdf"))
         if not pdf_files:
             logger.info(f"目录中没有PDF文件: {dir_path}")
             return 0
-        
+
         logger.info(f"找到 {len(pdf_files)} 个PDF文件，开始向量化...")
-        
+
         # 创建不指定data_dir的加载器，这样load_pdf不会重复添加data路径
         loader = DocumentLoader(data_dir=None)
         total_added = 0
-        
+
         for pdf_file in pdf_files:
             try:
                 logger.info(f"正在处理: {pdf_file.name}")
@@ -469,7 +502,7 @@ class ChromaDBStore:
             except Exception as e:
                 logger.error(f"处理文件失败 {pdf_file.name}: {e}")
                 continue
-        
+
         logger.info(f"自动加载完成，共添加 {total_added} 个文档")
         return total_added
 

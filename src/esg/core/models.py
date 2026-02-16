@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-
 # 常量定义
 DEFAULT_SCORE: float = 50.0
 DEFAULT_TARGET_SCORE: float = 80.0
@@ -64,50 +63,46 @@ SCOPE3_COVERAGE_BENCHMARK_LOW = 0.40  # 低覆盖率基准（40%）
 # S维度评分权重配置（分层加权，与E维度对齐）
 S_DIMENSION_WEIGHTS = {
     # 一级指标 - 员工发展与多元化（45%）
-    "diversity_inclusion": 0.20,      # 性别多元化（女性员工比例+高管女性比例）
-    "training_development": 0.15,     # 培训与发展（人均培训时长+人均培训投入）
-    "employee_scale": 0.10,           # 员工规模（相对行业基准）
-    
+    "diversity_inclusion": 0.20,  # 性别多元化（女性员工比例+高管女性比例）
+    "training_development": 0.15,  # 培训与发展（人均培训时长+人均培训投入）
+    "employee_scale": 0.10,  # 员工规模（相对行业基准）
     # 二级指标 - 安全与福祉（30%）
-    "safety_performance": 0.20,       # 安全绩效（TRIR/LTIFR/安全事故综合）
-    "safety_investment": 0.10,        # 安全投入占比
-    
+    "safety_performance": 0.20,  # 安全绩效（TRIR/LTIFR/安全事故综合）
+    "safety_investment": 0.10,  # 安全投入占比
     # 三级指标 - 社区责任（25%）
-    "community_investment": 0.15,     # 社区投资（占营收比例）
-    "local_employment": 0.10,         # 本地雇佣比例
+    "community_investment": 0.15,  # 社区投资（占营收比例）
+    "local_employment": 0.10,  # 本地雇佣比例
 }
 
 # G维度评分权重配置（分层加权，与E/S维度对齐）
 G_DIMENSION_WEIGHTS = {
     # 第一层：董事会与治理结构（35%）
-    "board_effectiveness": 0.15,      # 董事会效能（独立性+多元化）
-    "esg_governance": 0.10,           # ESG治理架构
-    "audit_independence": 0.10,       # 审计独立性（新增）
-    
+    "board_effectiveness": 0.15,  # 董事会效能（独立性+多元化）
+    "esg_governance": 0.10,  # ESG治理架构
+    "audit_independence": 0.10,  # 审计独立性（新增）
     # 第二层：合规与商业道德（30%）
-    "compliance_maturity": 0.15,      # 合规成熟度（道德+反腐败综合）
-    "whistleblower_protection": 0.05, # 举报人保护机制
-    "business_ethics": 0.10,          # 商业道德体系（新增）
-    
+    "compliance_maturity": 0.15,  # 合规成熟度（道德+反腐败综合）
+    "whistleblower_protection": 0.05,  # 举报人保护机制
+    "business_ethics": 0.10,  # 商业道德体系（新增）
     # 第三层：透明度与问责（15%）
-    "esg_report_quality": 0.08,       # ESG报告质量
-    "stakeholder_engagement": 0.07,   # 利益相关方参与（新增）
+    "esg_report_quality": 0.08,  # ESG报告质量
+    "stakeholder_engagement": 0.07,  # 利益相关方参与（新增）
 }
 
 # S维度行业基准值
-DIVERSITY_BENCHMARK_EXCELLENT = 40.0      # 女性比例优秀值（%）
-DIVERSITY_BENCHMARK_GOOD = 35.0           # 女性比例良好值（%）
-TRAINING_HOURS_BENCHMARK = 40.0           # 人均培训时长基准（小时）
-TRIR_BENCHMARK_EXCELLENT = 0.5            # 总可记录伤害率优秀值
-TRIR_BENCHMARK_POOR = 3.0                 # 总可记录伤害率较差值
-EMPLOYEE_SCALE_BENCHMARK = 5000           # 员工规模基准值（用于归一化）
+DIVERSITY_BENCHMARK_EXCELLENT = 40.0  # 女性比例优秀值（%）
+DIVERSITY_BENCHMARK_GOOD = 35.0  # 女性比例良好值（%）
+TRAINING_HOURS_BENCHMARK = 40.0  # 人均培训时长基准（小时）
+TRIR_BENCHMARK_EXCELLENT = 0.5  # 总可记录伤害率优秀值
+TRIR_BENCHMARK_POOR = 3.0  # 总可记录伤害率较差值
+EMPLOYEE_SCALE_BENCHMARK = 5000  # 员工规模基准值（用于归一化）
 
 # G维度行业基准值
-BOARD_INDEPENDENCE_BENCHMARK = 50.0       # 董事会独立性优秀值（%）
-BOARD_DIVERSITY_BENCHMARK = 30.0          # 董事会多元化优秀值（%）
-AUDIT_INDEPENDENCE_BENCHMARK = 80.0       # 审计独立性优秀值（%）
-ETHICS_TRAINING_BENCHMARK = 95.0          # 道德培训覆盖率优秀值（%）
-ANTI_CORRUPTION_BENCHMARK = 90.0          # 反腐败培训覆盖率优秀值（%）
+BOARD_INDEPENDENCE_BENCHMARK = 50.0  # 董事会独立性优秀值（%）
+BOARD_DIVERSITY_BENCHMARK = 30.0  # 董事会多元化优秀值（%）
+AUDIT_INDEPENDENCE_BENCHMARK = 80.0  # 审计独立性优秀值（%）
+ETHICS_TRAINING_BENCHMARK = 95.0  # 道德培训覆盖率优秀值（%）
+ANTI_CORRUPTION_BENCHMARK = 90.0  # 反腐败培训覆盖率优秀值（%）
 
 
 def _calculate_weighted_score(
@@ -144,9 +139,9 @@ def _calculate_weighted_score(
 @dataclass
 class SBTiTarget:
     """SBTi气候目标数据类
-    
+
     存储科学碳目标倡议(SBTi)相关信息。
-    
+
     Attributes:
         target_type: 目标类型（如 'absolute', 'intensity'）
         target_year: 目标年份
@@ -154,6 +149,7 @@ class SBTiTarget:
         baseline_year: 基准年份
         verification_status: 验证状态
     """
+
     target_type: Optional[str] = None
     target_year: Optional[int] = None
     reduction_percentage: Optional[float] = None
@@ -525,15 +521,17 @@ class ESGMetrics:
             diversity_score = self._calculate_diversity_score()
             training_score = self._calculate_training_score()
             employee_scale_score = self._calculate_employee_scale_score()
-            
+
             # 二级指标（30%）：安全与福祉
             safety_score = self._calculate_safety_score()
             safety_investment_score = self._safe_score(self.safety_investment_ratio, 100.0)
-            
+
             # 三级指标（25%）：社区责任
-            community_score = self._safe_score(self.community_investment_per_revenue, 1.0, multiplier=100.0)
+            community_score = self._safe_score(
+                self.community_investment_per_revenue, 1.0, multiplier=100.0
+            )
             local_employment_score = self._safe_score(self.local_employment_ratio, 100.0)
-            
+
             scores = [
                 # 一级指标
                 diversity_score,
@@ -559,16 +557,19 @@ class ESGMetrics:
             # 第一层：董事会与治理结构
             board_effectiveness = self._calculate_board_effectiveness()
             esg_governance = self._calculate_esg_governance_score()
-            audit_score = self._safe_score(self.board_independence_ratio, 100.0, multiplier=1.0)  # 作为代理
-            
+            audit_score = self._safe_score(
+                self.board_independence_ratio, 100.0, multiplier=1.0
+            )  # 作为代理
+
             # 第二层：合规与商业道德
             compliance_maturity = self._calculate_compliance_maturity()
             whistleblower_score = (
-                100.0 if self.whistleblower_protection
+                100.0
+                if self.whistleblower_protection
                 else 0.0 if self.whistleblower_protection is not None else None
             )
             business_ethics = self._calculate_business_ethics_score()
-            
+
             # 第三层：透明度与问责
             report_quality = self._safe_score(self.esg_report_quality, 100.0)
             stakeholder_score = self._calculate_stakeholder_engagement_score()
@@ -611,19 +612,19 @@ class ESGMetrics:
 
     def _calculate_diversity_score(self) -> Optional[float]:
         """计算员工多元化得分（0-100）
-        
+
         综合评估女性员工比例和高管层女性比例。
         女性员工比例权重60%，高管女性比例权重40%。
-        
+
         Returns:
             多元化得分(0-100)或None
         """
         if self.female_ratio is None and self.female_executive_ratio is None:
             return None
-        
+
         scores = []
         weights = []
-        
+
         # 女性员工比例评分
         if self.female_ratio is not None:
             # 理想区间35-50%，低于20%或高于60%需要关注
@@ -637,7 +638,7 @@ class ESGMetrics:
                 score = max(0.0, self.female_ratio / 20.0 * 60.0)
             scores.append(score)
             weights.append(0.6)
-        
+
         # 高管层女性比例评分（更严格的标准）
         if self.female_executive_ratio is not None:
             # 高管层30%为优秀，20%为良好
@@ -651,10 +652,10 @@ class ESGMetrics:
                 score = max(0.0, self.female_executive_ratio / 10.0 * 50.0)
             scores.append(score)
             weights.append(0.4)
-        
+
         if not scores:
             return None
-        
+
         # 加权平均
         total_weight = sum(weights)
         normalized_weights = [w / total_weight for w in weights]
@@ -662,17 +663,17 @@ class ESGMetrics:
 
     def _calculate_training_score(self) -> Optional[float]:
         """计算培训与发展得分（0-100）
-        
+
         综合评估人均培训时长和人均培训投入。
-        
+
         Returns:
             培训得分(0-100)或None
         """
         if self.training_hours is None and self.training_investment_per_employee is None:
             return None
-        
+
         scores = []
-        
+
         # 人均培训时长评分
         if self.training_hours is not None:
             if self.training_hours >= TRAINING_HOURS_BENCHMARK:
@@ -680,59 +681,61 @@ class ESGMetrics:
             else:
                 score = (self.training_hours / TRAINING_HOURS_BENCHMARK) * 100.0
             scores.append(score)
-        
+
         # 人均培训投入评分（如果有数据）
         if self.training_investment_per_employee is not None:
             # 假设500美元/人为基准
             benchmark_investment = 500.0
-            score = min(100.0, (self.training_investment_per_employee / benchmark_investment) * 100.0)
+            score = min(
+                100.0, (self.training_investment_per_employee / benchmark_investment) * 100.0
+            )
             scores.append(score)
-        
+
         if not scores:
             return None
-        
+
         return sum(scores) / len(scores)
 
     def _calculate_employee_scale_score(self) -> Optional[float]:
         """计算员工规模得分（0-100）
-        
+
         评估企业规模，鼓励创造就业。
         使用对数尺度避免大企业过度优势。
-        
+
         Returns:
             规模得分(0-100)或None
         """
         if self.employee_count is None:
             return None
-        
+
         import math
-        
+
         # 使用对数尺度：1000人=60分，5000人=80分，20000人=100分
         if self.employee_count <= 0:
             return 0.0
-        
+
         log_score = 20.0 * math.log10(self.employee_count / 100.0)
         return min(100.0, max(0.0, log_score))
 
     def _calculate_safety_score(self) -> Optional[float]:
         """计算安全绩效得分（0-100）
-        
+
         综合评估TRIR（总可记录伤害率）、LTIFR（失时工伤率）和安全事故数量。
         分数越高表示安全性越好。
-        
+
         Returns:
             安全得分(0-100)或None
         """
         has_trir = self.trir is not None
         has_ltifr = self.ltifr is not None or self.lost_time_injury_rate is not None
         has_incidents = self.safety_incidents is not None
-        
+
         if not (has_trir or has_ltifr or has_incidents):
             return None
-        
+
         scores = []
         weights = []
-        
+
         # TRIR评分（最权威的安全指标）
         trir_value = self.trir
         if trir_value is not None:
@@ -741,11 +744,13 @@ class ESGMetrics:
             elif trir_value >= TRIR_BENCHMARK_POOR:
                 score = 0.0
             else:
-                ratio = (trir_value - TRIR_BENCHMARK_EXCELLENT) / (TRIR_BENCHMARK_POOR - TRIR_BENCHMARK_EXCELLENT)
+                ratio = (trir_value - TRIR_BENCHMARK_EXCELLENT) / (
+                    TRIR_BENCHMARK_POOR - TRIR_BENCHMARK_EXCELLENT
+                )
                 score = 100.0 * (1 - ratio)
             scores.append(score)
             weights.append(0.5)
-        
+
         # LTIFR评分
         ltifr_value = self.ltifr if self.ltifr is not None else self.lost_time_injury_rate
         if ltifr_value is not None:
@@ -761,9 +766,13 @@ class ESGMetrics:
                 score = 100.0 * (1 - ratio)
             scores.append(score)
             weights.append(0.3)
-        
+
         # 安全事故数量评分（相对指标，需要员工规模）
-        if self.safety_incidents is not None and self.employee_count is not None and self.employee_count > 0:
+        if (
+            self.safety_incidents is not None
+            and self.employee_count is not None
+            and self.employee_count > 0
+        ):
             # 计算事故率（每千人）
             incident_rate = (self.safety_incidents / self.employee_count) * 1000
             if incident_rate == 0:
@@ -776,10 +785,10 @@ class ESGMetrics:
                 score = max(0.0, 60.0 - (incident_rate - 5.0) / 5.0 * 60.0)
             scores.append(score)
             weights.append(0.2)
-        
+
         if not scores:
             return None
-        
+
         # 加权平均
         total_weight = sum(weights)
         normalized_weights = [w / total_weight for w in weights]
@@ -787,36 +796,41 @@ class ESGMetrics:
 
     def _calculate_board_effectiveness(self) -> Optional[float]:
         """计算董事会效能得分（0-100）
-        
+
         综合评估董事会独立性和多元化。
         独立性权重60%，多元化权重40%。
-        
+
         Returns:
             董事会效能得分(0-100)或None
         """
         has_independence = self.board_independence_ratio is not None
-        
+
         # 检查是否有董事会多元化数据（使用现有字段作为代理）
         # 在实际应用中，可以添加 board_diversity_score 字段
         has_diversity = False  # 当前模型中暂无此字段
-        
+
         if not has_independence and not has_diversity:
             return None
-        
+
         scores = []
         weights = []
-        
+
         # 董事会独立性评分
         if self.board_independence_ratio is not None:
             if self.board_independence_ratio >= BOARD_INDEPENDENCE_BENCHMARK:
                 score = 100.0
             elif self.board_independence_ratio >= 33.0:  # 最低合规标准
-                score = 60.0 + (self.board_independence_ratio - 33.0) / (BOARD_INDEPENDENCE_BENCHMARK - 33.0) * 40.0
+                score = (
+                    60.0
+                    + (self.board_independence_ratio - 33.0)
+                    / (BOARD_INDEPENDENCE_BENCHMARK - 33.0)
+                    * 40.0
+                )
             else:
                 score = max(0.0, self.board_independence_ratio / 33.0 * 60.0)
             scores.append(score)
             weights.append(0.6)
-        
+
         # 董事会多元化评分（使用ESG委员会独立性作为代理）
         if self.esg_committee_independence is not None:
             # ESG委员会独立性反映了董事会对ESG的重视
@@ -826,62 +840,62 @@ class ESGMetrics:
                 score = (self.esg_committee_independence / BOARD_DIVERSITY_BENCHMARK) * 100.0
             scores.append(score)
             weights.append(0.4)
-        
+
         if not scores:
             return None
-        
+
         total_weight = sum(weights)
         normalized_weights = [w / total_weight for w in weights]
         return sum(s * nw for s, nw in zip(scores, normalized_weights))
 
     def _calculate_esg_governance_score(self) -> Optional[float]:
         """计算ESG治理架构得分（0-100）
-        
+
         评估ESG委员会独立性和ESG报告质量。
-        
+
         Returns:
             ESG治理得分(0-100)或None
         """
         has_committee = self.esg_committee_independence is not None
         has_report_quality = self.esg_report_quality is not None
-        
+
         if not has_committee and not has_report_quality:
             return None
-        
+
         scores = []
-        
+
         if self.esg_committee_independence is not None:
             if self.esg_committee_independence >= 50.0:
                 score = 100.0
             else:
                 score = (self.esg_committee_independence / 50.0) * 100.0
             scores.append(score)
-        
+
         if self.esg_report_quality is not None:
             scores.append(self.esg_report_quality)
-        
+
         if not scores:
             return None
-        
+
         return sum(scores) / len(scores)
 
     def _calculate_compliance_maturity(self) -> Optional[float]:
         """计算合规成熟度得分（0-100）
-        
+
         综合评估道德培训和反腐败培训覆盖率。
-        
+
         Returns:
             合规成熟度得分(0-100)或None
         """
         has_ethics = self.ethics_training_coverage is not None
         has_anti_corruption = self.anti_corruption_training_coverage is not None
-        
+
         if not has_ethics and not has_anti_corruption:
             return None
-        
+
         scores = []
         weights = []
-        
+
         # 道德培训覆盖率（权重60%）
         if self.ethics_training_coverage is not None:
             if self.ethics_training_coverage >= ETHICS_TRAINING_BENCHMARK:
@@ -890,7 +904,7 @@ class ESGMetrics:
                 score = (self.ethics_training_coverage / ETHICS_TRAINING_BENCHMARK) * 100.0
             scores.append(score)
             weights.append(0.6)
-        
+
         # 反腐败培训覆盖率（权重40%）
         if self.anti_corruption_training_coverage is not None:
             if self.anti_corruption_training_coverage >= ANTI_CORRUPTION_BENCHMARK:
@@ -899,31 +913,31 @@ class ESGMetrics:
                 score = (self.anti_corruption_training_coverage / ANTI_CORRUPTION_BENCHMARK) * 100.0
             scores.append(score)
             weights.append(0.4)
-        
+
         if not scores:
             return None
-        
+
         total_weight = sum(weights)
         normalized_weights = [w / total_weight for w in weights]
         return sum(s * nw for s, nw in zip(scores, normalized_weights))
 
     def _calculate_business_ethics_score(self) -> Optional[float]:
         """计算商业道德体系得分（0-100）
-        
+
         基于道德培训覆盖率和举报人保护机制评估商业道德体系成熟度。
-        
+
         Returns:
             商业道德得分(0-100)或None
         """
         has_ethics = self.ethics_training_coverage is not None
         has_whistleblower = self.whistleblower_protection is not None
-        
+
         if not has_ethics and not has_whistleblower:
             return None
-        
+
         scores = []
         weights = []
-        
+
         # 道德培训（权重70%）
         if self.ethics_training_coverage is not None:
             if self.ethics_training_coverage >= ETHICS_TRAINING_BENCHMARK:
@@ -932,42 +946,42 @@ class ESGMetrics:
                 score = (self.ethics_training_coverage / ETHICS_TRAINING_BENCHMARK) * 100.0
             scores.append(score)
             weights.append(0.7)
-        
+
         # 举报人保护（权重30%）
         if self.whistleblower_protection is not None:
             score = 100.0 if self.whistleblower_protection else 0.0
             scores.append(score)
             weights.append(0.3)
-        
+
         if not scores:
             return None
-        
+
         total_weight = sum(weights)
         normalized_weights = [w / total_weight for w in weights]
         return sum(s * nw for s, nw in zip(scores, normalized_weights))
 
     def _calculate_stakeholder_engagement_score(self) -> Optional[float]:
         """计算利益相关方参与得分（0-100）
-        
+
         基于ESG报告质量和社区投资评估利益相关方参与度。
-        
+
         Returns:
             利益相关方参与得分(0-100)或None
         """
         has_report = self.esg_report_quality is not None
         has_community = self.community_investment_per_revenue is not None
-        
+
         if not has_report and not has_community:
             return None
-        
+
         scores = []
         weights = []
-        
+
         # ESG报告质量（权重60%）
         if self.esg_report_quality is not None:
             scores.append(self.esg_report_quality)
             weights.append(0.6)
-        
+
         # 社区投资占营收比例（权重40%）
         if self.community_investment_per_revenue is not None:
             # 1%为优秀标准
@@ -978,10 +992,10 @@ class ESGMetrics:
                 score = (self.community_investment_per_revenue / benchmark) * 100.0
             scores.append(score)
             weights.append(0.4)
-        
+
         if not scores:
             return None
-        
+
         total_weight = sum(weights)
         normalized_weights = [w / total_weight for w in weights]
         return sum(s * nw for s, nw in zip(scores, normalized_weights))

@@ -1,10 +1,11 @@
 """测试竞争对手深度分析功能
 
-使用标准unittest格式，优化测试隔离和mock使用。
+使用pytest格式。
 """
 
 import logging
-import unittest
+
+import pytest
 
 from src.esg.analysis.competitor_analyzer import CompetitorAnalyzer
 from src.esg.core.models import ESGMetrics
@@ -14,10 +15,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-class TestCompetitorAnalyzer(unittest.TestCase):
+class TestCompetitorAnalyzer:
     """竞争对手分析器测试类"""
 
-    def setUp(self):
+    def setup_method(self):
         """测试前置设置"""
         self.analyzer = CompetitorAnalyzer()
 
@@ -45,9 +46,9 @@ class TestCompetitorAnalyzer(unittest.TestCase):
 
     def test_competitor_analyzer_init(self):
         """测试CompetitorAnalyzer初始化"""
-        self.assertIsNotNone(self.analyzer)
+        assert self.analyzer is not None
         competitor_list = self.analyzer.get_competitor_list()
-        self.assertIsInstance(competitor_list, list)
+        assert isinstance(competitor_list, list)
         logger.info(f"可用竞争对手: {competitor_list}")
 
     def test_generate_analysis(self):
@@ -55,9 +56,9 @@ class TestCompetitorAnalyzer(unittest.TestCase):
         analysis = self.analyzer.generate_analysis(self.test_metrics, "维斯塔斯", self.gap_data)
 
         # 使用assert验证
-        self.assertIsNotNone(analysis)
-        self.assertIsInstance(analysis, str)
-        self.assertGreater(len(analysis), 0)
+        assert analysis is not None
+        assert isinstance(analysis, str)
+        assert len(analysis) > 0
 
         logger.info(f"分析内容长度: {len(analysis)} 字符")
 
@@ -68,15 +69,15 @@ class TestCompetitorAnalyzer(unittest.TestCase):
         )
 
         # 验证表格结构
-        self.assertIsNotNone(table)
-        self.assertIsInstance(table, list)
-        self.assertGreater(len(table), 0)
+        assert table is not None
+        assert isinstance(table, list)
+        assert len(table) > 0
 
         # 验证表格字段
         for row in table:
-            self.assertIn("维度", row)
-            self.assertIn("我司现状", row)
-            self.assertIn("差距", row)
+            assert "维度" in row
+            assert "我司现状" in row
+            assert "差距" in row
 
         logger.info(f"表格行数: {len(table)}")
 
@@ -84,8 +85,8 @@ class TestCompetitorAnalyzer(unittest.TestCase):
         """测试创新亮点获取"""
         highlights = self.analyzer.get_innovation_highlights("维斯塔斯")
 
-        self.assertIsNotNone(highlights)
-        self.assertIsInstance(highlights, list)
+        assert highlights is not None
+        assert isinstance(highlights, list)
 
         logger.info(f"创新亮点数量: {len(highlights)}")
 
@@ -94,14 +95,14 @@ class TestCompetitorAnalyzer(unittest.TestCase):
         comparison = self.analyzer.get_overall_comparison(self.test_metrics)
 
         # 验证对比结果结构
-        self.assertIsNotNone(comparison)
-        self.assertIn("current_company", comparison)
+        assert comparison is not None
+        assert "current_company" in comparison
 
         current = comparison["current_company"]
-        self.assertIn("name", current)
-        self.assertIn("overall_score", current)
-        self.assertIn("rank", current)
-        self.assertIn("total_companies", current)
+        assert "name" in current
+        assert "overall_score" in current
+        assert "rank" in current
+        assert "total_companies" in current
 
         logger.info(f"综合评分: {current['overall_score']}")
         logger.info(f"排名: #{current['rank']} / {current['total_companies']}")
@@ -110,21 +111,21 @@ class TestCompetitorAnalyzer(unittest.TestCase):
         """测试差距数据在分析中被正确使用"""
         # 测试E维度差距
         e_gap = self.gap_data["E"]
-        self.assertEqual(e_gap["gap"], 20)
+        assert e_gap["gap"] == 20
 
         # 测试S维度差距
         s_gap = self.gap_data["S"]
-        self.assertEqual(s_gap["gap"], 10)
+        assert s_gap["gap"] == 10
 
         # 测试G维度差距
         g_gap = self.gap_data["G"]
-        self.assertEqual(g_gap["gap"], 3)
+        assert g_gap["gap"] == 3
 
 
-class TestCompetitorAnalyzerIsolation(unittest.TestCase):
+class TestCompetitorAnalyzerIsolation:
     """使用Mock进行测试隔离"""
 
-    def setUp(self):
+    def setup_method(self):
         """测试前置设置"""
         self.test_metrics = ESGMetrics(
             company_name="测试公司",
@@ -143,25 +144,4 @@ class TestCompetitorAnalyzerIsolation(unittest.TestCase):
         competitors = analyzer.get_competitor_list()
 
         # 使用断言而非日志
-        self.assertIsInstance(competitors, list)
-
-
-def run_tests():
-    """运行所有测试"""
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-
-    suite.addTests(loader.loadTestsFromTestCase(TestCompetitorAnalyzer))
-    suite.addTests(loader.loadTestsFromTestCase(TestCompetitorAnalyzerIsolation))
-
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-
-    return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    success = run_tests()
-    import sys
-
-    sys.exit(0 if success else 1)
+        assert isinstance(competitors, list)

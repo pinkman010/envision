@@ -61,7 +61,9 @@ class RAGEngine:
             if stream:
                 # 流式模式下返回错误信息生成器
                 def empty_stream():
+                    """当没有找到相关文档时，返回默认的空流响应"""
                     yield "抱歉，在知识库中未找到相关信息。"
+
                 return empty_stream()
             return RAGResponse(
                 answer="抱歉，在知识库中未找到相关信息。",
@@ -166,7 +168,7 @@ class RAGEngine:
             for line in response.iter_lines():
                 if line:
                     try:
-                        data = json.loads(line.decode('utf-8'))
+                        data = json.loads(line.decode("utf-8"))
                         chunk = data.get("response", "")
                         full_text += chunk
                         yield chunk
@@ -261,8 +263,11 @@ class RAGEngine:
         confidence = self._calculate_confidence(relevant_docs)
 
         if not relevant_docs:
+
             def empty_stream():
+                """当没有找到相关文档时，返回默认的空流响应"""
                 yield "抱歉，在知识库中未找到相关信息。"
+
             return [], empty_stream(), 0.0
 
         prompt = self._build_prompt(question, relevant_docs)

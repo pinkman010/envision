@@ -176,13 +176,11 @@ class GapAnalyzer:
         "carbon_intensity": "carbon_intensity",
         "scope3_coverage_percentage": "scope3_coverage",
         "sbti_target": "sbti_target",
-        
         # 二级指标：运营效率（30%）
         "renewable_energy_ratio": "renewable_energy",
         "energy_efficiency": "energy_efficiency",
         "waste_recycling_rate": "waste_recycling",
         "water_intensity": "water_management",
-        
         # 三级指标：新能源特色（25%）
         "turbine_availability": "turbine_performance",
         "curtailment_rate": "curtailment_management",
@@ -190,37 +188,30 @@ class GapAnalyzer:
         "battery_recycling_rate": "battery_recycling",
         "electrolysis_efficiency": "hydrogen_production",
         "energy_storage_safety_score": "storage_safety",
-        
         # ===== 社会维度 (S) - 对应 S_DIMENSION_WEIGHTS =====
         # 一级指标：员工发展与多元化（45%）
         "female_ratio": "gender_diversity",
         "female_executive_ratio": "executive_diversity",
         "training_hours": "training_development",
         "employee_count": "employee_scale",
-        
         # 二级指标：安全与福祉（30%）
         "trir": "safety_performance",
         "ltifr": "safety_performance",
         "safety_investment_ratio": "safety_investment",
-        
         # 三级指标：社区责任（25%）
         "community_investment_per_revenue": "community_engagement",
         "local_employment_ratio": "local_employment",
-        
         # ===== 治理维度 (G) - 对应 G_DIMENSION_WEIGHTS =====
         # 第一层：董事会与治理结构（35%）
         "board_independence_ratio": "board_independence",
         "esg_committee_independence": "esg_governance_structure",
-        
         # 第二层：合规与商业道德（30%）
         "ethics_training_coverage": "ethics_compliance",
         "anti_corruption_training_coverage": "anti_corruption",
         "whistleblower_protection": "whistleblower_protection",
-        
         # 第三层：气候治理（20%）
         "climate_governance": "climate_governance_framework",
         "tcfd_disclosure": "tcfd_disclosure_quality",
-        
         # 第四层：透明度与问责（15%）
         "esg_report_quality": "report_quality",
     }
@@ -429,263 +420,303 @@ class GapAnalyzer:
         """获取可用的标杆企业列表"""
         return self.repository.get_available_companies()
 
+    # ============================================================================
+    # 指标评分规则配置 (配置驱动模式)
+    # ============================================================================
+    # 使用配置驱动的评分规则，替代大量硬编码的if语句
+    # 评分类型: direct(直接), ratio(比例), inverse(逆向), threshold(分段), boolean(布尔)
+
+    INDICATOR_SCORING_RULES = {
+        # ===== 环境维度 (E) =====
+        # 碳强度（逆向：越低越好）
+        "carbon_intensity": {"type": "inverse", "excellent": 0, "poor": 100},
+        # 范围3覆盖率
+        "scope3_coverage": {"type": "range", "ranges": [(0.8, 100), (0.4, 0), (0, 100)]},
+        # SBTi目标（对象方法）
+        "sbti_target": {"type": "method", "method": "get_overall_score"},
+        # 直接比例型
+        "renewable_energy": {"type": "ratio", "max": 100},
+        "energy_efficiency": {"type": "direct", "max": 100},
+        "waste_recycling": {"type": "ratio", "max": 100},
+        # 水资源强度（逆向）
+        "water_management": {"type": "inverse", "excellent": 15, "poor": 100},
+        # 风机可利用率（基准比例）
+        "turbine_performance": {"type": "benchmark", "benchmark": 97.0},
+        # 弃风率（逆向）
+        "curtailment_management": {"type": "inverse", "excellent": 2, "poor": 10},
+        # 电池循环寿命
+        "battery_durability": {"type": "benchmark", "benchmark": 6000.0},
+        "battery_recycling": {"type": "ratio", "max": 100},
+        # 电解效率
+        "hydrogen_production": {"type": "benchmark", "benchmark": 70.0},
+        # 直接分数
+        "storage_safety": {"type": "direct", "max": 100},
+        # ===== 社会维度 (S) =====
+        # 性别多元化（分段计算，在单独方法中处理）
+        "gender_diversity": {"type": "composite"},
+        "executive_diversity": {"type": "ratio", "max": 100},
+        # 培训发展（复合）
+        "training_development": {"type": "composite"},
+        # 员工规模（对数）
+        "employee_scale": {"type": "log_scale", "base": 100.0, "factor": 20.0},
+        # 安全绩效（复合）
+        "safety_performance": {"type": "composite"},
+        "safety_investment": {"type": "ratio", "max": 100},
+        "community_engagement": {"type": "ratio", "max": 100},
+        "local_employment": {"type": "ratio", "max": 100},
+        # ===== 治理维度 (G) =====
+        # 董事会独立性（分段）
+        "board_independence": {"type": "threshold", "ranges": [(50, 100), (33, 60), (0, 0)]},
+        # ESG治理架构
+        "esg_governance_structure": {"type": "ratio", "max": 50},
+        # 合规（复合）
+        "ethics_compliance": {"type": "composite"},
+        "anti_corruption": {"type": "composite"},
+        # 举报人保护
+        "whistleblower_protection": {"type": "boolean"},
+        # 气候治理（复合）
+        "climate_governance_framework": {"type": "composite"},
+        # TCFD披露（复合）
+        "tcfd_disclosure_quality": {"type": "composite"},
+        # 报告质量
+        "report_quality": {"type": "direct", "max": 100},
+    }
+
     def _calculate_indicator_scores(self, metrics: ESGMetrics) -> Dict[str, float]:
         """计算各项指标分数
-        
+
         基于ESGMetrics数据计算各细分指标分数，与INDICATOR_MAPPING对齐。
-        使用与models.py中相同的评分逻辑和基准值。
-        
+        使用配置驱动的评分规则，大幅降低圈复杂度。
+
         Returns:
             Dict[str, float]: 指标ID到分数的映射
         """
         scores = {}
 
-        # ===== 环境维度 (E) =====
-        # 碳强度评分（越低越好）
-        if metrics.carbon_intensity is not None:
-            benchmark = metrics._get_carbon_intensity_benchmark()
-            excellent, poor = benchmark["excellent"], benchmark["poor"]
-            if metrics.carbon_intensity <= excellent:
-                scores["carbon_intensity"] = 100.0
-            elif metrics.carbon_intensity >= poor:
-                scores["carbon_intensity"] = 0.0
-            else:
-                ratio = (metrics.carbon_intensity - excellent) / (poor - excellent)
-                scores["carbon_intensity"] = 100.0 * (1 - ratio)
-        
-        # 范围3覆盖率
-        if metrics.scope3_coverage_percentage is not None:
-            if metrics.scope3_coverage_percentage >= 0.80:
-                scores["scope3_coverage"] = 100.0
-            elif metrics.scope3_coverage_percentage <= 0.40:
-                scores["scope3_coverage"] = 0.0
-            else:
-                ratio = (metrics.scope3_coverage_percentage - 0.40) / 0.40
-                scores["scope3_coverage"] = 100.0 * ratio
-        
-        # SBTi目标评分
-        if metrics.sbti_target is not None:
-            scores["sbti_target"] = metrics.sbti_target.get_overall_score()
-        
-        # 可再生能源比例
-        if metrics.renewable_energy_ratio is not None:
-            scores["renewable_energy"] = min(100.0, metrics.renewable_energy_ratio * 100)
-        
-        # 能源效率
-        if metrics.energy_efficiency is not None:
-            scores["energy_efficiency"] = min(100.0, metrics.energy_efficiency)
-        
-        # 废弃物回收率
-        if metrics.waste_recycling_rate is not None:
-            scores["waste_recycling"] = min(100.0, metrics.waste_recycling_rate * 100)
-        
-        # 水资源强度（越低越好）
-        if metrics.water_intensity is not None:
-            if metrics.water_intensity <= 15.0:
-                scores["water_management"] = 100.0
-            elif metrics.water_intensity >= 100.0:
-                scores["water_management"] = 0.0
-            else:
-                ratio = (metrics.water_intensity - 15.0) / 85.0
-                scores["water_management"] = 100.0 * (1 - ratio)
-        
-        # 风机可利用率
-        if metrics.turbine_availability is not None:
-            benchmark = 97.0
-            scores["turbine_performance"] = min(100.0, metrics.turbine_availability / benchmark * 100)
-        
-        # 弃风/弃光率（越低越好）
-        if metrics.curtailment_rate is not None:
-            if metrics.curtailment_rate <= 2.0:
-                scores["curtailment_management"] = 100.0
-            elif metrics.curtailment_rate >= 10.0:
-                scores["curtailment_management"] = 0.0
-            else:
-                ratio = (metrics.curtailment_rate - 2.0) / 8.0
-                scores["curtailment_management"] = 100.0 * (1 - ratio)
-        
-        # 电池循环寿命
-        if metrics.battery_cycle_life is not None:
-            benchmark = 6000.0
-            scores["battery_durability"] = min(100.0, metrics.battery_cycle_life / benchmark * 100)
-        
-        # 电池回收率
-        if metrics.battery_recycling_rate is not None:
-            scores["battery_recycling"] = min(100.0, metrics.battery_recycling_rate * 100)
-        
-        # 电解效率
-        if metrics.electrolysis_efficiency is not None:
-            benchmark = 70.0
-            scores["hydrogen_production"] = min(100.0, metrics.electrolysis_efficiency / benchmark * 100)
-        
-        # 储能安全评分
-        if metrics.energy_storage_safety_score is not None:
-            scores["storage_safety"] = metrics.energy_storage_safety_score
+        # 批量计算通用指标
+        for metric_name, indicator_id in self.INDICATOR_MAPPING.items():
+            value = getattr(metrics, metric_name, None)
+            if value is None:
+                continue
 
-        # ===== 社会维度 (S) =====
-        # 性别多元化（综合女性员工比例和高管女性比例）
-        diversity_scores = []
-        if metrics.female_ratio is not None:
-            if metrics.female_ratio >= 40.0:
-                diversity_scores.append(100.0)
-            elif metrics.female_ratio >= 35.0:
-                diversity_scores.append(80.0 + (metrics.female_ratio - 35.0) / 5.0 * 20.0)
-            elif metrics.female_ratio >= 20.0:
-                diversity_scores.append(60.0 + (metrics.female_ratio - 20.0) / 15.0 * 20.0)
-            else:
-                diversity_scores.append(max(0.0, metrics.female_ratio / 20.0 * 60.0))
-        
-        if metrics.female_executive_ratio is not None:
-            if metrics.female_executive_ratio >= 30.0:
-                diversity_scores.append(100.0)
-            elif metrics.female_executive_ratio >= 20.0:
-                diversity_scores.append(70.0 + (metrics.female_executive_ratio - 20.0) / 10.0 * 30.0)
-            elif metrics.female_executive_ratio >= 10.0:
-                diversity_scores.append(50.0 + (metrics.female_executive_ratio - 10.0) / 10.0 * 20.0)
-            else:
-                diversity_scores.append(max(0.0, metrics.female_executive_ratio / 10.0 * 50.0))
-        
-        if diversity_scores:
-            scores["gender_diversity"] = sum(diversity_scores) / len(diversity_scores)
-        
-        if metrics.female_executive_ratio is not None:
-            scores["executive_diversity"] = min(100.0, metrics.female_executive_ratio * 100)
-        
-        # 培训发展（综合培训时长和培训投入）
-        training_scores = []
-        if metrics.training_hours is not None:
-            benchmark = 40.0
-            training_scores.append(min(100.0, metrics.training_hours / benchmark * 100))
-        
-        if metrics.training_investment_per_employee is not None:
-            benchmark = 500.0  # 美元/人
-            training_scores.append(min(100.0, metrics.training_investment_per_employee / benchmark * 100))
-        
-        if training_scores:
-            scores["training_development"] = sum(training_scores) / len(training_scores)
-        
-        # 员工规模（对数尺度）
-        if metrics.employee_count is not None and metrics.employee_count > 0:
-            import math
-            scores["employee_scale"] = min(100.0, max(0.0, 20.0 * math.log10(metrics.employee_count / 100.0)))
-        
-        # 安全绩效（综合TRIR和LTIFR）
-        safety_scores = []
-        if metrics.trir is not None:
-            if metrics.trir <= 0.5:
-                safety_scores.append(100.0)
-            elif metrics.trir >= 3.0:
-                safety_scores.append(0.0)
-            else:
-                ratio = (metrics.trir - 0.5) / 2.5
-                safety_scores.append(100.0 * (1 - ratio))
-        
-        ltifr_value = metrics.ltifr if metrics.ltifr is not None else metrics.lost_time_injury_rate
-        if ltifr_value is not None:
-            if ltifr_value <= 0.3:
-                safety_scores.append(100.0)
-            elif ltifr_value >= 1.8:
-                safety_scores.append(0.0)
-            else:
-                ratio = (ltifr_value - 0.3) / 1.5
-                safety_scores.append(100.0 * (1 - ratio))
-        
-        if safety_scores:
-            scores["safety_performance"] = sum(safety_scores) / len(safety_scores)
-        
-        # 安全投入占比
-        if metrics.safety_investment_ratio is not None:
-            scores["safety_investment"] = min(100.0, metrics.safety_investment_ratio * 100)
-        
-        # 社区参与（占营收比例）
-        if metrics.community_investment_per_revenue is not None:
-            benchmark = 1.0  # 1%为优秀
-            scores["community_engagement"] = min(100.0, metrics.community_investment_per_revenue / benchmark * 100)
-        
-        # 本地雇佣比例
-        if metrics.local_employment_ratio is not None:
-            scores["local_employment"] = min(100.0, metrics.local_employment_ratio * 100)
+            rule = self.INDICATOR_SCORING_RULES.get(indicator_id)
+            if not rule:
+                continue
 
-        # ===== 治理维度 (G) =====
-        # 董事会独立性
-        if metrics.board_independence_ratio is not None:
-            if metrics.board_independence_ratio >= 50.0:
-                scores["board_independence"] = 100.0
-            elif metrics.board_independence_ratio >= 33.0:
-                scores["board_independence"] = 60.0 + (metrics.board_independence_ratio - 33.0) / 17.0 * 40.0
-            else:
-                scores["board_independence"] = max(0.0, metrics.board_independence_ratio / 33.0 * 60.0)
-        
-        # ESG治理架构
-        if metrics.esg_committee_independence is not None:
-            if metrics.esg_committee_independence >= 50.0:
-                scores["esg_governance_structure"] = 100.0
-            else:
-                scores["esg_governance_structure"] = metrics.esg_committee_independence / 50.0 * 100
-        
-        # 合规成熟度（综合道德培训和反腐败培训）
-        compliance_scores = []
-        if metrics.ethics_training_coverage is not None:
-            compliance_scores.append(min(100.0, metrics.ethics_training_coverage / 95.0 * 100))
-        
-        if metrics.anti_corruption_training_coverage is not None:
-            compliance_scores.append(min(100.0, metrics.anti_corruption_training_coverage / 90.0 * 100))
-        
-        if compliance_scores:
-            scores["ethics_compliance"] = sum(compliance_scores) / len(compliance_scores)
-            scores["anti_corruption"] = min(100.0, metrics.anti_corruption_training_coverage / 90.0 * 100) if metrics.anti_corruption_training_coverage is not None else scores["ethics_compliance"]
-        
-        # 举报人保护
-        if metrics.whistleblower_protection is not None:
-            scores["whistleblower_protection"] = 100.0 if metrics.whistleblower_protection else 0.0
-        
-        # 气候治理架构 - 添加属性存在检查
-        if hasattr(metrics, 'climate_governance') and metrics.climate_governance is not None:
-            cg_scores = []
-            if hasattr(metrics.climate_governance, 'board_climate_committee') and metrics.climate_governance.board_climate_committee:
-                cg_scores.append(100.0)
-            else:
-                cg_scores.append(0.0)
-            if hasattr(metrics.climate_governance, 'exec_comp_linked_to_climate') and metrics.climate_governance.exec_comp_linked_to_climate:
-                cg_scores.append(100.0)
-            else:
-                cg_scores.append(0.0)
-            if hasattr(metrics.climate_governance, 'climate_risk_identification_process') and metrics.climate_governance.climate_risk_identification_process:
-                cg_scores.append(100.0)
-            else:
-                cg_scores.append(0.0)
-            if hasattr(metrics.climate_governance, 'regular_climate_reporting_to_board') and metrics.climate_governance.regular_climate_reporting_to_board:
-                cg_scores.append(100.0)
-            else:
-                cg_scores.append(0.0)
-            scores["climate_governance_framework"] = sum(cg_scores) / len(cg_scores)
-        
-        # TCFD披露 - 添加属性存在检查
-        if hasattr(metrics, 'tcfd_disclosure') and metrics.tcfd_disclosure is not None:
-            tcfd_scores = []
-            if hasattr(metrics.tcfd_disclosure, 'governance_disclosed') and metrics.tcfd_disclosure.governance_disclosed:
-                tcfd_scores.append(100.0)
-            else:
-                tcfd_scores.append(0.0)
-            if hasattr(metrics.tcfd_disclosure, 'strategy_disclosed') and metrics.tcfd_disclosure.strategy_disclosed:
-                tcfd_scores.append(100.0)
-            else:
-                tcfd_scores.append(0.0)
-            if hasattr(metrics.tcfd_disclosure, 'risk_management_disclosed') and metrics.tcfd_disclosure.risk_management_disclosed:
-                tcfd_scores.append(100.0)
-            else:
-                tcfd_scores.append(0.0)
-            if hasattr(metrics.tcfd_disclosure, 'metrics_targets_disclosed') and metrics.tcfd_disclosure.metrics_targets_disclosed:
-                tcfd_scores.append(100.0)
-            else:
-                tcfd_scores.append(0.0)
-            scores["tcfd_disclosure_quality"] = sum(tcfd_scores) / len(tcfd_scores)
-        
-        # 报告质量
-        if metrics.esg_report_quality is not None:
-            scores["report_quality"] = metrics.esg_report_quality
+            score = self._compute_score_from_rule(value, rule, metrics)
+            if score is not None:
+                scores[indicator_id] = score
 
         return scores
+
+    def _compute_score_from_rule(self, value, rule: dict, metrics: ESGMetrics) -> Optional[float]:
+        """根据规则计算分数
+
+        Args:
+            value: 指标值
+            rule: 评分规则
+            metrics: 完整的ESGMetrics对象（用于复合指标计算）
+
+        Returns:
+            计算后的分数
+        """
+        rule_type = rule.get("type")
+
+        if rule_type == "direct":
+            return min(rule.get("max", 100), float(value))
+
+        elif rule_type == "ratio":
+            return min(rule.get("max", 100), float(value) * 100)
+
+        elif rule_type == "inverse":
+            excellent = rule.get("excellent", 0)
+            poor = rule.get("poor", 100)
+            if value <= excellent:
+                return 100.0
+            if value >= poor:
+                return 0.0
+            return 100.0 * (1 - (value - excellent) / (poor - excellent))
+
+        elif rule_type == "benchmark":
+            benchmark = rule.get("benchmark", 100)
+            return min(100.0, float(value) / benchmark * 100)
+
+        elif rule_type == "boolean":
+            return 100.0 if value else 0.0
+
+        elif rule_type == "range":
+            # 简化处理：0-1范围的比例
+            if value >= 0.8:
+                return 100.0
+            if value <= 0.4:
+                return 0.0
+            return 100.0 * (value - 0.4) / 0.4
+
+        elif rule_type == "threshold":
+            ranges = rule.get("ranges", [])
+            for threshold, score in ranges:
+                if value >= threshold:
+                    if threshold == 0:
+                        return score
+                    return (
+                        score + (value - threshold) / threshold * (100 - score)
+                        if score < 100
+                        else score
+                    )
+            return 0.0
+
+        elif rule_type == "log_scale":
+            import math
+
+            base = rule.get("base", 100)
+            factor = rule.get("factor", 20)
+            if value > 0:
+                return min(100.0, max(0.0, factor * math.log10(value / base)))
+            return 0.0
+
+        elif rule_type == "method":
+            method_name = rule.get("method")
+            if hasattr(value, method_name):
+                return getattr(value, method_name)()
+            return None
+
+        elif rule_type == "composite":
+            # 复合指标在下面专门处理
+            return self._calculate_composite_score(value, rule, metrics)
+
+        return None
+
+    def _calculate_composite_score(self, value, rule: dict, metrics: ESGMetrics) -> Optional[float]:
+        """计算复合指标分数
+
+        复合指标需要多个字段综合计算。
+        """
+        indicator_id = None
+        for metric_name, ind_id in self.INDICATOR_MAPPING.items():
+            if self.INDICATOR_SCORING_RULES.get(ind_id) == rule:
+                indicator_id = ind_id
+                break
+
+        if indicator_id == "gender_diversity":
+            return self._calc_gender_diversity(metrics)
+        elif indicator_id == "training_development":
+            return self._calc_training_development(metrics)
+        elif indicator_id == "safety_performance":
+            return self._calc_safety_performance(metrics)
+        elif indicator_id in ("ethics_compliance", "anti_corruption"):
+            return self._calc_compliance(metrics)
+        elif indicator_id == "climate_governance_framework":
+            return self._calc_climate_governance(metrics)
+        elif indicator_id == "tcfd_disclosure_quality":
+            return self._calc_tcfd_disclosure(metrics)
+
+        return None
+
+    def _calc_gender_diversity(self, metrics: ESGMetrics) -> Optional[float]:
+        """计算性别多元化综合分数"""
+        scores = []
+        if metrics.female_ratio is not None:
+            fr = metrics.female_ratio
+            if fr >= 40:
+                scores.append(100.0)
+            elif fr >= 35:
+                scores.append(80.0 + (fr - 35.0) / 5.0 * 20.0)
+            elif fr >= 20:
+                scores.append(60.0 + (fr - 20.0) / 15.0 * 20.0)
+            else:
+                scores.append(max(0.0, fr / 20.0 * 60.0))
+        if metrics.female_executive_ratio is not None:
+            fer = metrics.female_executive_ratio
+            if fer >= 30:
+                scores.append(100.0)
+            elif fer >= 20:
+                scores.append(70.0 + (fer - 20.0) / 10.0 * 30.0)
+            elif fer >= 10:
+                scores.append(50.0 + (fer - 10.0) / 10.0 * 20.0)
+            else:
+                scores.append(max(0.0, fer / 10.0 * 50.0))
+        return sum(scores) / len(scores) if scores else None
+
+    def _calc_training_development(self, metrics: ESGMetrics) -> Optional[float]:
+        """计算培训发展综合分数"""
+        scores = []
+        if metrics.training_hours is not None:
+            scores.append(min(100.0, metrics.training_hours / 40.0 * 100))
+        if metrics.training_investment_per_employee is not None:
+            scores.append(min(100.0, metrics.training_investment_per_employee / 500.0 * 100))
+        return sum(scores) / len(scores) if scores else None
+
+    def _calc_safety_performance(self, metrics: ESGMetrics) -> Optional[float]:
+        """计算安全绩效综合分数"""
+        scores = []
+        if metrics.trir is not None:
+            trir = metrics.trir
+            if trir <= 0.5:
+                scores.append(100.0)
+            elif trir >= 3.0:
+                scores.append(0.0)
+            else:
+                scores.append(100.0 * (1 - (trir - 0.5) / 2.5))
+        ltifr = metrics.ltifr if metrics.ltifr is not None else metrics.lost_time_injury_rate
+        if ltifr is not None:
+            if ltifr <= 0.3:
+                scores.append(100.0)
+            elif ltifr >= 1.8:
+                scores.append(0.0)
+            else:
+                scores.append(100.0 * (1 - (ltifr - 0.3) / 1.5))
+        return sum(scores) / len(scores) if scores else None
+
+    def _calc_compliance(self, metrics: ESGMetrics) -> Optional[float]:
+        """计算合规培训综合分数"""
+        scores = []
+        if metrics.ethics_training_coverage is not None:
+            scores.append(min(100.0, metrics.ethics_training_coverage / 95.0 * 100))
+        if metrics.anti_corruption_training_coverage is not None:
+            scores.append(min(100.0, metrics.anti_corruption_training_coverage / 90.0 * 100))
+        return sum(scores) / len(scores) if scores else None
+
+    def _calc_climate_governance(self, metrics: ESGMetrics) -> Optional[float]:
+        """计算气候治理分数"""
+        if not hasattr(metrics, "climate_governance") or not metrics.climate_governance:
+            return None
+        cg = metrics.climate_governance
+        scores = []
+        if getattr(cg, "board_climate_committee", False):
+            scores.append(100.0)
+        else:
+            scores.append(0.0)
+        if getattr(cg, "exec_comp_linked_to_climate", False):
+            scores.append(100.0)
+        else:
+            scores.append(0.0)
+        if getattr(cg, "climate_risk_identification_process", False):
+            scores.append(100.0)
+        else:
+            scores.append(0.0)
+        if getattr(cg, "regular_climate_reporting_to_board", False):
+            scores.append(100.0)
+        else:
+            scores.append(0.0)
+        return sum(scores) / len(scores)
+
+    def _calc_tcfd_disclosure(self, metrics: ESGMetrics) -> Optional[float]:
+        """计算TCFD披露分数"""
+        if not hasattr(metrics, "tcfd_disclosure") or not metrics.tcfd_disclosure:
+            return None
+        tcfd = metrics.tcfd_disclosure
+        scores = []
+        for attr in [
+            "governance_disclosed",
+            "strategy_disclosed",
+            "risk_management_disclosed",
+            "metrics_targets_disclosed",
+        ]:
+            if getattr(tcfd, attr, False):
+                scores.append(100.0)
+            else:
+                scores.append(0.0)
+        return sum(scores) / len(scores)
 
     def _calculate_priority(self, gap: float) -> str:
         """根据差距计算优先级"""

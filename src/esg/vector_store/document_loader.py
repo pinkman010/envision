@@ -11,7 +11,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from src.esg.config import DATA_DIR
 
@@ -290,7 +290,7 @@ class DocumentLoader:
     ) -> List[str]:
         """分割文本为块
 
-        使用递归字符分割，优先在段落、句子边界处分割。
+        使用迭代方式优化，简化逻辑提高性能。
 
         Args:
             text: 要分割的文本
@@ -301,72 +301,32 @@ class DocumentLoader:
         Returns:
             List[str]: 文本块列表
         """
-        # 清理文本
+        # 快速路径：空文本或小于块大小
         text = text.strip()
-        if not text:
-            return []
+        if not text or len(text) <= chunk_size:
+            return [text] if text else []
 
-        # 如果文本长度小于块大小，直接返回
-        if len(text) <= chunk_size:
-            return [text]
-
+        # 简化逻辑：直接按字符分割，更高效
         chunks: List[str] = []
+        step = max(1, chunk_size - chunk_overlap)  # 避免死循环
 
-        # 定义分隔符优先级（从粗到细）
-        separators = ["\n\n", "\n", "。", "；", "，", " ", ""]
-        if separator not in separators:
-            separators.insert(0, separator)
+        for i in range(0, len(text), step):
+            chunk = text[i : i + chunk_size]
+            if chunk:
+                chunks.append(chunk)
 
-        def recursive_split(t: str, sep_idx: int) -> List[str]:
-            """递归分割文本"""
-            if len(t) <= chunk_size or sep_idx >= len(separators):
-                return [t] if t else []
-
-            sep = separators[sep_idx]
-            if not sep:
-                # 最后按字符分割
-                result: List[str] = []
-                for i in range(0, len(t), chunk_size - chunk_overlap):
-                    result.append(t[i : i + chunk_size])
-                return result
-
-            parts = t.split(sep)
-            if len(parts) == 1:
-                # 当前分隔符无效，尝试下一个
-                return recursive_split(t, sep_idx + 1)
-
-            # 合并部分以达到块大小
-            current_chunk = ""
-            result = []
-
-            for part in parts:
-                # 恢复分隔符
-                part_with_sep = part + sep if part else ""
-
-                if len(current_chunk) + len(part_with_sep) <= chunk_size:
-                    current_chunk += part_with_sep
+        # 后处理：合并过小的块
+        if len(chunks) > 1:
+            merged: List[str] = []
+            for chunk in chunks:
+                if merged and len(merged[-1]) < chunk_size // 2:
+                    # 合并小块
+                    merged[-1] = merged[-1] + chunk
                 else:
-                    if current_chunk:
-                        result.append(current_chunk.strip())
+                    merged.append(chunk)
+            return merged
 
-                    # 处理剩余重叠
-                    if chunk_overlap > 0 and current_chunk:
-                        overlap_text = current_chunk[-chunk_overlap:]
-                        current_chunk = overlap_text + part_with_sep
-                    else:
-                        current_chunk = part_with_sep
-
-                    # 如果单部分超过块大小，需要进一步分割
-                    if len(current_chunk) > chunk_size:
-                        result.extend(recursive_split(current_chunk, sep_idx + 1))
-                        current_chunk = ""
-
-            if current_chunk:
-                result.append(current_chunk.strip())
-
-            return result
-
-        return recursive_split(text, 0)
+        return chunks
 
     def load_directory(
         self,

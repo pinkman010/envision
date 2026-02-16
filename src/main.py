@@ -9,31 +9,30 @@
 - 📅 沟通时机建议
 
 用法:
-    streamlit run main.py
+    streamlit run src/main.py
 """
 
 import sys
 from pathlib import Path
 
 # 添加 src 到路径
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent))
 
 import streamlit as st
-from src.esg.config import APP_NAME, APP_ICON, VERSION
+
+from src.esg.config import APP_ICON, APP_NAME, VERSION
 
 
 def main():
     """主函数"""
     # 页面配置
     st.set_page_config(
-        page_title=f"{APP_NAME} v{VERSION}",
-        page_icon=APP_ICON,
-        layout="wide",
-        initial_sidebar_state="expanded"
+        page_title=APP_NAME, page_icon=APP_ICON, layout="wide", initial_sidebar_state="expanded"
     )
-    
+
     # 渲染增强版界面
     from src.esg.ui.app_enhanced import render_app
+
     render_app()
 
 

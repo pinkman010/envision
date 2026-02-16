@@ -17,7 +17,7 @@
 子模块:
     - models: 数据模型（ESGMetrics, BenchmarkData, AnalysisResult）
     - scoring: 评分计算器
-    
+
 Version: 1.4.1
 """
 

@@ -73,6 +73,14 @@ class TimingAdvisor:
         "ethics": ["ethics", "compliance", "道德", "合规", "反腐败"],
     }
 
+    # 相关度评分权重配置 (配置驱动模式)
+    RELEVANCE_WEIGHTS = {
+        "category_match": 0.3,  # 主题类别匹配权重
+        "text_match": 0.2,  # 文本匹配权重
+        "special_carbon_cop": 0.4,  # 碳议题+COP会议特殊权重
+        "special_governance_report": 0.4,  # 治理议题+年报特殊权重
+    }
+
     def __init__(self):
         """初始化时机建议器"""
         self.calendar = COMMUNICATION_CALENDAR
@@ -148,30 +156,55 @@ class TimingAdvisor:
     def _calculate_relevance(
         self, event: Dict[str, Any], matched_categories: List[str], search_text: str
     ) -> float:
-        """计算事件与策略的相关度分数"""
+        """计算事件与策略的相关度分数
+
+        使用配置驱动的权重系统，替代嵌套if判断。
+
+        Args:
+            event: 日历事件
+            matched_categories: 匹配的主题类别列表
+            search_text: 搜索文本
+
+        Returns:
+            相关度分数 (0-1)
+        """
         relevance = 0.0
+        event_name = event.get("event_name", "")
+        event_text = f"{event_name} {event.get('opportunity', '')}".lower()
 
-        # 1. 基于主题类别的匹配
-        suitable_topics = event.get("suitable_topics", [])
-        for category in matched_categories:
-            category_keywords = self.TOPIC_KEYWORDS.get(category, [])
-            for topic in suitable_topics:
-                if any(kw in topic.lower() for kw in category_keywords):
-                    relevance += 0.3
+        # 1. 基于主题类别的匹配 (使用预计算权重)
+        if matched_categories:
+            suitable_topics = event.get("suitable_topics", [])
+            category_weight = self.RELEVANCE_WEIGHTS["category_match"]
 
-        # 2. 直接文本匹配
-        event_text = f"{event['event_name']} {event['opportunity']}".lower()
-        if any(word in event_text for word in search_text.split()):
-            relevance += 0.2
+            for category in matched_categories:
+                category_keywords = self.TOPIC_KEYWORDS.get(category, [])
+                for topic in suitable_topics:
+                    if any(kw in topic.lower() for kw in category_keywords):
+                        relevance += category_weight
+                        break  # 每个类别只计算一次
+                # 限制最大加分
+                if relevance >= category_weight * len(matched_categories):
+                    break
 
-        # 3. 特殊规则匹配
-        if "carbon" in matched_categories or "climate" in search_text:
-            if "COP" in event["event_name"]:
-                relevance += 0.4
+        # 2. 直接文本匹配 (使用预计算权重)
+        text_weight = self.RELEVANCE_WEIGHTS["text_match"]
+        search_words = search_text.split()
+        if any(word in event_text for word in search_words):
+            relevance += text_weight
 
-        if "governance" in matched_categories or "board" in search_text:
-            if "年报" in event["event_name"] or "财报" in event["event_name"]:
-                relevance += 0.4
+        # 3. 特殊规则匹配 (使用预计算权重)
+        # 碳议题 + COP会议
+        is_carbon_related = "carbon" in matched_categories or "climate" in search_text
+        is_cop_event = "COP" in event_name
+        if is_carbon_related and is_cop_event:
+            relevance += self.RELEVANCE_WEIGHTS["special_carbon_cop"]
+
+        # 治理议题 + 年报
+        is_governance_related = "governance" in matched_categories or "board" in search_text
+        is_report_event = "年报" in event_name or "财报" in event_name
+        if is_governance_related and is_report_event:
+            relevance += self.RELEVANCE_WEIGHTS["special_governance_report"]
 
         return min(relevance, 1.0)
 

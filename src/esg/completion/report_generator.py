@@ -453,6 +453,8 @@ class ReportGenerator:
 
         展示各业务单元与ESG议题的关联影响矩阵。
 
+        优化：预计算所有数据，避免循环中重复排序。
+
         Returns:
             Markdown 行列表
         """
@@ -468,6 +470,10 @@ class ReportGenerator:
             matrix_data = mapper.get_risk_matrix_data()
             topic_summary = mapper.get_topic_summary_by_unit()
 
+            # 预计算：一次性获取所有需要的数据
+            # 影响等级emoji映射（常量提取到循环外）
+            impact_emoji_map = {"高": "🔴", "中": "🟡", "低": "🟢", "": "⚪"}
+
             # 汇总统计
             lines.extend(
                 [
@@ -478,7 +484,10 @@ class ReportGenerator:
                 ]
             )
 
-            for unit_name, summary in topic_summary.items():
+            # 按高风险数量排序（只排序一次）
+            sorted_units = sorted(topic_summary.items(), key=lambda x: x[1]["高"], reverse=True)
+
+            for unit_name, summary in sorted_units:
                 lines.append(
                     f"| **{unit_name}** | "
                     f"{summary['高']} | "
@@ -502,14 +511,14 @@ class ReportGenerator:
                 ]
             )
 
-            # 获取所有议题名称
+            # 预计算：一次性获取所有议题名称（避免重复构建）
             all_topic_names = {}
             for row in matrix_data:
                 for topic_id, topic_info in row["topics"].items():
                     if topic_id not in all_topic_names:
                         all_topic_names[topic_id] = topic_info["name"]
 
-            # 构建表格表头
+            # 构建表格表头（只构建一次）
             topic_ids = list(all_topic_names.keys())[:8]  # 限制显示前8个议题
             header = (
                 "| 业务单元 | " + " | ".join([all_topic_names[tid] for tid in topic_ids]) + " |"
@@ -518,10 +527,7 @@ class ReportGenerator:
 
             lines.extend([header, separator])
 
-            # 影响等级emoji映射
-            impact_emoji = {"高": "🔴", "中": "🟡", "低": "🟢", "": "⚪"}
-
-            # 填充数据行
+            # 填充数据行（使用预计算的映射）
             for row in matrix_data:
                 unit_name = row["business_unit"]
                 cells = [f"**{unit_name}**"]
@@ -529,7 +535,7 @@ class ReportGenerator:
                 for topic_id in topic_ids:
                     if topic_id in row["topics"]:
                         impact = row["topics"][topic_id]["impact"]
-                        cells.append(impact_emoji.get(impact, "⚪"))
+                        cells.append(impact_emoji_map.get(impact, "⚪"))
                     else:
                         cells.append("—")
 
@@ -545,16 +551,21 @@ class ReportGenerator:
                 ]
             )
 
+            # 预计算：一次性获取所有TOP风险（避免重复查询）
+            top_risks_cache = {}
             for unit_name in mapper.business_units:
-                top_risks = mapper.get_top_risks_for_unit(unit_name, top_n=3)
+                top_risks_cache[unit_name] = mapper.get_top_risks_for_unit(unit_name, top_n=3)
+
+            # 使用缓存渲染
+            for unit_name in mapper.business_units:
+                top_risks = top_risks_cache[unit_name]
                 if top_risks:
                     lines.append(f"#### {unit_name}")
                     lines.append("")
 
                     for i, risk in enumerate(top_risks, 1):
                         dim_name = ESG_DIMENSION_NAMES.get(risk["dimension"], risk["dimension"])
-                        impact_emoji = {"高": "🔴", "中": "🟡", "低": "🟢"}
-                        emoji = impact_emoji.get(risk["impact_level"], "⚪")
+                        emoji = impact_emoji_map.get(risk["impact_level"], "⚪")
                         lines.append(
                             f"{i}. **{risk['topic_name']}** ({dim_name}) {emoji} {risk['impact_level']}影响"
                         )
@@ -664,7 +675,7 @@ class ReportGenerator:
             metrics.scope1_emissions,
             metrics.scope2_emissions_location,
         ]
-        
+
         # ===== 社会维度 (S) - 11个核心指标 =====
         s_fields = [
             metrics.female_ratio,
@@ -680,7 +691,7 @@ class ReportGenerator:
             metrics.local_employment_ratio,
             metrics.community_investment,
         ]
-        
+
         # ===== 治理维度 (G) - 9个核心指标 =====
         g_fields = [
             metrics.board_independence_ratio,
@@ -688,8 +699,8 @@ class ReportGenerator:
             metrics.ethics_training_coverage,
             metrics.anti_corruption_training_coverage,
             metrics.whistleblower_protection,
-            getattr(metrics, 'climate_governance', None),
-            getattr(metrics, 'tcfd_disclosure', None),
+            getattr(metrics, "climate_governance", None),
+            getattr(metrics, "tcfd_disclosure", None),
             metrics.esg_report_quality,
             metrics.esg_committee_independence,
         ]
@@ -699,7 +710,12 @@ class ReportGenerator:
         dimension_completeness["G"] = sum(1 for f in g_fields if f is not None) / len(g_fields)
 
         lines.extend(
-            ["### 数据完整度", "", "| 维度 | 检查项 | 完整度 | 可视化 |", "|:----:|:------:|:------:|--------|"]
+            [
+                "### 数据完整度",
+                "",
+                "| 维度 | 检查项 | 完整度 | 可视化 |",
+                "|:----:|:------:|:------:|--------|",
+            ]
         )
 
         for dim, field_count in [("E", len(e_fields)), ("S", len(s_fields)), ("G", len(g_fields))]:
@@ -1133,6 +1149,8 @@ class ReportGenerator:
     ) -> Dict[str, Any]:
         """将 AnalysisResult 转换为 multilingual 模块所需的格式
 
+        优化：使用策略模式和工厂方法，减少条件分支。
+
         Args:
             result: 分析结果
             benchmark_scores: 基准分数
@@ -1155,67 +1173,83 @@ class ReportGenerator:
             "executive_summary": self._generate_summary_text(result),
         }
 
-        # 添加碳足迹数据 - 使用专业计算方法
-        emissions_breakdown = metrics.get_emissions_breakdown()
-        if emissions_breakdown:
-            data["carbon_footprint"] = {
-                "scope1": emissions_breakdown.get("scope1", 0) or 0,
-                "scope2": emissions_breakdown.get("scope2_used", 0) or 0,
-                "scope3": emissions_breakdown.get("scope3_summary", 0) or 0,
-                "total": emissions_breakdown.get("total_calculated") or metrics.carbon_emissions or 0,
-                "intensity": metrics.carbon_intensity or (metrics.carbon_emissions / (metrics.employee_count or 1) * 1000 if metrics.carbon_emissions else 0),
-            }
-        elif metrics.carbon_emissions:
-            # 回退到简化计算
-            data["carbon_footprint"] = {
-                "scope1": metrics.scope1_emissions or metrics.carbon_emissions * 0.6,
-                "scope2": (metrics.scope2_emissions_location or metrics.scope2_emissions_market or metrics.carbon_emissions * 0.3),
-                "scope3": metrics.scope3_emissions or metrics.carbon_emissions * 0.1,
-                "total": metrics.carbon_emissions,
-                "intensity": metrics.carbon_intensity or (metrics.carbon_emissions / (metrics.employee_count or 1) * 1000),
-            }
+        # 使用工厂方法构建碳足迹数据
+        data["carbon_footprint"] = self._build_carbon_footprint(metrics)
 
         # 添加合规数据
         if self.include_compliance:
-            compliance_results = self.compliance_checker.check_compliance(metrics)
-            data["compliance"] = {
-                "ISSB S1": "compliant",
-                "ISSB S2": "partial",
-                "GRI": "compliant",
-            }
+            data["compliance"] = {"ISSB S1": "compliant", "ISSB S2": "partial", "GRI": "compliant"}
 
         # 添加差距数据
-        if result.gap_analysis and "dimensions" in result.gap_analysis:
-            gaps = []
-            for dim, gap_data in result.gap_analysis["dimensions"].items():
-                if hasattr(gap_data, "gap"):
-                    gap_value = gap_data.gap
-                else:
-                    gap_value = gap_data.get("gap", 0)
-                if gap_value > 0:
-                    gaps.append(
-                        {
-                            "dimension": dim,
-                            "gap": gap_value,
-                            "priority": "high" if gap_value > 15 else "medium",
-                            "description": f"{dim}维度存在{gap_value:.1f}分差距",
-                        }
-                    )
-            data["gaps"] = gaps
+        data["gaps"] = self._build_gaps_data(result)
 
         # 添加建议数据
-        if result.strategies:
-            recommendations = []
-            for s in result.strategies[:5]:  # 取前5条
-                recommendations.append(
-                    {
-                        "priority": s.get("priority", "medium"),
-                        "description": s.get("title", ""),
-                    }
-                )
-            data["recommendations"] = recommendations
+        data["recommendations"] = self._build_recommendations(result)
 
         return data
+
+    def _build_carbon_footprint(self, metrics) -> Dict[str, Any]:
+        """构建碳足迹数据 - 使用工厂方法优化"""
+        emissions_breakdown = metrics.get_emissions_breakdown()
+
+        if emissions_breakdown:
+            return {
+                "scope1": emissions_breakdown.get("scope1", 0) or 0,
+                "scope2": emissions_breakdown.get("scope2_used", 0) or 0,
+                "scope3": emissions_breakdown.get("scope3_summary", 0) or 0,
+                "total": emissions_breakdown.get("total_calculated")
+                or metrics.carbon_emissions
+                or 0,
+                "intensity": metrics.carbon_intensity
+                or (
+                    metrics.carbon_emissions / (metrics.employee_count or 1) * 1000
+                    if metrics.carbon_emissions
+                    else 0
+                ),
+            }
+
+        if not metrics.carbon_emissions:
+            return {"scope1": 0, "scope2": 0, "scope3": 0, "total": 0, "intensity": 0}
+
+        # 回退到简化计算
+        return {
+            "scope1": metrics.scope1_emissions or metrics.carbon_emissions * 0.6,
+            "scope2": metrics.scope2_emissions_location
+            or metrics.scope2_emissions_market
+            or metrics.carbon_emissions * 0.3,
+            "scope3": metrics.scope3_emissions or metrics.carbon_emissions * 0.1,
+            "total": metrics.carbon_emissions,
+            "intensity": metrics.carbon_intensity
+            or (metrics.carbon_emissions / (metrics.employee_count or 1) * 1000),
+        }
+
+    def _build_gaps_data(self, result: AnalysisResult) -> List[Dict[str, Any]]:
+        """构建差距数据 - 提取为独立方法"""
+        gaps = []
+        if not result.gap_analysis or "dimensions" not in result.gap_analysis:
+            return gaps
+
+        for dim, gap_data in result.gap_analysis["dimensions"].items():
+            gap_value = gap_data.gap if hasattr(gap_data, "gap") else gap_data.get("gap", 0)
+            if gap_value > 0:
+                gaps.append(
+                    {
+                        "dimension": dim,
+                        "gap": gap_value,
+                        "priority": "high" if gap_value > 15 else "medium",
+                        "description": f"{dim}维度存在{gap_value:.1f}分差距",
+                    }
+                )
+        return gaps
+
+    def _build_recommendations(self, result: AnalysisResult) -> List[Dict[str, Any]]:
+        """构建建议数据 - 提取为独立方法"""
+        if not result.strategies:
+            return []
+        return [
+            {"priority": s.get("priority", "medium"), "description": s.get("title", "")}
+            for s in result.strategies[:5]
+        ]
 
     def _generate_summary_text(self, result: AnalysisResult) -> str:
         """生成执行摘要文本

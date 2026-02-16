@@ -6,7 +6,7 @@ Example:
     >>> from src.esg.core import ESGMetrics
     >>> from src.esg.extraction import PDFExtractor
     >>> from src.esg.analysis import GapAnalyzer
-    
+
 Version: 1.4.1
 """
 

@@ -49,6 +49,13 @@ TRANSLATIONS = {
         "non_compliant": "Non-Compliant",
         "partially_compliant": "Partially Compliant",
         "not_applicable": "Not Applicable",
+        # New translation keys
+        "esg_scores": "ESG Scores",
+        "compliance": "Compliance",
+        "total": "Total",
+        "intensity": "Carbon Intensity",
+        "no_gaps_found": "No significant gaps identified.",
+        "no_recommendations": "No recommendations available.",
     },
     Language.ZH_CN: {
         "report_title": "ESG分析报告",
@@ -72,6 +79,13 @@ TRANSLATIONS = {
         "non_compliant": "不合规",
         "partially_compliant": "部分合规",
         "not_applicable": "不适用",
+        # 新增翻译键
+        "esg_scores": "ESG评分",
+        "compliance": "合规",
+        "total": "总计",
+        "intensity": "碳强度",
+        "no_gaps_found": "未发现显著差距",
+        "no_recommendations": "暂无建议",
     },
     Language.ZH_TW: {
         "report_title": "ESG分析報告",
@@ -95,6 +109,13 @@ TRANSLATIONS = {
         "non_compliant": "不合規",
         "partially_compliant": "部分合規",
         "not_applicable": "不適用",
+        # 新增翻譯鍵
+        "esg_scores": "ESG評分",
+        "compliance": "合規",
+        "total": "總計",
+        "intensity": "碳強度",
+        "no_gaps_found": "未發現顯著差距",
+        "no_recommendations": "暫無建議",
     },
 }
 
@@ -278,14 +299,14 @@ class MultilingualReportGenerator:
 {data.get('g_analysis', '')}
 """
 
-        return ReportSection(title="ESG Scores", content=content.strip(), order=2)
+        return ReportSection(title=t("esg_scores"), content=content.strip(), order=2)
 
     def _generate_gap_analysis_section(self, t: callable, data: Dict[str, Any]) -> ReportSection:
         """生成差距分析章节"""
         gaps = data.get("gaps", [])
 
         if not gaps:
-            content = "No significant gaps identified."
+            content = t("no_gaps_found")
         else:
             content_parts = []
             for gap in gaps:
@@ -329,14 +350,14 @@ class MultilingualReportGenerator:
             status_label = t(status.lower().replace(" ", "_"))
             content_parts.append(f"- {standard}: {status_label}")
 
-        return ReportSection(title="Compliance", content="\n".join(content_parts), order=5)
+        return ReportSection(title=t("compliance"), content="\n".join(content_parts), order=5)
 
     def _generate_recommendations_section(self, t: callable, data: Dict[str, Any]) -> ReportSection:
         """生成改进建议章节"""
         recommendations = data.get("recommendations", [])
 
         if not recommendations:
-            content = "No recommendations available."
+            content = t("no_recommendations")
         else:
             content_parts = []
             for i, rec in enumerate(recommendations, 1):

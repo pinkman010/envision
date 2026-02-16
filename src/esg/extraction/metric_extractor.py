@@ -263,7 +263,6 @@ class MetricExtractor:
             "unit": "分",
             "multiplier": 1.0,
         },
-        
         # ===== 社会指标 (S) - 对应S_DIMENSION_WEIGHTS =====
         # 一级指标：员工发展与多元化（45%权重）
         "employee_count": {
@@ -397,7 +396,6 @@ class MetricExtractor:
             "unit": "%",
             "multiplier": 0.01,
         },
-        
         # ===== 治理指标 (G) - 对应G_DIMENSION_WEIGHTS =====
         # 第一层：董事会与治理结构（35%权重）
         "board_independence_ratio": {

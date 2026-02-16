@@ -1154,10 +1154,10 @@ class StrategyGenerator:
 
     def _calculate_data_completeness(self, metrics: ESGMetrics) -> float:
         """计算数据完整度
-        
+
         基于models.py中修复后的E/S/G维度权重配置，检查所有核心指标。
         与E_DIMENSION_WEIGHTS、S_DIMENSION_WEIGHTS、G_DIMENSION_WEIGHTS对齐。
-        
+
         Returns:
             数据完整度 (0-1)
         """
@@ -1184,7 +1184,7 @@ class StrategyGenerator:
             metrics.scope1_emissions,
             metrics.scope2_emissions_location,
         ]
-        
+
         # ===== 社会维度 (S) - 对应S_DIMENSION_WEIGHTS的7个指标 =====
         s_checks = [
             # 一级指标：员工发展与多元化（45%）
@@ -1203,7 +1203,7 @@ class StrategyGenerator:
             metrics.local_employment_ratio,
             metrics.community_investment,
         ]
-        
+
         # ===== 治理维度 (G) - 对应G_DIMENSION_WEIGHTS的10个指标 =====
         g_checks = [
             # 第一层：董事会与治理结构（35%）
@@ -1214,24 +1214,24 @@ class StrategyGenerator:
             metrics.anti_corruption_training_coverage,
             metrics.whistleblower_protection,
             # 第三层：气候治理（20%）- 添加hasattr检查
-            getattr(metrics, 'climate_governance', None),
-            getattr(metrics, 'tcfd_disclosure', None),
+            getattr(metrics, "climate_governance", None),
+            getattr(metrics, "tcfd_disclosure", None),
             # 第四层：透明度与问责（15%）
             metrics.esg_report_quality,
             metrics.esg_committee_independence,  # 同时作为ESG治理指标
         ]
-        
+
         checks = {
             "E": e_checks,
             "S": s_checks,
             "G": g_checks,
         }
-        
+
         total_fields = sum(len(fields) for fields in checks.values())
         filled_fields = sum(
             1 for fields in checks.values() for field in fields if field is not None
         )
-        
+
         return filled_fields / total_fields if total_fields > 0 else 0.5
 
     def _calculate_expected_impact(self, gap: float, confidence: float) -> float:

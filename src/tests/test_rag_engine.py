@@ -74,8 +74,7 @@ class TestRAGEngine(unittest.TestCase):
         """测试正常查询流程"""
         # 设置mock响应
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "response": """<thinking>
+        mock_response.json.return_value = {"response": """<thinking>
 1. 用户询问ESG是什么
 2. 从文档中找到ESG定义
 3. ESG代表环境、社会和治理
@@ -83,8 +82,7 @@ class TestRAGEngine(unittest.TestCase):
 
 <answer>
 ESG代表环境(Environmental)、社会(Social)和治理(Governance)。
-</answer>"""
-        }
+</answer>"""}
         mock_response.raise_for_status = MagicMock()
         mock_post.return_value = mock_response
 
@@ -200,16 +198,14 @@ ESG代表环境(Environmental)、社会(Social)和治理(Governance)。
     def test_extract_thinking_thinking_tag(self, mock_post):
         """测试<thinking>标签提取"""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "response": """<thinking>
+        mock_response.json.return_value = {"response": """<thinking>
 思考过程在这里
 多行内容
 </thinking>
 
 <answer>
 最终答案
-</answer>"""
-        }
+</answer>"""}
         mock_response.raise_for_status = MagicMock()
         mock_post.return_value = mock_response
 
@@ -225,13 +221,11 @@ ESG代表环境(Environmental)、社会(Social)和治理(Governance)。
     def test_extract_thinking_think_tag(self, mock_post):
         """测试<think>标签提取"""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "response": """<think>
+        mock_response.json.return_value = {"response": """<think>
 这是思考内容
 </think>
 
-这是答案内容"""
-        }
+这是答案内容"""}
         mock_response.raise_for_status = MagicMock()
         mock_post.return_value = mock_response
 
@@ -247,14 +241,12 @@ ESG代表环境(Environmental)、社会(Social)和治理(Governance)。
     def test_extract_thinking_chinese_markers(self, mock_post):
         """测试中文标记提取"""
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "response": """思考：
+        mock_response.json.return_value = {"response": """思考：
 1. 分析问题
 2. 查找资料
 
 答案：
-这是最终答案"""
-        }
+这是最终答案"""}
         mock_response.raise_for_status = MagicMock()
         mock_post.return_value = mock_response
 

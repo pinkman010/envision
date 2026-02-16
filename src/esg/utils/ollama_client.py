@@ -37,6 +37,13 @@ class OllamaResponseError(OllamaError):
     """响应异常"""
 
     def __init__(self, message: str, status_code: int = None, response_text: str = None):
+        """初始化响应异常
+
+        Args:
+            message: 错误消息
+            status_code: HTTP 状态码
+            response_text: 响应文本内容
+        """
         super().__init__(message)
         self.status_code = status_code
         self.response_text = response_text

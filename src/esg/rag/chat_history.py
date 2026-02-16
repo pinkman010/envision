@@ -22,6 +22,11 @@ class ChatHistory:
     """聊天历史管理器"""
 
     def __init__(self, max_history: int = 50):
+        """初始化聊天历史管理器
+
+        Args:
+            max_history: 最大保存的历史消息数量，默认为50
+        """
         self.messages: List[ChatMessage] = []
         self.max_history = max_history
 

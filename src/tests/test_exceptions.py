@@ -4,14 +4,11 @@
 """
 
 import shutil
-import sys
 import tempfile
-import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
-# 添加项目路径
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import pytest
 
 from src.esg.extraction.pdf_extractor import (
     PDFExtractionError,
@@ -26,93 +23,93 @@ from src.esg.utils.ollama_client import (
 )
 
 
-class TestOllamaClientExceptions(unittest.TestCase):
+class TestOllamaClientExceptions:
     """Ollama客户端异常测试"""
 
     def test_ollama_error_basic(self):
         """测试基础OllamaError"""
         error = OllamaError("基础错误")
-        self.assertEqual(str(error), "基础错误")
-        self.assertIsInstance(error, Exception)
+        assert str(error) == "基础错误"
+        assert isinstance(error, Exception)
 
     def test_connection_error(self):
         """测试连接错误"""
         error = OllamaConnectionError("无法连接到服务器")
-        self.assertEqual(str(error), "无法连接到服务器")
-        self.assertIsInstance(error, OllamaError)
+        assert str(error) == "无法连接到服务器"
+        assert isinstance(error, OllamaError)
 
     def test_timeout_error(self):
         """测试超时错误"""
         error = OllamaTimeoutError("请求超时")
-        self.assertEqual(str(error), "请求超时")
-        self.assertIsInstance(error, OllamaError)
+        assert str(error) == "请求超时"
+        assert isinstance(error, OllamaError)
 
     def test_response_error_with_status(self):
         """测试带状态码的响应错误"""
         error = OllamaResponseError(
             "服务器错误", status_code=500, response_text="Internal Server Error"
         )
-        self.assertEqual(error.status_code, 500)
-        self.assertEqual(error.response_text, "Internal Server Error")
-        self.assertIn("500", str(error))
+        assert error.status_code == 500
+        assert error.response_text == "Internal Server Error"
+        assert "500" in str(error)
 
     def test_response_error_without_status(self):
         """测试不带状态码的响应错误"""
         error = OllamaResponseError("响应错误")
-        self.assertIsNone(error.status_code)
-        self.assertIsNone(error.response_text)
+        assert error.status_code is None
+        assert error.response_text is None
 
 
-class TestPDFExtractorExceptions(unittest.TestCase):
+class TestPDFExtractorExceptions:
     """PDF提取器异常测试"""
 
     def test_pdf_not_found_error(self):
         """测试PDF未找到错误"""
         error = PDFNotFoundError("文件不存在")
-        self.assertEqual(str(error), "文件不存在")
+        assert str(error) == "文件不存在"
 
     def test_pdf_extraction_error(self):
         """测试PDF提取错误"""
         error = PDFExtractionError("提取失败")
-        self.assertEqual(str(error), "提取失败")
+        assert str(error) == "提取失败"
 
     def test_pdf_library_not_found_error(self):
         """测试PDF库未找到错误"""
         error = PDFLibraryNotFoundError("未安装pdfplumber")
-        self.assertEqual(str(error), "未安装pdfplumber")
+        assert str(error) == "未安装pdfplumber"
 
 
-class TestExceptionInheritance(unittest.TestCase):
+class TestExceptionInheritance:
     """异常继承关系测试"""
 
     def test_ollama_exception_hierarchy(self):
         """测试Ollama异常层次结构"""
         # 所有Ollama异常都应该继承自OllamaError
-        self.assertTrue(issubclass(OllamaConnectionError, OllamaError))
-        self.assertTrue(issubclass(OllamaTimeoutError, OllamaError))
-        self.assertTrue(issubclass(OllamaResponseError, OllamaError))
+        assert issubclass(OllamaConnectionError, OllamaError)
+        assert issubclass(OllamaTimeoutError, OllamaError)
+        assert issubclass(OllamaResponseError, OllamaError)
 
         # OllamaError应该继承自Exception
-        self.assertTrue(issubclass(OllamaError, Exception))
+        assert issubclass(OllamaError, Exception)
 
     def test_catch_base_exception(self):
         """测试捕获基础异常"""
         try:
             raise OllamaConnectionError("连接失败")
         except OllamaError as e:
-            self.assertIn("连接失败", str(e))
+            assert "连接失败" in str(e)
 
     def test_catch_specific_exception(self):
         """测试捕获特定异常"""
         try:
             raise OllamaTimeoutError("超时")
         except OllamaTimeoutError as e:
-            self.assertEqual(str(e), "超时")
+            assert str(e) == "超时"
         except OllamaError:
-            self.fail("应该捕获到OllamaTimeoutError")
+            pytest.fail("应该捕获到OllamaTimeoutError")
 
 
-class TestErrorRecovery(unittest.TestCase):
+class TestErrorRecovery:
     """错误恢复测试"""
 
     def test_retry_mechanism(self):
@@ -130,8 +127,8 @@ class TestErrorRecovery(unittest.TestCase):
             return "成功"
 
         result = flaky_operation()
-        self.assertEqual(result, "成功")
-        self.assertEqual(attempt_count, 2)
+        assert result == "成功"
+        assert attempt_count == 2
 
     def test_retry_exhaustion(self):
         """测试重试耗尽"""
@@ -141,7 +138,7 @@ class TestErrorRecovery(unittest.TestCase):
         def always_fail():
             raise OllamaConnectionError("持续失败")
 
-        with self.assertRaises(OllamaConnectionError):
+        with pytest.raises(OllamaConnectionError):
             always_fail()
 
     def test_fallback_mechanism(self):
@@ -159,15 +156,15 @@ class TestErrorRecovery(unittest.TestCase):
         except OllamaError:
             result = fallback_method()
 
-        self.assertEqual(result, "备用方法成功")
+        assert result == "备用方法成功"
 
 
-class TestNetworkErrorHandling(unittest.TestCase):
+class TestNetworkErrorHandling:
     """网络错误处理测试"""
 
     @patch("src.esg.utils.ollama_client.requests.Session.request")
     def test_connection_timeout(self, mock_request):
-        """测试连接超时 - 验证OllamaClient._make_request正确处理超时"""
+        """测试连接超时"""
         import requests
 
         mock_request.side_effect = requests.Timeout("连接超时")
@@ -186,7 +183,7 @@ class TestNetworkErrorHandling(unittest.TestCase):
 
     @patch("src.esg.utils.ollama_client.requests.Session.request")
     def test_connection_error(self, mock_request):
-        """测试连接错误 - 验证OllamaClient._make_request正确处理连接错误"""
+        """测试连接错误"""
         import requests
 
         mock_request.side_effect = requests.ConnectionError("连接被拒绝")
@@ -205,7 +202,7 @@ class TestNetworkErrorHandling(unittest.TestCase):
 
     @patch("src.esg.utils.ollama_client.requests.Session.request")
     def test_http_error(self, mock_request):
-        """测试HTTP错误 - 验证OllamaClient._make_request正确处理HTTP错误"""
+        """测试HTTP错误"""
         import requests
 
         mock_response = MagicMock()
@@ -226,7 +223,7 @@ class TestNetworkErrorHandling(unittest.TestCase):
             pass  # 也接受其他异常
 
 
-class TestDataValidationErrors(unittest.TestCase):
+class TestDataValidationErrors:
     """数据验证错误测试"""
 
     def test_invalid_esg_metrics(self):
@@ -239,7 +236,7 @@ class TestDataValidationErrors(unittest.TestCase):
         )
 
         # 应该能正常创建对象（验证在输入时进行）
-        self.assertEqual(metrics.company_name, "")
+        assert metrics.company_name == ""
 
     def test_missing_required_fields(self):
         """测试缺少必填字段"""
@@ -248,18 +245,18 @@ class TestDataValidationErrors(unittest.TestCase):
         # 应该能创建只有必填字段的对象
         metrics = ESGMetrics(company_name="测试公司", year="2024")
 
-        self.assertEqual(metrics.company_name, "测试公司")
-        self.assertIsNone(metrics.renewable_energy_ratio)
+        assert metrics.company_name == "测试公司"
+        assert metrics.renewable_energy_ratio is None
 
 
-class TestFileOperationErrors(unittest.TestCase):
+class TestFileOperationErrors:
     """文件操作错误测试"""
 
-    def setUp(self):
+    def setup_method(self):
         """测试前置"""
         self.temp_dir = tempfile.mkdtemp()
 
-    def tearDown(self):
+    def teardown_method(self):
         """测试后置"""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
@@ -268,8 +265,8 @@ class TestFileOperationErrors(unittest.TestCase):
         from src.esg.utils.validators import validate_pdf
 
         is_valid, msg = validate_pdf("/nonexistent/file.pdf")
-        self.assertFalse(is_valid)
-        self.assertIn("文件不存在", msg)
+        assert is_valid is False
+        assert "文件不存在" in msg
 
     def test_permission_error(self):
         """测试权限错误（模拟）"""
@@ -284,10 +281,10 @@ class TestFileOperationErrors(unittest.TestCase):
         corrupted_pdf.write_text("这不是PDF内容")
 
         is_valid, msg = validate_pdf(corrupted_pdf)
-        self.assertFalse(is_valid)
+        assert is_valid is False
 
 
-class TestDatabaseErrors(unittest.TestCase):
+class TestDatabaseErrors:
     """数据库错误测试"""
 
     def test_chromadb_unavailable_handling(self):
@@ -299,7 +296,7 @@ class TestDatabaseErrors(unittest.TestCase):
         if not HAS_CHROMADB:
             # 预期：ChromaDB不可用时会返回False
             store = ChromaDBStore()
-            self.assertFalse(store.is_available())
+            assert store.is_available() is False
         else:
             # ChromaDB可用时测试连接
             store = ChromaDBStore()
@@ -307,7 +304,7 @@ class TestDatabaseErrors(unittest.TestCase):
             _ = store.is_available()
 
 
-class TestGracefulDegradation(unittest.TestCase):
+class TestGracefulDegradation:
     """优雅降级测试"""
 
     def test_partial_data_handling(self):
@@ -323,7 +320,7 @@ class TestGracefulDegradation(unittest.TestCase):
 
         # 应该能计算得分（基于可用数据）
         e_score = metrics.get_dimension_score("E")
-        self.assertIsInstance(e_score, float)
+        assert isinstance(e_score, float)
 
     def test_empty_data_handling(self):
         """测试空数据处理"""
@@ -333,35 +330,4 @@ class TestGracefulDegradation(unittest.TestCase):
 
         # 无数据时应该返回默认值
         e_score = metrics.get_dimension_score("E")
-        self.assertEqual(e_score, DEFAULT_SCORE)
-
-
-def run_tests():
-    """运行所有测试"""
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-
-    test_classes = [
-        TestOllamaClientExceptions,
-        TestPDFExtractorExceptions,
-        TestExceptionInheritance,
-        TestErrorRecovery,
-        TestNetworkErrorHandling,
-        TestDataValidationErrors,
-        TestFileOperationErrors,
-        TestDatabaseErrors,
-        TestGracefulDegradation,
-    ]
-
-    for test_class in test_classes:
-        suite.addTests(loader.loadTestsFromTestCase(test_class))
-
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-
-    return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    success = run_tests()
-    sys.exit(0 if success else 1)
+        assert e_score == DEFAULT_SCORE

@@ -363,6 +363,10 @@ class ComplianceChecker:
         >>> print(checker.get_compliance_rate())
     """
 
+    # 阈值检查分数
+    _COMPLIANT_THRESHOLD = 80.0
+    _PARTIAL_THRESHOLD = 40.0
+
     def __init__(self):
         """初始化合规检查器，加载披露标准配置"""
         self.standards = DISCLOSURE_STANDARDS
@@ -441,6 +445,109 @@ class ComplianceChecker:
             "按性别分类": self._check_gender_diversity,
             "碳强度数据": self._check_carbon_intensity,
         }
+
+    # ========================================================================
+    # 公共辅助方法（消除重复代码）
+    # ========================================================================
+
+    def _calculate_status(self, score: float) -> str:
+        """根据得分返回合规状态
+
+        Args:
+            score: 合规得分 (0-100)
+
+        Returns:
+            合规状态：已合规/部分合规/未合规
+        """
+        if score >= self._COMPLIANT_THRESHOLD:
+            return COMPLIANCE_STATUS_COMPLIANT
+        elif score >= self._PARTIAL_THRESHOLD:
+            return COMPLIANCE_STATUS_PARTIAL
+        return COMPLIANCE_STATUS_NON_COMPLIANT
+
+    def _count_mandatory_compliance(self, results: Dict[str, Any]) -> tuple:
+        """统计强制条款合规情况
+
+        Args:
+            results: 合规检查结果字典
+
+        Returns:
+            (强制条款总数, 强制条款合规数)
+        """
+        mandatory_total = 0
+        mandatory_compliant = 0
+        for result in results.values():
+            if result.get("requirement_type") == REQUIREMENT_MANDATORY:
+                mandatory_total += 1
+                if result.get("status") == COMPLIANCE_STATUS_COMPLIANT:
+                    mandatory_compliant += 1
+        return mandatory_total, mandatory_compliant
+
+    def _count_by_status(self, results: Dict[str, Any]) -> Dict[str, int]:
+        """统计各状态数量
+
+        Args:
+            results: 合规检查结果字典
+
+        Returns:
+            各状态数量字典
+        """
+        return {
+            "compliant": sum(
+                1 for r in results.values() if r["status"] == COMPLIANCE_STATUS_COMPLIANT
+            ),
+            "partial": sum(1 for r in results.values() if r["status"] == COMPLIANCE_STATUS_PARTIAL),
+            "non_compliant": sum(
+                1 for r in results.values() if r["status"] == COMPLIANCE_STATUS_NON_COMPLIANT
+            ),
+        }
+
+    def _check_threshold(
+        self,
+        value: Optional[float],
+        min_threshold: Optional[float] = None,
+        max_threshold: Optional[float] = None,
+        allow_zero: bool = False,
+    ) -> bool:
+        """通用阈值检查
+
+        Args:
+            value: 要检查的值
+            min_threshold: 最小阈值（包含）
+            max_threshold: 最大阈值（包含）
+            allow_zero: 是否允许值为0
+
+        Returns:
+            是否通过检查
+        """
+        if value is None:
+            return False
+        if not allow_zero and value <= 0:
+            return False
+        if min_threshold is not None and value < min_threshold:
+            return False
+        if max_threshold is not None and value > max_threshold:
+            return False
+        return True
+
+    def _check_percentage_coverage(
+        self, value: Optional[float], min_percentage: float, max_percentage: float = 100.0
+    ) -> bool:
+        """检查百分比覆盖率
+
+        Args:
+            value: 百分比值
+            min_percentage: 最小百分比
+            max_percentage: 最大百分比
+
+        Returns:
+            是否在合理范围内
+        """
+        if value is None:
+            return False
+        # 支持两种格式：0-1 或 0-100
+        effective_value = value * 100 if value <= 1 else value
+        return min_percentage <= effective_value <= max_percentage
 
     def _check_scope1_emissions(self, metrics: ESGMetrics) -> bool:
         """检查范围1排放数据
@@ -674,13 +781,8 @@ class ComplianceChecker:
                 total_items = len(check_items)
                 score = (passed_items / total_items * 100) if total_items > 0 else 0.0
 
-                # 确定状态
-                if score >= 80:
-                    status = COMPLIANCE_STATUS_COMPLIANT
-                elif score >= 40:
-                    status = COMPLIANCE_STATUS_PARTIAL
-                else:
-                    status = COMPLIANCE_STATUS_NON_COMPLIANT
+                # 确定状态（使用公共方法）
+                status = self._calculate_status(score)
 
                 results[standard_id] = {
                     "status": status,
@@ -769,7 +871,7 @@ class ComplianceChecker:
 
         overall_score = sum(scores) / len(scores) if scores else 0
 
-        # 确定总体状态
+        # 确定总体状态（使用公共方法，注意部分合规阈值是50）
         if overall_score >= 80:
             overall_status = COMPLIANCE_STATUS_COMPLIANT
         elif overall_score >= 50:
@@ -832,14 +934,8 @@ class ComplianceChecker:
         """
         results = self.check_compliance(metrics)
 
-        mandatory_total = 0
-        mandatory_compliant = 0
-
-        for standard_id, result in results.items():
-            if result.get("requirement_type") == REQUIREMENT_MANDATORY:
-                mandatory_total += 1
-                if result.get("status") == COMPLIANCE_STATUS_COMPLIANT:
-                    mandatory_compliant += 1
+        # 使用公共辅助方法统计强制条款合规情况
+        mandatory_total, mandatory_compliant = self._count_mandatory_compliance(results)
 
         if mandatory_total == 0:
             return 0.0
@@ -859,23 +955,15 @@ class ComplianceChecker:
         emissions_check = self.check_emissions_compliance(metrics)
 
         total_clauses = len(results)
-        compliant_count = sum(
-            1 for r in results.values() if r["status"] == COMPLIANCE_STATUS_COMPLIANT
-        )
-        partial_count = sum(1 for r in results.values() if r["status"] == COMPLIANCE_STATUS_PARTIAL)
-        non_compliant_count = sum(
-            1 for r in results.values() if r["status"] == COMPLIANCE_STATUS_NON_COMPLIANT
-        )
 
-        mandatory_total = sum(
-            1 for r in results.values() if r["requirement_type"] == REQUIREMENT_MANDATORY
-        )
-        mandatory_compliant = sum(
-            1
-            for r in results.values()
-            if r["requirement_type"] == REQUIREMENT_MANDATORY
-            and r["status"] == COMPLIANCE_STATUS_COMPLIANT
-        )
+        # 使用公共辅助方法统计各状态数量
+        status_counts = self._count_by_status(results)
+        compliant_count = status_counts["compliant"]
+        partial_count = status_counts["partial"]
+        non_compliant_count = status_counts["non_compliant"]
+
+        # 使用公共辅助方法统计强制条款合规情况
+        mandatory_total, mandatory_compliant = self._count_mandatory_compliance(results)
 
         # 按标准分组统计
         standards_summary = {}
@@ -884,24 +972,14 @@ class ComplianceChecker:
             standard_results = {k: v for k, v in results.items() if k in standard_clauses}
 
             if standard_results:
+                # 使用公共方法统计每个标准的各状态数量
+                standard_status_counts = self._count_by_status(standard_results)
                 standards_summary[standard_key] = {
                     "name": standard_config.get("name", ""),
                     "total": len(standard_results),
-                    "compliant": sum(
-                        1
-                        for r in standard_results.values()
-                        if r["status"] == COMPLIANCE_STATUS_COMPLIANT
-                    ),
-                    "partial": sum(
-                        1
-                        for r in standard_results.values()
-                        if r["status"] == COMPLIANCE_STATUS_PARTIAL
-                    ),
-                    "non_compliant": sum(
-                        1
-                        for r in standard_results.values()
-                        if r["status"] == COMPLIANCE_STATUS_NON_COMPLIANT
-                    ),
+                    "compliant": standard_status_counts["compliant"],
+                    "partial": standard_status_counts["partial"],
+                    "non_compliant": standard_status_counts["non_compliant"],
                 }
 
         return {
@@ -1079,13 +1157,21 @@ class SASBStandards:
     """SASB标准
 
     可持续发展会计准则委员会（SASB）标准，针对新能源行业的特定指标。
+    支持三个新能源子行业：可再生能源发电(NR0302)、电池存储与回收(NR0303)、太阳能技术(NR0301)
     """
 
     # 新能源行业SASB标准代码
     INDUSTRY_CODE = "NR0302"  # 可再生能源发电
 
-    # SASB标准要求
-    REQUIREMENTS: List[StandardRequirement] = [
+    # 子行业代码
+    SUB_INDUSTRY_CODES = {
+        "NR0301": "太阳能技术与制造",
+        "NR0302": "可再生能源发电",
+        "NR0303": "电池存储与回收",
+    }
+
+    # SASB标准要求 - NR0302 可再生能源发电
+    REQUIREMENTS_NR0302: List[StandardRequirement] = [
         StandardRequirement(
             code="NR0302-01",
             name="可再生能源发电量",
@@ -1159,17 +1245,235 @@ class SASBStandards:
         ),
     ]
 
+    # SASB标准要求 - NR0303 电池存储与回收（优先级一：高优先级）
+    REQUIREMENTS_NR0303: List[StandardRequirement] = [
+        StandardRequirement(
+            code="NR0303-01",
+            name="关键电池材料采购",
+            description="锂、钴、镍等关键电池材料的采购来源和供应链管理",
+            category="供应链",
+            mandatory=True,
+            guidance="报告关键矿物来源国、供应商审核情况、冲突矿产合规",
+        ),
+        StandardRequirement(
+            code="NR0303-02",
+            name="电池回收与再利用",
+            description="退役电池的回收网络和再利用比例",
+            category="循环经济",
+            mandatory=True,
+            guidance="报告回收率、回收网络覆盖、回收材料使用比例",
+        ),
+        StandardRequirement(
+            code="NR0303-03",
+            name="储能系统安全",
+            description="储能系统的安全记录和风险管理体系",
+            category="安全",
+            mandatory=True,
+            guidance="报告安全事故率、热失控风险管理、安全认证",
+        ),
+        StandardRequirement(
+            code="NR0303-04",
+            name="电池梯次利用",
+            description="退役电池在储能、低速电动车等领域的梯次利用",
+            category="循环经济",
+            mandatory=False,
+            guidance="报告梯次利用量、市场化进展",
+        ),
+        StandardRequirement(
+            code="NR0303-05",
+            name="生产过程用水与回收",
+            description="电池生产过程的用水量和循环水利用率",
+            category="环境绩效",
+            mandatory=True,
+            guidance="报告取水量、废水处理、循环利用率",
+        ),
+        StandardRequirement(
+            code="NR0303-06",
+            name="电池产品碳足迹",
+            description="电池产品全生命周期的碳排放足迹",
+            category="环境绩效",
+            mandatory=True,
+            guidance="报告碳足迹评估方法论、碳排放强度",
+        ),
+        StandardRequirement(
+            code="NR0303-07",
+            name="稀有金属回收",
+            description="锂、钴、镍等稀有金属的回收利用",
+            category="循环经济",
+            mandatory=True,
+            guidance="报告稀有金属回收率、材料循环利用率",
+        ),
+    ]
+
+    # SASB标准要求 - NR0301 太阳能技术（优先级二：中优先级）
+    REQUIREMENTS_NR0301: List[StandardRequirement] = [
+        StandardRequirement(
+            code="NR0301-01",
+            name="太阳能板回收",
+            description="太阳能板的回收计划和回收率",
+            category="循环经济",
+            mandatory=True,
+            guidance="报告回收体系、处理能力、技术路线",
+        ),
+        StandardRequirement(
+            code="NR0301-02",
+            name="供应链劳工权益",
+            description="光伏组件供应链的劳工权益保护",
+            category="社会绩效",
+            mandatory=True,
+            guidance="报告供应商劳工审核、童工禁止政策",
+        ),
+        StandardRequirement(
+            code="NR0301-03",
+            name="多晶硅供应链管理",
+            description="多晶硅等关键材料的供应链管理",
+            category="供应链",
+            mandatory=True,
+            guidance="报告供应商集中度、风险管理措施",
+        ),
+        StandardRequirement(
+            code="NR0301-04",
+            name="制造过程能源效率",
+            description="太阳能组件制造过程的能源效率",
+            category="环境绩效",
+            mandatory=False,
+            guidance="报告能源强度、节能措施",
+        ),
+    ]
+
+    # 绿氢/燃料电池相关标准（项目特有 - 优先级二）
+    REQUIREMENTS_GREEN_HYDROGEN: List[StandardRequirement] = [
+        StandardRequirement(
+            code="NR0304-01",
+            name="绿氢生产认证",
+            description="绿氢生产的碳足迹和可再生能源认证",
+            category="环境绩效",
+            mandatory=True,
+            guidance="报告绿氢认证等级、碳排放强度、可再生能源来源",
+        ),
+        StandardRequirement(
+            code="NR0304-02",
+            name="氢气安全",
+            description="氢气生产、储存、运输的安全管理",
+            category="安全",
+            mandatory=True,
+            guidance="报告安全事故、应急预案、安全培训",
+        ),
+        StandardRequirement(
+            code="NR0304-03",
+            name="电解水效率",
+            description="电解水制氢的能源转化效率",
+            category="环境绩效",
+            mandatory=True,
+            guidance="报告电解效率(kWh/kgH2)、技术路线(PEM/ALK)",
+        ),
+        StandardRequirement(
+            code="NR0304-04",
+            name="水资源消耗",
+            description="绿氢生产过程中的水资源消耗",
+            category="环境绩效",
+            mandatory=True,
+            guidance="报告用水量、水资源管理措施",
+        ),
+    ]
+
+    # 综合所有REQUIREMENTS（保持向后兼容）
+    REQUIREMENTS: List[StandardRequirement] = (
+        REQUIREMENTS_NR0302
+        + REQUIREMENTS_NR0303
+        + REQUIREMENTS_NR0301
+        + REQUIREMENTS_GREEN_HYDROGEN
+    )
+
     @classmethod
     def get_requirements(cls, category: Optional[str] = None) -> List[StandardRequirement]:
-        """获取标准要求"""
+        """获取标准要求
+
+        Args:
+            category: 可选，按类别筛选（环境绩效/社会绩效/供应链/循环经济/安全/治理/战略）
+
+        Returns:
+            标准要求列表
+        """
         if category:
             return [r for r in cls.REQUIREMENTS if r.category == category]
         return cls.REQUIREMENTS
 
     @classmethod
+    def get_requirements_by_industry(cls, industry_code: str) -> List[StandardRequirement]:
+        """获取指定子行业的标准要求
+
+        Args:
+            industry_code: 子行业代码（NR0301/NR0302/NR0303/NR0304）
+
+        Returns:
+            该子行业的标准要求列表
+        """
+        if industry_code == "NR0301":
+            return cls.REQUIREMENTS_NR0301
+        elif industry_code == "NR0302":
+            return cls.REQUIREMENTS_NR0302
+        elif industry_code == "NR0303":
+            return cls.REQUIREMENTS_NR0303
+        elif industry_code == "NR0304":
+            return cls.REQUIREMENTS_GREEN_HYDROGEN
+        else:
+            # 默认返回所有要求
+            return cls.REQUIREMENTS
+
+    @classmethod
+    def get_mandatory_requirements(
+        cls, industry_code: Optional[str] = None
+    ) -> List[StandardRequirement]:
+        """获取强制要求
+
+        Args:
+            industry_code: 可选，按子行业筛选
+
+        Returns:
+            强制要求列表
+        """
+        if industry_code:
+            requirements = cls.get_requirements_by_industry(industry_code)
+        else:
+            requirements = cls.REQUIREMENTS
+        return [r for r in requirements if r.mandatory]
+
+    @classmethod
     def get_requirement_by_code(cls, code: str) -> Optional[StandardRequirement]:
         """通过代码获取要求"""
         return next((r for r in cls.REQUIREMENTS if r.code == code), None)
+
+    @classmethod
+    def get_all_industry_codes(cls) -> Dict[str, str]:
+        """获取所有支持的子行业代码"""
+        return cls.SUB_INDUSTRY_CODES.copy()
+
+    @classmethod
+    def get_requirements_summary(cls) -> Dict[str, Dict[str, Any]]:
+        """获取各子行业条款汇总统计"""
+        return {
+            "NR0301": {
+                "name": "太阳能技术与制造",
+                "total": len(cls.REQUIREMENTS_NR0301),
+                "mandatory": len([r for r in cls.REQUIREMENTS_NR0301 if r.mandatory]),
+            },
+            "NR0302": {
+                "name": "可再生能源发电",
+                "total": len(cls.REQUIREMENTS_NR0302),
+                "mandatory": len([r for r in cls.REQUIREMENTS_NR0302 if r.mandatory]),
+            },
+            "NR0303": {
+                "name": "电池存储与回收",
+                "total": len(cls.REQUIREMENTS_NR0303),
+                "mandatory": len([r for r in cls.REQUIREMENTS_NR0303 if r.mandatory]),
+            },
+            "NR0304": {
+                "name": "绿氢与燃料电池",
+                "total": len(cls.REQUIREMENTS_GREEN_HYDROGEN),
+                "mandatory": len([r for r in cls.REQUIREMENTS_GREEN_HYDROGEN if r.mandatory]),
+            },
+        }
 
 
 class TCFDStandards:

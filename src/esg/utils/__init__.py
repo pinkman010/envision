@@ -4,8 +4,8 @@
 - Ollama HTTP 客户端：用于与大模型服务交互
 """
 
-# Ollama 客户端
-from src.esg.utils.ollama_client import OllamaClient
+# Ollama 客户端 (从 llm 模块导入)
+from src.esg.llm.ollama_client import OllamaClient
 
 __all__ = [
     # Ollama 客户端

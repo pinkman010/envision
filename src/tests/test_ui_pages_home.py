@@ -180,20 +180,14 @@ class TestRenderDemoDataSelection(unittest.TestCase):
     """示例数据选择测试"""
 
     @patch("streamlit.markdown")
-    @patch("streamlit.columns")
     @patch("streamlit.button")
     @patch("streamlit.success")
     def test_render_demo_data_selection(
-        self, mock_success, mock_button, mock_columns, mock_markdown
+        self, mock_success, mock_button, mock_markdown
     ):
         """测试示例数据选择"""
-        mock_col1 = MagicMock()
-        mock_col2 = MagicMock()
-        mock_col3 = MagicMock()
-        mock_columns.return_value = [mock_col1, mock_col2, mock_col3]
-
-        # 模拟第一个按钮被点击
-        mock_button.side_effect = [True, False, False]
+        # 模拟按钮被点击
+        mock_button.return_value = True
 
         with patch("esg.ui.pages.home.load_demo_metrics") as mock_load:
             with patch("esg.ui.pages.home.get_state_manager") as mock_get_manager:
@@ -201,7 +195,7 @@ class TestRenderDemoDataSelection(unittest.TestCase):
                 mock_get_manager.return_value = mock_manager
 
                 mock_metrics = MagicMock()
-                mock_metrics.company_name = "测试公司"
+                mock_metrics.company_name = "绿色能源集团"
                 mock_load.return_value = mock_metrics
 
                 from src.esg.ui.pages import home

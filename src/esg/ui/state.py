@@ -1,10 +1,10 @@
-"""会话状态管理模块
+"""会话状态管理模块（简化版）
 
 统一管理 Streamlit 的 session_state，提供类型安全的状态访问接口。
+简化版：只保留核心状态。
 """
 
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
 
 import streamlit as st
@@ -24,40 +24,14 @@ STATE_KEYS = {
     "extraction_progress": "extraction_progress",
     "analysis_progress": "analysis_progress",
     "gap_analysis": "gap_analysis",
-    "strategies": "strategies",
-    "benchmark_company": "benchmark_company",
-    "ahp_matrix": "ahp_matrix",
-    "ahp_result": "ahp_result",
-    "topic_filter": "topic_filter",
-    "selected_topics": "selected_topics",
-    # 第一阶段新增：幽灵功能集成
-    "chat_history": "chat_history",  # 聊天历史管理
-    "completion_result": "completion_result",  # 数据补全结果
 }
 
 
 @dataclass
 class AppState:
-    """应用状态数据类
+    """应用状态数据类（简化版）
 
-    Attributes:
-        initialized: 是否已初始化
-        current_page: 当前页面标识
-        metrics: 提取的ESG指标数据
-        analysis_result: 分析结果
-        weights: ESG维度权重配置
-        selected_industry: 选择的行业
-        selected_year: 选择的年份
-        uploaded_file: 上传的文件信息
-        extraction_progress: 数据提取进度 (0-100)
-        analysis_progress: 分析进度 (0-100)
-        gap_analysis: 差距分析结果
-        strategies: 生成的策略列表
-        benchmark_company: 选择的标杆企业
-        ahp_matrix: AHP判断矩阵
-        ahp_result: AHP计算结果
-        topic_filter: 议题筛选条件
-        selected_topics: 选中的议题列表
+    简化后状态：metrics, analysis_result, current_page, weights
     """
 
     initialized: bool = False
@@ -71,25 +45,13 @@ class AppState:
     extraction_progress: int = 0
     analysis_progress: int = 0
     gap_analysis: Dict[str, Any] = field(default_factory=dict)
-    strategies: List[Dict[str, Any]] = field(default_factory=list)
-    benchmark_company: str = "行业平均"
-    ahp_matrix: Optional[List[List[float]]] = None
-    ahp_result: Optional[Dict[str, Any]] = None
-    topic_filter: str = "all"
-    selected_topics: List[str] = field(default_factory=list)
 
 
 class StateManager:
-    """会话状态管理器
+    """会话状态管理器（简化版）
 
     提供对 Streamlit session_state 的类型安全封装。
-    所有状态访问都应通过此类进行。
-
-    Example:
-        >>> manager = StateManager()
-        >>> manager.init_state()  # 初始化状态
-        >>> manager.set_metrics(metrics)
-        >>> metrics = manager.get_metrics()
+    简化版：只保留核心状态访问方法。
     """
 
     def __init__(self) -> None:
@@ -97,11 +59,7 @@ class StateManager:
         self._state = st.session_state
 
     def init_state(self) -> None:
-        """初始化默认状态
-
-        如果状态未初始化，则设置所有默认值。
-        应在应用启动时调用一次。
-        """
+        """初始化默认状态"""
         if STATE_KEYS["initialized"] not in self._state:
             default_state = AppState()
             for key, value in asdict(default_state).items():
@@ -117,27 +75,14 @@ class StateManager:
     # === 基本状态访问 ===
 
     def get(self, key: str, default: Any = None) -> Any:
-        """获取任意状态值
-
-        Args:
-            key: 状态键名
-            default: 默认值
-
-        Returns:
-            状态值或默认值
-        """
+        """获取任意状态值"""
         return self._state.get(key, default)
 
     def set(self, key: str, value: Any) -> None:
-        """设置任意状态值
-
-        Args:
-            key: 状态键名
-            value: 要设置的值
-        """
+        """设置任意状态值"""
         self._state[key] = value
 
-    # === 特定状态访问 ===
+    # === 核心状态访问 ===
 
     def get_metrics(self) -> Optional[ESGMetrics]:
         """获取ESG指标数据"""
@@ -171,14 +116,6 @@ class StateManager:
         """设置当前页面"""
         self._state["current_page"] = page
 
-    def get_benchmark_company(self) -> str:
-        """获取标杆企业"""
-        return cast(str, self._state.get("benchmark_company", "行业平均"))
-
-    def set_benchmark_company(self, company: str) -> None:
-        """设置标杆企业"""
-        self._state["benchmark_company"] = company
-
     def get_gap_analysis(self) -> Dict[str, Any]:
         """获取差距分析结果"""
         return cast(Dict[str, Any], self._state.get("gap_analysis", {}))
@@ -186,22 +123,6 @@ class StateManager:
     def set_gap_analysis(self, gap: Dict[str, Any]) -> None:
         """设置差距分析结果"""
         self._state["gap_analysis"] = gap
-
-    def get_strategies(self) -> List[Dict[str, Any]]:
-        """获取策略列表"""
-        return cast(List[Dict[str, Any]], self._state.get("strategies", []))
-
-    def set_strategies(self, strategies: List[Dict[str, Any]]) -> None:
-        """设置策略列表"""
-        self._state["strategies"] = strategies
-
-    def get_ahp_result(self) -> Optional[Dict[str, Any]]:
-        """获取AHP计算结果"""
-        return cast(Optional[Dict[str, Any]], self._state.get("ahp_result"))
-
-    def set_ahp_result(self, result: Dict[str, Any]) -> None:
-        """设置AHP计算结果"""
-        self._state["ahp_result"] = result
 
     # === 进度相关 ===
 
@@ -235,39 +156,13 @@ class StateManager:
         """检查是否已有差距分析"""
         return bool(self._state.get("gap_analysis"))
 
-    def has_strategies(self) -> bool:
-        """检查是否已有策略"""
-        return bool(self._state.get("strategies"))
-
-    # === 第一阶段新增：幽灵功能集成 ===
-
-    def get_chat_history(self) -> Any:
-        """获取聊天历史"""
-        return self._state.get("chat_history")
-
-    def set_chat_history(self, chat_history: Any) -> None:
-        """设置聊天历史"""
-        self._state["chat_history"] = chat_history
-
-    def get_completion_result(self) -> Any:
-        """获取数据补全结果"""
-        return self._state.get("completion_result")
-
-    def set_completion_result(self, result: Any) -> None:
-        """设置数据补全结果"""
-        self._state["completion_result"] = result
-
 
 # 全局状态管理器实例
 _state_manager: Optional[StateManager] = None
 
 
 def get_state_manager() -> StateManager:
-    """获取全局状态管理器实例
-
-    Returns:
-        StateManager: 状态管理器单例
-    """
+    """获取全局状态管理器实例"""
     global _state_manager
     if _state_manager is None:
         _state_manager = StateManager()

@@ -13,13 +13,12 @@ from unittest.mock import MagicMock, Mock, patch
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.esg.utils.ollama_client import (
+from src.esg.llm.ollama_client import (
     OllamaClient,
-    OllamaConnectionError,
-    OllamaError,
-    OllamaResponseError,
-    OllamaTimeoutError,
-    retry_with_backoff,
+    LLMError as OllamaError,
+    LLMConnectionError as OllamaConnectionError,
+    LLMResponseError as OllamaResponseError,
+    LLMTimeoutError as OllamaTimeoutError,
 )
 
 

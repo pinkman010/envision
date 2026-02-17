@@ -30,8 +30,8 @@ def main():
         page_title=APP_NAME, page_icon=APP_ICON, layout="wide", initial_sidebar_state="expanded"
     )
 
-    # 渲染增强版界面
-    from src.esg.ui.app_enhanced import render_app
+    # 渲染应用界面
+    from src.esg.ui.app_main import render_app
 
     render_app()
 

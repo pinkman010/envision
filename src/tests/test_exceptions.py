@@ -10,16 +10,22 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from src.esg.extraction.pdf_extractor import (
-    PDFExtractionError,
-    PDFLibraryNotFoundError,
-    PDFNotFoundError,
-)
-from src.esg.utils.ollama_client import (
-    OllamaConnectionError,
-    OllamaError,
-    OllamaResponseError,
-    OllamaTimeoutError,
+# 检查模块是否存在
+has_pdf_extractor = True
+try:
+    from src.esg.extraction.pdf_extractor import (
+        PDFExtractionError,
+        PDFLibraryNotFoundError,
+        PDFNotFoundError,
+    )
+except ImportError:
+    has_pdf_extractor = False
+
+from src.esg.llm.ollama_client import (
+    LLMError as OllamaError,
+    LLMConnectionError as OllamaConnectionError,
+    LLMResponseError as OllamaResponseError,
+    LLMTimeoutError as OllamaTimeoutError,
 )
 
 

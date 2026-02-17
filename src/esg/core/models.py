@@ -1,4 +1,21 @@
-"""ESG核心数据模型"""
+"""ESG核心数据模型
+
+该模块包含ESG分析的核心数据模型和分析引擎。
+
+主要组件:
+    - ESGMetrics: ESG指标数据类（内置评分计算逻辑）
+    - AnalysisResult: 分析结果类
+    - BenchmarkData: 行业基准数据类
+
+常量:
+    - DEFAULT_SCORE: 默认得分 (50.0)
+    - GAP_THRESHOLD_HIGH: 高差距阈值 (15.0)
+    - GAP_THRESHOLD_MEDIUM: 中差距阈值 (8.0)
+    - CARBON_INTENSITY_BENCHMARKS: 按行业细分的碳强度基准
+    - SCORE_MAX: 最大评分 (100.0)
+
+Version: 1.6.0 (移除ScoreCalculator，使用ESGMetrics内置评分)
+"""
 
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -9,6 +26,7 @@ DEFAULT_SCORE: float = 50.0
 DEFAULT_TARGET_SCORE: float = 80.0
 GAP_THRESHOLD_HIGH: float = 15.0
 GAP_THRESHOLD_MEDIUM: float = 8.0
+SCORE_MAX: float = 100.0  # 最大评分
 
 # 碳强度评分参考值（吨CO2e/百万元营收）- 按新能源子行业细分
 CARBON_INTENSITY_BENCHMARKS = {
@@ -1216,3 +1234,12 @@ class AnalysisResult:
             是否存在警告
         """
         return len(self.data_quality_warnings) > 0
+
+
+# 已移除 ScoreCalculator 类
+# 替代方案：使用 ESGMetrics.get_dimension_score() 方法
+# 示例：
+#   metrics = ESGMetrics(company_name="示例公司", year="2024")
+#   e_score = metrics.get_dimension_score("E")
+#   s_score = metrics.get_dimension_score("S")
+#   g_score = metrics.get_dimension_score("G")

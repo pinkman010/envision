@@ -1,6 +1,7 @@
-"""导航模块
+"""导航模块（简化版）
 
 提供侧边栏导航功能。
+简化版：只保留首页和差距诊断两个页面。
 """
 
 from typing import Any, Dict
@@ -12,25 +13,20 @@ from src.esg.ui.state import get_state_manager
 
 
 def render_sidebar() -> Dict[str, Any]:
-    """渲染侧边栏
+    """渲染侧边栏（简化版）
+
+    简化后导航：首页、差距诊断，共2个页面
 
     Returns:
         配置参数字典
     """
     with st.sidebar:
-        # 导航
+        # 导航 - 只保留2个页面
         st.markdown("### 📍 功能导航")
 
         pages = {
             "home": "🏠 首页",
-            "topics": "📊 议题全景图",
-            "materiality": "📋 实质性矩阵",
-            "competitor": "🔍 竞争对手分析",
-            "weights": "⚖️ 权重配置",
             "gap": "📉 差距诊断",
-            "strategies": "💡 AI策略建议",
-            "timing": "📅 沟通时机",
-            "rag": "💬 RAG智能问答",
         }
 
         manager = get_state_manager()

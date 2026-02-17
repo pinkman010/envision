@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.esg.extraction.metric_extractor import (
-    MetricExtractionError,
     MetricExtractor,
     MetricType,
 )
@@ -38,10 +37,4 @@ class TestMetricExtractor:
         pass
 
 
-class TestMetricExtractionError:
-    """MetricExtractionError测试类"""
-
-    def test_metric_extraction_error(self):
-        """测试异常创建"""
-        error = MetricExtractionError("提取失败")
-        assert str(error) == "提取失败"
+# MetricExtractionError 类已从模块中移除

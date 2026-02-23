@@ -1,0 +1,35 @@
+{
+  "project_name": "新能源行业ESG实质性议题规则",
+  "version": "1.0.0",
+  "fixed_extraction_fields": [
+    "company_name",
+    "report_year",
+    "scope1_emission",
+    "scope2_emission",
+    "green_energy_usage",
+    "energy_efficiency",
+    "waste_recycling",
+    "safety_incidents",
+    "employee_training"
+  ],
+  "topics": [
+    {
+      "id": "climate_change",
+      "name": "气候变化",
+      "description": "温室气体排放、气候风险应对",
+      "priority": 1
+    },
+    {
+      "id": "circular_economy",
+      "name": "循环经济",
+      "description": "废弃物回收、资源循环利用",
+      "priority": 2
+    },
+    {
+      "id": "occupational_safety",
+      "name": "职业健康安全",
+      "description": "安全生产、员工健康",
+      "priority": 3
+    }
+  ]
+}

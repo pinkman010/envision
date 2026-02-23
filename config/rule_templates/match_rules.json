@@ -1,0 +1,19 @@
+{
+  "project_name": "白盒规则匹配配置",
+  "version": "1.0.0",
+  "topic_match_conditions": {
+    "climate_change": [
+      "scope1_emission",
+      "scope2_emission",
+      "green_energy_usage"
+    ],
+    "circular_economy": [
+      "waste_recycling",
+      "energy_efficiency"
+    ],
+    "occupational_safety": [
+      "safety_incidents",
+      "employee_training"
+    ]
+  }
+}

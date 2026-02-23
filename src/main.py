@@ -1,40 +1,55 @@
-"""ESG智能分析系统 - 入口
-
-增强版功能模块：
-- 📊 行业议题全景图
-- ⚖️ AHP权重配置
-- 🔍 披露差距诊断
-- 💡 AI策略建议
-- 💬 RAG智能问答
-- 📅 沟通时机建议
-
-用法:
-    streamlit run src/main.py
+"""
+FastAPI后端服务入口
+功能：全局配置加载、API路由注册、CORS配置、健康检查
 """
 
-import sys
-from pathlib import Path
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# 添加 src 到路径
-sys.path.insert(0, str(Path(__file__).parent))
+from src.core_config.settings import settings
+from src.core_config.paths import ensure_all_paths
+from src.api.router import api_router
 
-import streamlit as st
+# 1. 确保所有必要的目录存在（data/、tmp/等）
+ensure_all_paths()
 
-from src.esg.config import APP_ICON, APP_NAME, VERSION
+# 2. 初始化FastAPI应用
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    description=settings.PROJECT_DESCRIPTION,
+    version=settings.VERSION,
+    docs_url="/api/docs",  # 自动生成API文档
+    redoc_url="/api/redoc",
+)
 
+# 3. 配置CORS（允许Streamlit前端跨域访问）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def main():
-    """主函数"""
-    # 页面配置
-    st.set_page_config(
-        page_title=APP_NAME, page_icon=APP_ICON, layout="wide", initial_sidebar_state="expanded"
-    )
+# 4. 注册全局API路由
+app.include_router(api_router, prefix=settings.API_PREFIX)
 
-    # 渲染应用界面
-    from src.esg.ui.app_main import render_app
+# 5. 健康检查接口（用于Docker部署、监控）
+@app.get("/health", tags=["系统监控"])
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": settings.VERSION,
+        "project_name": settings.PROJECT_NAME,
+    }
 
-    render_app()
-
-
+# 6. 本地启动入口（仅用于开发调试，生产环境用uvicorn命令或Docker）
 if __name__ == "__main__":
-    main()
+    uvicorn.run(
+        "src.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG,  # 开发环境开启热重载
+        log_level=settings.LOG_LEVEL.lower(),
+    )

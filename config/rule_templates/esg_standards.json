@@ -1,0 +1,21 @@
+{
+  "project_name": "ESG披露标准配置",
+  "version": "1.0.0",
+  "core_standards": [
+    {
+      "id": "ISSB-IFRS-S1",
+      "name": "IFRS S1 一般财务报告相关的可持续发展相关财务信息披露",
+      "description": "要求企业披露与可持续发展相关的风险和机遇，以及治理情况"
+    },
+    {
+      "id": "ISSB-IFRS-S2",
+      "name": "IFRS S2 气候相关披露",
+      "description": "要求企业披露气候相关的风险、机遇、温室气体排放数据"
+    },
+    {
+      "id": "SASB-RENEW",
+      "name": "SASB 可再生能源行业标准",
+      "description": "可再生能源行业的特定ESG披露要求"
+    }
+  ]
+}

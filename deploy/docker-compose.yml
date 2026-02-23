@@ -1,0 +1,72 @@
+# ============================================
+# ESG AI Expert System - Docker Compose 配置
+# 用途：一键启动完整服务栈
+# 启动命令：docker-compose up -d
+# ============================================
+
+version: '3.8'
+
+services:
+  # FastAPI 后端服务
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: envision_api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://api.openai.com/v1}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
+    volumes:
+      # 持久化数据存储
+      - ../data/chroma_db:/app/data/chroma_db
+      - ../data/sqlite_db:/app/data/sqlite_db
+      - ../data/raw_corpus:/app/data/raw_corpus
+      - ../data/export_results:/app/data/export_results
+      # 持久化日志
+      - ../logs:/app/logs
+    networks:
+      - envision_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streamlit 前端服务
+  ui:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: envision_ui
+    ports:
+      - "8501:8501"
+    environment:
+      - ENVIRONMENT=production
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+    networks:
+      - envision_network
+    restart: unless-stopped
+    command: ["streamlit", "run", "src/ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
+networks:
+  envision_network:
+    driver: bridge
+
+volumes:
+  chroma_data:
+    driver: local
+  sqlite_data:
+    driver: local

@@ -1,37 +1,46 @@
-# 过滤敏感配置文件（核心，永不提交）
+# 环境变量
 .env
-.env.*
+.env.local
 
-# 过滤Python可编辑安装生成的元数据
-*.egg-info/
-# 过滤Python编译冗余文件
+# 临时文件
+tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 数据文件（敏感内容不上传）
+data/
+logs/
+
+# 演示数据
+demo_data/
+
+# Python缓存
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-# 过滤虚拟环境（如果有）
+
+# 虚拟环境
 venv/
 env/
-.venv/
-# 过滤日志/临时文件
-*.log
-temp/
-logs/
-# 过滤编辑器缓存（可选，如VS Code）
+ENV/
+*.venv
+
+# IDE配置
 .vscode/
-# 忽略所有 PDF 文件
-*.pdf
-# 忽略所有 DOC 格式文件
-*.doc
-# 忽略所有 DOCX 格式文件
-*.docx
-# 可选：若有临时/隐藏的这类文件（如 ~$xxx.docx），也可补充忽略
-~$*.docx
-~$*.doc
-# 忽略所有 bin 格式文件
-*.bin
-*.sqlite3
-*.json
-# 忽略项目根目录下的 data 文件夹（所有内容）
-/data/
-/DuoCLI
+.idea/
+*.swp
+*.swo
+
+# 测试覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 构建产物
+dist/
+build/
+*.egg-info/

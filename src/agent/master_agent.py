@@ -7,7 +7,7 @@
 from typing import Dict, Any
 from enum import Enum
 
-from src.agent import BaseAgent, AgentState
+from src.agent.base_agent import BaseAgent, AgentState
 from src.core_config import get_logger
 from src.utils import write_audit_log, BaseESGException
 

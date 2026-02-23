@@ -25,23 +25,48 @@ def validate_json_format(json_str: str) -> dict[str, Any]:
         raise ValidationException(f"JSON格式错误: {str(e)}", original_exception=e) from e
 
 
-def validate_extraction_result(result: dict[str, Any]) -> None:
+def validate_extraction_result(result: dict[str, Any]) -> bool:
     """
-    校验信息抽取结果的完整性（必须有字段名、抽取内容、字符锚点）
+    校验信息抽取结果的完整性。
+    返回 True 表示有实质内容可做后续相似度校验；
+    返回 False 表示该字段在原文中未找到（extracted_content 为空），属合法状态，跳过相似度校验。
     :param result: 抽取结果字典
-    :raises ValidationException: 校验失败时抛出
+    :raises ValidationException: 结构性缺失时抛出（field_name 缺失等不可恢复错误）
     """
-    required_fields = ["field_name", "extracted_content", "char_start", "char_end"]
-    for field in required_fields:
-        if field not in result:
-            raise ValidationException(f"抽取结果缺少必填字段: {field}")
-        if not result[field] and result[field] != 0:
-            raise ValidationException(f"抽取结果字段为空: {field}")
-    # 校验字符位置合法性
-    if not isinstance(result["char_start"], int) or not isinstance(result["char_end"], int):
-        raise ValidationException("字符锚点必须为整数")
-    if result["char_start"] < 0 or result["char_end"] <= result["char_start"]:
-        raise ValidationException("字符锚点位置不合法")
+    # field_name 必须存在且非空，否则是结构性错误
+    if "field_name" not in result or not result["field_name"]:
+        raise ValidationException("抽取结果缺少必填字段: field_name")
+
+    # extracted_content 为空字符串 = LLM 遵守 Prompt 约定，报告该字段原文中不存在，合法
+    extracted_content = result.get("extracted_content", None)
+    if extracted_content is None:
+        raise ValidationException(f"抽取结果缺少字段: extracted_content (field={result['field_name']})")
+    if extracted_content == "" or (isinstance(extracted_content, str) and extracted_content.strip() == ""):
+        return False  # 合法的"未找到"状态，调用方跳过相似度校验
+
+    # 有内容时，检查是否有行号或字符位置锚点
+    has_line_number = "line_number" in result and result["line_number"] is not None
+    has_char_anchor = "char_start" in result and "char_end" in result
+    
+    if not has_line_number and not has_char_anchor:
+        raise ValidationException(f"抽取结果有内容但缺少位置锚点（行号或字符位置）(field={result['field_name']})")
+    
+    # 如果提供了行号，校验行号合法性
+    if has_line_number:
+        line_number = result["line_number"]
+        if not isinstance(line_number, int) or line_number < 1:
+            raise ValidationException(f"行号必须为正整数 (field={result['field_name']}, line_number={line_number})")
+    
+    # 如果提供了字符位置，校验字符位置合法性
+    if has_char_anchor:
+        char_start = result["char_start"]
+        char_end = result["char_end"]
+        if not isinstance(char_start, int) or not isinstance(char_end, int):
+            raise ValidationException(f"字符锚点必须为整数 (field={result['field_name']})")
+        if char_start < 0 or char_end <= char_start:
+            raise ValidationException(f"字符锚点位置不合法 (field={result['field_name']})")
+
+    return True  # 有内容，且锚点合法，需要做相似度校验
 
 
 def validate_file_suffix(file_path: Path, allowed_suffixes: List[str]) -> None:

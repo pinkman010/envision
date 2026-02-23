@@ -7,17 +7,16 @@ import streamlit as st
 
 from src.core_config import settings
 
-# 页面配置（已在streamlit_app.py全局配置）
-st.header("🌱 新能源行业ESG披露与沟通智能分析系统")
-st.subheader("规则驱动为主、AI辅助为辅的强合规分析工具")
+# 页面配置（app.py全局配置）
+st.header("🌱 ESG信息披露与沟通智能分析系统")
+st.subheader("规则驱动、AI辅助的强合规分析工具")
 st.divider()
 
 # 系统介绍
 st.markdown("### 系统定位")
 st.info(
     "本系统针对新能源行业ESG披露的强合规、强监管场景设计，"
-    "采用「人工定规则+AI做提取+白盒做校验+人工做决策」的混合架构，"
-    "彻底解决大模型在法定披露场景下的黑盒、幻觉、不可追溯的行业痛点。"
+    "采用「人工定规则+AI做提取+白盒做校验+人工做决策」的混合架构。"
 )
 st.caption(f"版本：v{settings.VERSION} | 环境：{settings.ENVIRONMENT}")
 
@@ -25,13 +24,14 @@ st.divider()
 
 # 核心数据看板（MVP阶段用静态数据演示，后期对接数据库）
 st.markdown("### 📊 核心数据看板")
+st.markdown("#### （MVP阶段用静态数据演示，后期对接数据库）")
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(
         label="已接入语料库",
         value="120+",
         delta="TOP100新能源企业",
-        help="已预加载新能源行业TOP100企业的近3年ESG报告",
+        help="已预加载新能源行业20份ESG报告",
     )
 with col2:
     st.metric(
@@ -78,5 +78,5 @@ st.error(
     "**重要提示**：\n\n"
     "1. 本系统的AI输出仅为辅助参考，不构成任何披露建议、投资建议或法律意见；\n"
     "2. 所有用于对外披露的内容，必须经企业ESG团队人工复核确认；\n"
-    "3. 企业自行承担使用本系统产生的所有法律责任与披露责任。"
+    "3. 使用人自行承担所有法律责任与披露责任。"
 )

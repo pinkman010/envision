@@ -90,21 +90,38 @@ def call_llm(
             message = response.choices[0].message
             content = message.content
             
-            # 检查content是否为None或空字符串
-            if content is None or (isinstance(content, str) and content.strip() == ""):
-                # 检查是否有reasoning_content（推理模型如kimi-k2.5, DeepSeek-R1等）
-                reasoning_content = getattr(message, 'reasoning_content', None)
-                if reasoning_content and reasoning_content.strip():
-                    logger.info("大模型返回空content但有reasoning_content，使用reasoning_content")
-                    return reasoning_content.strip()
-                
-                logger.warning(f"[第{attempt}次尝试] 大模型返回空内容，准备重试...")
-                last_exception = LLMCallException("大模型返回空内容")
-                if attempt < LLM_MAX_RETRIES:
-                    time.sleep(LLM_RETRY_DELAY * attempt)
-                continue
-            
-            return content.strip()
+            # 检查是否有reasoning_content（推理模型如kimi-k2.5, DeepSeek-R1等）
+            reasoning_content = getattr(message, 'reasoning_content', None)
+
+            # 推理模型：content 是最终答案，reasoning_content 是思考过程
+            # 优先使用 content（最终答案），仅当 content 为空时尝试从 reasoning_content 提取
+            if content is not None and content.strip():
+                if reasoning_content:
+                    logger.debug(f"推理模型返回: content长度={len(content)}, reasoning长度={len(reasoning_content)}")
+                return content.strip()
+
+            # content为空，尝试从reasoning_content中提取有用内容
+            if reasoning_content and reasoning_content.strip():
+                logger.warning(
+                    f"[第{attempt}次尝试] 推理模型content为空，尝试从reasoning_content提取 "
+                    f"(reasoning长度={len(reasoning_content)})"
+                )
+                # 尝试从思考过程中提取JSON（推理模型有时把最终结果混在思考过程里）
+                import re
+                json_match = re.search(r'\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\})*)*\})*)*\}', reasoning_content, re.DOTALL)
+                if json_match:
+                    logger.info("从reasoning_content中提取到JSON片段")
+                    return json_match.group(0)
+                # 没有JSON就返回原文（可能是非JSON场景的调用）
+                logger.info("reasoning_content中无JSON，返回reasoning_content原文")
+                return reasoning_content.strip()
+
+            # 两个字段都为空，重试
+            logger.warning(f"[第{attempt}次尝试] 大模型返回空内容(content和reasoning_content均为空)，准备重试...")
+            last_exception = LLMCallException("大模型返回空内容")
+            if attempt < LLM_MAX_RETRIES:
+                time.sleep(LLM_RETRY_DELAY * attempt)
+            continue
         
         except Exception as e:
             # 获取异常类型

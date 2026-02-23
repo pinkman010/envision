@@ -7,7 +7,7 @@ AI仅做乱码/表格识别异常修复，无任何业务判断
 from pathlib import Path
 from typing import Dict, Any
 
-from src.agent import BaseAgent
+from src.agent.base_agent import BaseAgent
 from src.core_config import get_logger, settings
 from src.utils import (
     validate_file,

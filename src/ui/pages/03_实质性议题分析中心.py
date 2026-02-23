@@ -82,35 +82,45 @@ if st.session_state.extract_result:
         field_name = result["field_name"]
         extracted_content = result["extracted_content"]
         validation_status = result["validation_status"]
-        similarity = result.get("similarity", 0.0)
-        char_start = result["char_start"]
-        char_end = result["char_end"]
-        
+        similarity = result.get("similarity")  # 可能是 float 或 None
+        char_start = result.get("char_start")
+        char_end = result.get("char_end")
+
         # 根据校验状态显示不同的颜色
-        status_color = "#00A86B" if validation_status == "passed" else "#DC2626"
-        status_text = "✅ 校验通过" if validation_status == "passed" else "❌ 校验失败"
-        
+        if validation_status == "passed":
+            status_color = "#00A86B"
+            status_text = "✅ 校验通过"
+        elif validation_status == "not_found":
+            status_color = "#6B7280"
+            status_text = "⬜ 原文未找到"
+        else:  # failed
+            status_color = "#DC2626"
+            status_text = "❌ 校验失败"
+
+        similarity_str = f"{similarity:.2%}" if similarity is not None else "N/A"
         with st.expander(
-            f"{status_text} | {field_name} | 相似度: {similarity:.2%}",
+            f"{status_text} | {field_name} | 相似度: {similarity_str}",
             expanded=validation_status == "failed",
         ):
             st.markdown(f"**字段名**: {field_name}")
             st.markdown(f"**抽取内容**: {extracted_content}")
-            st.markdown(f"**字符位置**: {char_start} - {char_end}")
+            char_display = f"{char_start} - {char_end}" if char_start is not None else "N/A（原文未找到）"
+            st.markdown(f"**字符位置**: {char_display}")
             st.markdown(f"**校验状态**: <span style='color:{status_color};font-weight:bold;'>{status_text}</span>", unsafe_allow_html=True)
-            
-            # 显示高亮原文片段
-            st.markdown("**原文对应片段（高亮显示）**:")
-            # 取前后各100字符作为上下文
-            context_start = max(0, char_start - 100)
-            context_end = min(len(fixed_text), char_end + 100)
-            highlighted_snippet = highlight_text(
-                fixed_text[context_start:context_end],
-                char_start - context_start,
-                char_end - context_start,
-                color=status_color,
-            )
-            st.markdown(f"...{highlighted_snippet}...", unsafe_allow_html=True)
+
+            # 显示高亮原文片段（仅在找到原文时）
+            if char_start is not None and char_end is not None:
+                st.markdown("**原文对应片段（高亮显示）**:")
+                # 取前后各100字符作为上下文
+                context_start = max(0, char_start - 100)
+                context_end = min(len(fixed_text), char_end + 100)
+                highlighted_snippet = highlight_text(
+                    fixed_text[context_start:context_end],
+                    char_start - context_start,
+                    char_end - context_start,
+                    color=status_color,
+                )
+                st.markdown(f"...{highlighted_snippet}...", unsafe_allow_html=True)
     
     st.divider()
     

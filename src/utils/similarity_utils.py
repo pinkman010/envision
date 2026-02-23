@@ -62,3 +62,68 @@ def validate_similarity(
     similarity = calculate_similarity(original_snippet, extracted_text)
     is_passed = similarity >= SIMILARITY_THRESHOLD
     return is_passed, similarity
+
+
+def validate_similarity_by_line(
+    original_text: str,
+    extracted_text: str,
+    line_number: int,
+    context_lines: int = 2,
+) -> Tuple[bool, float, str]:
+    """
+    基于行号校验AI抽取内容与原文的相似度
+    
+    在指定的行及其前后几行中搜索匹配的内容，返回最佳匹配的相似度。
+    这比字符位置更可靠，因为LLM更擅长识别行号而非精确字符位置。
+    
+    :param original_text: 完整原文
+    :param extracted_text: AI抽取内容
+    :param line_number: AI标注的行号（从1开始）
+    :param context_lines: 搜索的上下文行数（在指定行前后各搜索多少行）
+    :return: （是否通过校验, 相似度, 匹配到的原文片段）
+    """
+    if not original_text or not extracted_text or line_number < 1:
+        return False, 0.0, ""
+    
+    # 将原文按行分割
+    lines = original_text.split('\n')
+    total_lines = len(lines)
+    
+    # 计算搜索范围（考虑边界）
+    search_start = max(0, line_number - 1 - context_lines)  # 转换为0索引
+    search_end = min(total_lines, line_number + context_lines)
+    
+    # 在搜索范围内逐行计算相似度，找出最佳匹配
+    best_similarity = 0.0
+    best_match = ""
+    
+    for i in range(search_start, search_end):
+        if i >= total_lines:
+            break
+        
+        line_content = lines[i]
+        # 计算当前行与抽取内容的相似度
+        similarity = calculate_similarity(line_content, extracted_text)
+        
+        # 也尝试在当前行中搜索抽取内容（处理LLM只抽取了部分内容的情况）
+        if extracted_text in line_content:
+            # 如果抽取内容完全包含在某一行中，给予高相似度
+            similarity = max(similarity, 0.95)
+        
+        if similarity > best_similarity:
+            best_similarity = similarity
+            best_match = line_content
+    
+    # 也尝试在整个文本中搜索（作为备选）
+    if extracted_text in original_text:
+        # 如果能在原文中找到完全匹配，至少给0.9的相似度
+        best_similarity = max(best_similarity, 0.9)
+        if not best_match:
+            # 找到包含该内容的行
+            for i, line in enumerate(lines):
+                if extracted_text in line:
+                    best_match = line
+                    break
+    
+    is_passed = best_similarity >= SIMILARITY_THRESHOLD
+    return is_passed, best_similarity, best_match

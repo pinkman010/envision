@@ -12,19 +12,20 @@ from src.core_config import settings, get_logger
 # 初始化logger
 logger = get_logger(__name__)
 
-# 页面配置（已在streamlit_app.py全局配置，这里仅设置页面标题）
-st.title("📄 ESG语料管理中心")
+# 页面配置（已在app.py全局配置，这里仅设置页面标题）
+st.title("📄 ESG报告处理模块")
 st.divider()
 
-# 侧边栏：上传文件
-with st.sidebar:
-    st.subheader("上传ESG报告")
-    uploaded_file = st.file_uploader(
-        "选择PDF/Word文件",
-        type=["pdf", "docx", "doc"],
-        help="支持PDF、Word格式，最大50MB",
-    )
-    process_button = st.button("🚀 开始处理语料", use_container_width=True)
+# 上传文件区域
+st.subheader("📤 上传ESG报告")
+uploaded_file = st.file_uploader(
+    "选择PDF/Word文件",
+    type=["pdf", "docx"],
+    help="支持PDF、Word格式，最大200MB",
+)
+process_button = st.button("🚀 开始处理文件", use_container_width=True)
+st.divider()
+
 
 # 主内容区
 if "corpus_result" not in st.session_state:

@@ -1,35 +1,83 @@
 {
   "project_name": "新能源行业ESG实质性议题规则",
   "version": "1.0.0",
-  "fixed_extraction_fields": [
-    "company_name",
-    "report_year",
-    "scope1_emission",
-    "scope2_emission",
-    "green_energy_usage",
-    "energy_efficiency",
-    "waste_recycling",
-    "safety_incidents",
-    "employee_training"
-  ],
+  "description": "P0阶段外置配置化规则，支持关键词+正则双匹配",
+  "supported_industries": ["新能源"],
   "topics": [
     {
-      "id": "climate_change",
-      "name": "气候变化",
-      "description": "温室气体排放、气候风险应对",
-      "priority": 1
+      "id": "climate_change_ghg",
+      "name": "气候变化与温室气体排放",
+      "priority": 1,
+      "keywords": [
+        "scope 1", "scope1", "scope 2", "scope2",
+        "温室气体", "碳排放", "co2", "二氧化碳",
+        "碳减排", "碳足迹", "碳强度"
+      ],
+      "regex_patterns": [
+        "scope\\s*1.*?(\\d+(?:\\.\\d+)?)\\s*(?:万吨|吨|万吨co2|吨co2|万吨二氧化碳|吨二氧化碳)",
+        "scope\\s*2.*?(\\d+(?:\\.\\d+)?)\\s*(?:万吨|吨|万吨co2|吨co2|万吨二氧化碳|吨二氧化碳)",
+        "碳强度.*?(\\d+(?:\\.\\d+)?)\\s*(?:吨co2/万元|吨co2/mwh)"
+      ]
     },
     {
-      "id": "circular_economy",
-      "name": "循环经济",
-      "description": "废弃物回收、资源循环利用",
-      "priority": 2
+      "id": "renewable_energy_installation",
+      "name": "可再生能源装机、发电量与消纳",
+      "priority": 2,
+      "keywords": [
+        "可再生能源", "风电", "光伏", "储能",
+        "装机容量", "发电量", "消纳", "并网",
+        "新能源装机", "风光储", "光伏组件", "风机"
+      ],
+      "regex_patterns": [
+        "装机容量.*?(\\d+(?:\\.\\d+)?)\\s*(?:gw|mw|万千瓦|兆瓦|吉瓦)",
+        "发电量.*?(\\d+(?:\\.\\d+)?)\\s*(?:亿千瓦时|kwh|mwh|gwh)",
+        "消纳率.*?(\\d+(?:\\.\\d+)?)\\s*%"
+      ]
     },
     {
-      "id": "occupational_safety",
-      "name": "职业健康安全",
-      "description": "安全生产、员工健康",
-      "priority": 3
+      "id": "occupational_safety_health",
+      "name": "安全生产与职业健康",
+      "priority": 3,
+      "keywords": [
+        "安全生产", "职业健康", "安全事故", "伤亡",
+        "职业病", "安全培训", "应急预案",
+        "ohsas", "iso 45001", "安全投入", "零事故"
+      ],
+      "regex_patterns": [
+        "安全事故.*?(\\d+)\\s*(?:起|次)",
+        "死亡.*?(\\d+)|重伤.*?(\\d+)",
+        "安全培训.*?(\\d+)\\s*(?:人次|人)"
+      ]
+    },
+    {
+      "id": "supply_chain_esg",
+      "name": "供应链ESG管理",
+      "priority": 4,
+      "keywords": [
+        "供应链", "供应商", "硅料", "叶片", "电池",
+        "采购", "供应商评估", "供应链合规",
+        "绿色供应链", "供应商ESG", "负责任采购"
+      ],
+      "regex_patterns": [
+        "供应商.*?(\\d+)\\s*(?:家|个)",
+        "绿色供应商.*?(\\d+(?:\\.\\d+)?)\\s*%",
+        "核心供应商.*?ESG.*?(\\d+(?:\\.\\d+)?)\\s*%"
+      ]
+    },
+    {
+      "id": "circular_economy_waste",
+      "name": "循环经济与废弃物管理",
+      "priority": 5,
+      "keywords": [
+        "循环经济", "废弃物", "回收", "退役",
+        "风机叶片", "光伏组件", "资源化",
+        "危废", "固废", "回收利用率", "退役处置"
+      ],
+      "regex_patterns": [
+        "回收.*?(\\d+(?:\\.\\d+)?)\\s*(?:吨|万吨)",
+        "回收利用率.*?(\\d+(?:\\.\\d+)?)\\s*%",
+        "资源化率.*?(\\d+(?:\\.\\d+)?)\\s*%"
+      ]
     }
   ]
 }

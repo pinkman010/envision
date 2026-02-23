@@ -42,6 +42,7 @@ from src.utils.validate_utils import (
 from src.utils.similarity_utils import (
     calculate_similarity,
     validate_similarity,
+    validate_similarity_by_line,
 )
 
 # 审计日志
@@ -105,6 +106,7 @@ __all__ = [
     # 相似度校验
     "calculate_similarity",
     "validate_similarity",
+    "validate_similarity_by_line",
     # 审计日志
     "init_audit_db",
     "write_audit_log",

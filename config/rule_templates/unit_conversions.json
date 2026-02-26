@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "description": "单位转换表配置",
+  "conversions": {
+    "万吨": {
+      "factor": 10000,
+      "target_unit": "吨"
+    },
+    "万吨CO2e": {
+      "factor": 10000,
+      "target_unit": "tCO2e"
+    },
+    "千人次": {
+      "factor": 1000,
+      "target_unit": "人"
+    },
+    "万人": {
+      "factor": 10000,
+      "target_unit": "人"
+    },
+    "亿元": {
+      "factor": 100000000,
+      "target_unit": "元"
+    },
+    "百万元": {
+      "factor": 1000000,
+      "target_unit": "元"
+    },
+    "千万元": {
+      "factor": 10000000,
+      "target_unit": "元"
+    },
+    "GWh": {
+      "factor": 1000,
+      "target_unit": "MWh"
+    },
+    "万MWh": {
+      "factor": 10000,
+      "target_unit": "MWh"
+    }
+  }
+}

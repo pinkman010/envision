@@ -1,19 +1,31 @@
 {
-  "project_name": "白盒规则匹配配置",
-  "version": "1.0.0",
-  "topic_match_conditions": {
-    "climate_change": [
-      "scope1_emission",
-      "scope2_emission",
-      "green_energy_usage"
-    ],
-    "circular_economy": [
-      "waste_recycling",
-      "energy_efficiency"
-    ],
-    "occupational_safety": [
-      "safety_incidents",
-      "employee_training"
-    ]
+  "version": "1.0",
+  "match_strategies": {
+    "keyword_match": {
+      "enabled": true,
+      "description": "关键词匹配策略",
+      "threshold": 1,
+      "weight": 0.3
+    },
+    "regex_match": {
+      "enabled": true,
+      "description": "正则表达式匹配策略",
+      "weight": 0.5
+    },
+    "semantic_match": {
+      "enabled": false,
+      "description": "语义匹配策略（P2阶段启用）",
+      "weight": 0.2
+    }
+  },
+  "scoring_rules": {
+    "quantitative_data_bonus": 10,
+    "priority_weight": 1.0,
+    "multiple_matches_bonus": 5
+  },
+  "output_format": {
+    "include_extracted_values": true,
+    "max_extracted_values": 3,
+    "include_confidence_score": false
   }
 }

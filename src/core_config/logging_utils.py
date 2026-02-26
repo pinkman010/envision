@@ -21,7 +21,7 @@ from src.core_config.settings import (
 from src.core_config.paths import APP_LOG_DIR, API_LOG_DIR
 
 
-def init_logging() -> None:
+def init_logging() -> logging.Logger:
     """
     初始化全局 logging 配置
     必须在应用启动时调用一次（main.py 和 streamlit_app.py 都要调用）
@@ -69,6 +69,8 @@ def init_logging() -> None:
     api_logger.addHandler(api_file_handler)
     if DEBUG:
         api_logger.addHandler(console_handler)
+    
+    return root_logger
 
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:

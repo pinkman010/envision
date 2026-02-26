@@ -1,99 +1,137 @@
 """
 代码级固定配置（不可随意修改，与外置业务规则解耦）
-所有配置项均有默认值，可通过.env覆盖
+所有配置项均从 .env 文件读取，无默认兜底值
 """
 
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from typing import List, Literal
+from typing import List, Literal, Any, Callable
+
 
 # 加载.env环境变量（优先加载项目根目录的.env）
 load_dotenv(dotenv_path=Path(__file__).parent.parent.parent / ".env")
 
+
+def get_required_env(key: str, var_type: type = str, converter: Callable[[str], Any] = None) -> Any:
+    """
+    获取必需的环境变量，不存在则抛出异常
+    
+    Args:
+        key: 环境变量名称
+        var_type: 期望的类型（用于错误提示）
+        converter: 自定义转换函数
+    
+    Returns:
+        转换后的值
+    
+    Raises:
+        ValueError: 环境变量不存在时抛出
+    """
+    value = os.getenv(key)
+    if value is None:
+        raise ValueError(f"缺少必需的环境变量: {key}，请在 .env 文件中配置")
+    
+    try:
+        if converter:
+            return converter(value)
+        if var_type == bool:
+            return value.lower() in ("true", "1", "yes", "on")
+        if var_type == int:
+            return int(value)
+        if var_type == float:
+            return float(value)
+        if var_type == str:
+            return value
+        return value
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"环境变量 {key} 的值 '{value}' 无法转换为 {var_type.__name__}: {e}")
+
+
+def parse_list(value: str, separator: str = ",") -> List[str]:
+    """解析逗号分隔的列表"""
+    return [item.strip() for item in value.split(separator) if item.strip()]
+
+
 # ------------------------------
 # 项目基础配置
 # ------------------------------
-PROJECT_NAME: str = os.getenv("PROJECT_NAME", "ESG AI Expert System")
-PROJECT_DESCRIPTION: str = os.getenv(
-    "PROJECT_DESCRIPTION",
-    "新能源行业ESG披露与沟通智能分析系统（规则驱动为主、AI辅助为辅的强合规工具）",
-)
-VERSION: str = os.getenv("VERSION", "1.0.0")
-API_PREFIX: str = os.getenv("API_PREFIX", "/api/v1")
+PROJECT_NAME: str = get_required_env("PROJECT_NAME")
+PROJECT_DESCRIPTION: str = get_required_env("PROJECT_DESCRIPTION")
+VERSION: str = get_required_env("VERSION")
+API_PREFIX: str = get_required_env("API_PREFIX")
 
 # ------------------------------
 # 运行环境配置
 # ------------------------------
-ENVIRONMENT: Literal["development", "testing", "production"] = os.getenv(
-    "ENVIRONMENT", "development"
-).lower()
+ENVIRONMENT: Literal["development", "testing", "production"] = get_required_env("ENVIRONMENT")
 DEBUG: bool = ENVIRONMENT == "development"
 
 # 服务器绑定配置（后端使用）
-HOST: str = os.getenv("HOST", "0.0.0.0")
-PORT: int = int(os.getenv("PORT", 8000))
+HOST: str = get_required_env("HOST")
+PORT: int = get_required_env("PORT", int)
 
-# API访问地址（前端/UI连接后端使用，默认127.0.0.1，可通过.env覆盖）
-API_BASE_URL: str = os.getenv("API_BASE_URL", f"http://127.0.0.1:{PORT}")
+# API访问地址（前端/UI连接后端使用）
+API_BASE_URL: str = get_required_env("API_BASE_URL")
 
 # ------------------------------
 # 跨域配置（CORS）
 # ------------------------------
-ALLOWED_ORIGINS: List[str] = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:8501,http://127.0.0.1:8501,http://localhost:8000,http://127.0.0.1:8000"
-).split(",")
+ALLOWED_ORIGINS: List[str] = get_required_env("ALLOWED_ORIGINS", converter=parse_list)
 
 # ------------------------------
 # 大模型配置（仅保留网络层重试，无业务逻辑）
 # ------------------------------
-LLM_API_KEY: str = os.getenv("LLM_API_KEY", "")
-LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
-LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")  # MVP用小模型，成本低、速度快
-LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.0"))  # 0温度，输出稳定无随机性
-LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "2048"))
-LLM_TIMEOUT: int = int(os.getenv("LLM_TIMEOUT", "60"))
-LLM_MAX_RETRIES: int = int(os.getenv("LLM_MAX_RETRIES", "3"))
-LLM_RETRY_DELAY: float = float(os.getenv("LLM_RETRY_DELAY", "2.0"))  # 基础重试延迟（秒），指数退避
+LLM_API_KEY: str = get_required_env("LLM_API_KEY")
+LLM_BASE_URL: str = get_required_env("LLM_BASE_URL")
+LLM_MODEL: str = get_required_env("LLM_MODEL")
+LLM_TEMPERATURE: float = get_required_env("LLM_TEMPERATURE", float)
+LLM_MAX_TOKENS: int = get_required_env("LLM_MAX_TOKENS", int)
+LLM_TIMEOUT: int = get_required_env("LLM_TIMEOUT", int)
+LLM_MAX_RETRIES: int = get_required_env("LLM_MAX_RETRIES", int)
+LLM_RETRY_DELAY: float = get_required_env("LLM_RETRY_DELAY", float)
+# 可选配置：禁用推理模型思考能力（如 kimi-k2.5, DeepSeek-R1）
+LLM_THINKING_DISABLED: bool = os.getenv("LLM_THINKING_DISABLED", "false").lower() in ("true", "1", "yes", "on")
 
 # ------------------------------
 # 硬规则校验阈值（ESG合规核心）
 # ------------------------------
-SIMILARITY_THRESHOLD: float = float(os.getenv("SIMILARITY_THRESHOLD", "0.98"))  # 文本相似度阈值，低于直接拦截
-MAX_FILE_SIZE: int = int(os.getenv("MAX_FILE_SIZE", "52428800"))  # 最大文件大小（字节），默认50MB
-CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "1000"))  # 文本分块大小（字符数）
-CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "100"))  # 文本分块重叠大小（字符数）
+SIMILARITY_THRESHOLD: float = get_required_env("SIMILARITY_THRESHOLD", float)
+MAX_FILE_SIZE: int = get_required_env("MAX_FILE_SIZE", int)
+CHUNK_SIZE: int = get_required_env("CHUNK_SIZE", int)
+CHUNK_OVERLAP: int = get_required_env("CHUNK_OVERLAP", int)
 
 # ------------------------------
 # 日志配置（区分普通运行日志和审计日志）
 # ------------------------------
-LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = os.getenv(
-    "LOG_LEVEL", "DEBUG" if DEBUG else "INFO"
-).upper()
-LOG_FORMAT: str = os.getenv(
-    "LOG_FORMAT",
-    "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
-)
-LOG_DATE_FORMAT: str = os.getenv("LOG_DATE_FORMAT", "%Y-%m-%d %H:%M:%S")
-LOG_MAX_BYTES: int = int(os.getenv("LOG_MAX_BYTES", "10485760"))  # 单个日志文件最大大小（字节），默认10MB
-LOG_BACKUP_COUNT: int = int(os.getenv("LOG_BACKUP_COUNT", "5"))  # 保留的日志文件备份数
+LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = get_required_env("LOG_LEVEL")
+LOG_FORMAT: str = get_required_env("LOG_FORMAT")
+LOG_DATE_FORMAT: str = get_required_env("LOG_DATE_FORMAT")
+LOG_MAX_BYTES: int = get_required_env("LOG_MAX_BYTES", int)
+LOG_BACKUP_COUNT: int = get_required_env("LOG_BACKUP_COUNT", int)
 
 # ------------------------------
 # 数据库配置（SQLite轻量级，适合单人开发和企业小范围使用）
 # ------------------------------
-SQLITE_DB_NAME: str = os.getenv("SQLITE_DB_NAME", "esg_system.db")
-CHROMA_DB_PERSIST_DIR: str = os.getenv("CHROMA_DB_PERSIST_DIR", "chroma_db")
+SQLITE_DB_NAME: str = get_required_env("SQLITE_DB_NAME")
+CHROMA_DB_PERSIST_DIR: str = get_required_env("CHROMA_DB_PERSIST_DIR")
 
 # ------------------------------
 # Ollama 嵌入模型配置（向量数据库用）
 # ------------------------------
-OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "nomic-embed-text:v1.5")
-EMBEDDING_DIMENSION: int = int(os.getenv("EMBEDDING_DIMENSION", "768"))
-EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
-EMBEDDING_MAX_WORKERS: int = int(os.getenv("EMBEDDING_MAX_WORKERS", "4"))
-EMBEDDING_TIMEOUT: int = int(os.getenv("EMBEDDING_TIMEOUT", "60"))
+OLLAMA_BASE_URL: str = get_required_env("OLLAMA_BASE_URL")
+EMBEDDING_MODEL: str = get_required_env("EMBEDDING_MODEL")
+EMBEDDING_DIMENSION: int = get_required_env("EMBEDDING_DIMENSION", int)
+EMBEDDING_BATCH_SIZE: int = get_required_env("EMBEDDING_BATCH_SIZE", int)
+EMBEDDING_MAX_WORKERS: int = get_required_env("EMBEDDING_MAX_WORKERS", int)
+EMBEDDING_TIMEOUT: int = get_required_env("EMBEDDING_TIMEOUT", int)
+
+# ------------------------------
+# RAG增强提取配置
+# ------------------------------
+USE_RAG_ENHANCEMENT: bool = os.getenv("USE_RAG_ENHANCEMENT", "true").lower() in ("true", "1", "yes", "on")
+RAG_EXTRACTION_TOP_K: int = int(os.getenv("RAG_EXTRACTION_TOP_K", "3"))
+RAG_EXTRACTION_THRESHOLD: float = float(os.getenv("RAG_EXTRACTION_THRESHOLD", "0.6"))
 
 
 class Settings:
@@ -123,6 +161,7 @@ class Settings:
     LLM_TIMEOUT = LLM_TIMEOUT
     LLM_MAX_RETRIES = LLM_MAX_RETRIES
     LLM_RETRY_DELAY = LLM_RETRY_DELAY
+    LLM_THINKING_DISABLED = LLM_THINKING_DISABLED
     
     # 硬规则
     SIMILARITY_THRESHOLD = SIMILARITY_THRESHOLD
@@ -148,6 +187,11 @@ class Settings:
     EMBEDDING_BATCH_SIZE = EMBEDDING_BATCH_SIZE
     EMBEDDING_MAX_WORKERS = EMBEDDING_MAX_WORKERS
     EMBEDDING_TIMEOUT = EMBEDDING_TIMEOUT
+    
+    # RAG增强提取
+    USE_RAG_ENHANCEMENT = USE_RAG_ENHANCEMENT
+    RAG_EXTRACTION_TOP_K = RAG_EXTRACTION_TOP_K
+    RAG_EXTRACTION_THRESHOLD = RAG_EXTRACTION_THRESHOLD
 
 
 # 关键：创建实例，这样才能 import settings

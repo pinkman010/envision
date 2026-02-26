@@ -42,13 +42,22 @@ def load_match_rules() -> Dict[str, Any]:
     return load_json_config(RULE_TEMPLATES_DIR / "match_rules.json")
 
 
+def load_esg_indicators() -> Dict[str, Any]:
+    """加载ESG指标定义配置"""
+    return load_json_config(RULE_TEMPLATES_DIR / "esg_indicators.json")
+
+
+def load_unit_conversions() -> Dict[str, Any]:
+    """加载单位转换表配置"""
+    return load_json_config(RULE_TEMPLATES_DIR / "unit_conversions.json")
+
+
 def load_prompt_template(template_name: str) -> Template:
     """
-    加载Prompt模板（支持.j2和.json格式）
-    :param template_name: 模板文件名（如extract_prompt.j2或extract_prompt.json）
+    加载Prompt模板
+    :param template_name: 模板文件名
     :return: Jinja2模板对象
     """
-    # 尝试不同的扩展名
     possible_names = [template_name]
     if not template_name.endswith('.j2') and not template_name.endswith('.json'):
         possible_names.extend([f"{template_name}.j2", f"{template_name}.json"])
@@ -61,14 +70,10 @@ def load_prompt_template(template_name: str) -> Template:
             break
     
     if not template_path:
-        # 如果找不到，尝试直接用传入的名字
-        template_path = PROMPT_TEMPLATES_DIR / template_name
-        if not template_path.exists():
-            raise FileNotFoundError(f"Prompt模板不存在: {template_name}")
+        raise FileNotFoundError(f"Prompt模板不存在: {template_name}")
     
     with open(template_path, "r", encoding="utf-8") as f:
         content = f.read()
     
-    # 创建Jinja2模板
     env = Environment(loader=BaseLoader(), trim_blocks=True, lstrip_blocks=True)
     return env.from_string(content)

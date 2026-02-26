@@ -4,8 +4,10 @@ FastAPI后端服务入口
 """
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from src.core_config.settings import settings
 from src.core_config.paths import ensure_all_paths
@@ -35,7 +37,16 @@ app.add_middleware(
 # 4. 注册全局API路由
 app.include_router(api_router, prefix=settings.API_PREFIX)
 
-# 5. 健康检查接口（用于Docker部署、监控）
+# 5. 全局异常处理器：将 Pydantic 请求验证错误(422)转换为 400
+# 注：测试期望请求参数验证失败返回 400，而 FastAPI 默认返回 422
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.errors(), "message": "请求参数验证失败"},
+    )
+
+# 6. 健康检查接口（用于Docker部署、监控）
 @app.get("/health", tags=["系统监控"])
 async def health_check():
     return {
@@ -44,7 +55,7 @@ async def health_check():
         "project_name": settings.PROJECT_NAME,
     }
 
-# 6. 本地启动入口（仅用于开发调试，生产环境用uvicorn命令或Docker）
+# 7. 本地启动入口（仅用于开发调试，生产环境用uvicorn命令或Docker）
 if __name__ == "__main__":
     uvicorn.run(
         "src.main:app",

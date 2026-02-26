@@ -1,7 +1,6 @@
 """
 白盒规则匹配框架：纯代码实现，100%可解释
 ESG合规核心工具：所有专业判断由白盒规则完成，AI仅做提取
-P0阶段：外置配置化规则（从config/rule_templates/esg_topic_rules.json加载）
 """
 
 import re
@@ -15,7 +14,6 @@ class RuleMatcher:
     """白盒规则匹配器"""
     
     def __init__(self):
-        # 从外置配置文件加载规则（完全移除硬编码）
         self._load_rules_from_config()
     
     def _load_rules_from_config(self):
@@ -26,7 +24,7 @@ class RuleMatcher:
             self.supported_industries = self.topic_config.get("supported_industries", ["新能源"])
             self.match_rules = load_match_rules()
         except Exception as e:
-            raise RuleMatchException(f"规则配置加载失败: {str(e)}", original_exception=e) from e
+            raise RuleMatchException(f"规则配置加载失败: {str(e)}") from e
     
     def _match_single_topic(
         self,
@@ -34,14 +32,13 @@ class RuleMatcher:
         topic: Dict[str, Any]
     ) -> Tuple[bool, Optional[Dict[str, Any]]]:
         """
-        匹配单个议题（内部方法）
-        :param text: 待匹配的文本（通常是AI提取的内容或原文片段）
-        :param topic: 单个议题的规则字典
+        匹配单个议题
+        :param text: 待匹配的文本
+        :param topic: 议题规则字典
         :return: (是否匹配, 匹配结果详情)
         """
         text_lower = text.lower()
         
-        # 1. 关键词粗筛
         keyword_hit = False
         for keyword in topic["keywords"]:
             if keyword.lower() in text_lower:
@@ -50,22 +47,25 @@ class RuleMatcher:
         if not keyword_hit:
             return False, None
         
-        # 2. 正则细筛/数值提取
         extracted_values = []
         for pattern in topic["regex_patterns"]:
             matches = re.findall(pattern, text, re.IGNORECASE | re.DOTALL)
             if matches:
-                # 扁平化匹配结果，过滤空值
-                flat_matches = [m for sublist in matches for m in sublist if m]
-                extracted_values.extend(flat_matches)
+                # 处理单个或多个捕获组的情况
+                for match in matches:
+                    if isinstance(match, tuple):
+                        # 多个捕获组，展平并过滤空值
+                        extracted_values.extend([m for m in match if m])
+                    else:
+                        # 单个捕获组，直接使用
+                        extracted_values.append(match)
         
-        # 3. 返回匹配结果
         return True, {
             "topic_id": topic["id"],
             "topic_name": topic["name"],
             "priority": topic.get("priority", 99),
             "has_quantitative_data": len(extracted_values) > 0,
-            "extracted_values": extracted_values[:3]  # 最多返回3个提取值
+            "extracted_values": extracted_values[:3]
         }
     
     def match_topic(
@@ -74,14 +74,14 @@ class RuleMatcher:
         company_industry: str = "新能源",
     ) -> List[Dict[str, Any]]:
         """
-        白盒规则匹配实质性议题（P0核心方法）
-        :param text: 待匹配的文本（通常是AI提取的内容或原文片段）
-        :param company_industry: 所属行业（仅支持配置文件中定义的行业）
-        :return: 匹配到的议题列表（按优先级+量化数据排序）
+        白盒规则匹配实质性议题
+        :param text: 待匹配的文本
+        :param company_industry: 所属行业
+        :return: 匹配到的议题列表
         """
         try:
             if company_industry not in self.supported_industries:
-                return []  # 仅支持配置文件中定义的行业
+                return []
             
             matched_topics = []
             for topic in self.hardcoded_topics:
@@ -89,7 +89,6 @@ class RuleMatcher:
                 if is_matched and match_detail:
                     matched_topics.append(match_detail)
             
-            # 按“优先级升序 + 有量化数据优先”排序
             matched_topics.sort(
                 key=lambda x: (x["priority"], not x["has_quantitative_data"], -len(x["extracted_values"]))
             )
@@ -97,7 +96,7 @@ class RuleMatcher:
             return matched_topics
         
         except Exception as e:
-            raise RuleMatchException(f"议题匹配失败: {str(e)}", original_exception=e) from e
+            raise RuleMatchException(f"议题匹配失败: {str(e)}") from e
     
     def match_esg_standard(
         self,
@@ -105,19 +104,25 @@ class RuleMatcher:
         standard_type: str = "ISSB",
     ) -> List[Dict[str, Any]]:
         """
-        白盒规则匹配ESG披露标准（P0预留框架，暂不实现）
+        白盒规则匹配ESG披露标准（预留接口，待后续实现）
+        
+        TODO[P1]: 实现ESG标准条款匹配逻辑
+        - 支持标准：ISSB、GRI、SASB、TCFD 等主流披露框架
+        - 匹配逻辑：基于规则的白盒匹配（非AI黑盒）
+        - 输入：AI提取的结构化ESG内容
+        - 输出：匹配到的标准条款列表（条款编号、要求描述、符合度评分）
+        
+        Issue: 当前为预留空实现，返回空列表
+        预计实现时间：v1.5 版本
+        
         :param extracted_content: AI提取的内容
         :param standard_type: 披露标准类型
-        :return: 匹配到的标准条款列表
+        :return: 匹配到的标准条款列表（当前为空列表）
         """
-        try:
-            # TODO: P1阶段再实现标准匹配，P0先返回空列表
-            return []
-        except Exception as e:
-            raise RuleMatchException(f"ESG标准匹配失败: {str(e)}", original_exception=e) from e
+        # TODO[P1]: 待实现ESG标准条款匹配逻辑
+        return []
 
 
-# 全局单例
 _rule_matcher: Optional[RuleMatcher] = None
 
 

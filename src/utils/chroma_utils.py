@@ -2,17 +2,21 @@
 Chroma 向量数据库工具：语料存储、检索、管理
 使用本地 Ollama 嵌入模型（配置项：EMBEDDING_MODEL）
 优化：批量向量化 + 并发处理
+
+包含RAG增强提取功能：利用语料库知识库提高信息提取精准度
 """
 
 import json
 import uuid
 import time
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
+from dataclasses import dataclass
 
-from src.core_config.paths import CHROMA_DB_DIR, RAW_CORPUS_DIR
+from src.core_config.paths import CHROMA_DB_DIR, RAW_CORPUS_DIR, ROOT_DIR
 from src.core_config import get_logger
 from src.core_config.settings import (
     OLLAMA_BASE_URL,
@@ -21,41 +25,53 @@ from src.core_config.settings import (
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_MAX_WORKERS,
     EMBEDDING_TIMEOUT,
+    USE_RAG_ENHANCEMENT,
+    RAG_EXTRACTION_TOP_K,
+    RAG_EXTRACTION_THRESHOLD,
 )
-from src.utils.exception_utils import FileProcessingException
+from src.utils.exception_utils import FileProcessingException, ValidationException
+from src.utils.llm_utils import call_llm
+from src.utils.config_utils import (
+    load_prompt_template,
+    load_esg_indicators,
+    load_unit_conversions,
+)
 
 logger = get_logger(__name__)
 
-# ESG指标定义
-ESG_INDICATORS = {
-    "scope1_emission": {"name": "范围1温室气体排放量", "unit": "tCO2e"},
-    "scope2_emission": {"name": "范围2温室气体排放量", "unit": "tCO2e"},
-    "scope3_emission": {"name": "范围3温室气体排放量", "unit": "tCO2e"},
-    "energy_intensity": {"name": "能耗强度", "unit": "GJ/MW"},
-    "trir": {"name": "工伤率(TRIR)", "unit": ""},
-    "ltir": {"name": "工伤率(LTIR)", "unit": ""},
-    "total_employees": {"name": "员工总数", "unit": "人"},
-    "renewable_energy_ratio": {"name": "可再生能源使用占比", "unit": "%"},
-    "renewable_energy_mwh": {"name": "可再生能源发电量", "unit": "MWh"},
-    "waste_total": {"name": "废弃物总量", "unit": "吨"},
-    "waste_recycle_rate": {"name": "废弃物回收率", "unit": "%"},
-    "water_consumption": {"name": "水消耗量", "unit": "m³"},
-    "female_ratio": {"name": "女性员工比例", "unit": "%"},
-    "rd_investment": {"name": "研发投入", "unit": "元"},
+# 加载ESG指标定义配置
+_ESG_INDICATORS_CONFIG = load_esg_indicators()
+ESG_INDICATORS = _ESG_INDICATORS_CONFIG.get("indicators", {})
+
+# 加载单位转换表配置
+_UNIT_CONVERSION_CONFIG = load_unit_conversions()
+_UNIT_CONVERSION_RAW = _UNIT_CONVERSION_CONFIG.get("conversions", {})
+UNIT_CONVERSION = {
+    unit: (data["factor"], data["target_unit"])
+    for unit, data in _UNIT_CONVERSION_RAW.items()
 }
 
-# 单位转换表
-UNIT_CONVERSION = {
-    "万吨": (10000, "吨"),
-    "万吨CO2e": (10000, "tCO2e"),
-    "千人次": (1000, "人"),
-    "万人": (10000, "人"),
-    "亿元": (100000000, "元"),
-    "百万元": (1000000, "元"),
-    "千万元": (10000000, "元"),
-    "GWh": (1000, "MWh"),
-    "万MWh": (10000, "MWh"),
-}
+
+@dataclass
+class RetrievedChunk:
+    """检索到的文本块"""
+    text: str
+    score: float
+    corpus_id: str
+    file_name: str
+    chunk_index: int
+    metadata: Dict[str, Any]
+
+
+@dataclass
+class ExtractionEnhancement:
+    """提取增强结果"""
+    original_extraction: str
+    enhanced_extraction: str
+    confidence_boost: float
+    supporting_evidence: List[Dict[str, Any]]
+    inconsistencies: List[str]
+    suggestions: List[str]
 
 
 class ChromaManager:
@@ -137,8 +153,8 @@ class ChromaManager:
         fixed_path = date_dir / f"{corpus_id}_fixed.txt"
         fixed_path.write_text(fixed_text, encoding="utf-8")
         
-        return str(raw_path.relative_to(Path(__file__).parent.parent.parent)), \
-               str(fixed_path.relative_to(Path(__file__).parent.parent.parent))
+        return str(raw_path.relative_to(ROOT_DIR)), \
+               str(fixed_path.relative_to(ROOT_DIR))
     
     def _batch_embed_texts(self, texts: List[str]) -> List[List[float]]:
         """
@@ -570,6 +586,209 @@ class ChromaManager:
             logger.error(f"ESG指标查询失败: {str(e)}")
             return []
 
+    # ==================== RAG增强提取功能 ====================
+    
+    def retrieve_for_extraction(
+        self,
+        query: str,
+        top_k: int = None,
+        score_threshold: float = None,
+        filter_criteria: Optional[Dict[str, Any]] = None,
+    ) -> List[RetrievedChunk]:
+        """
+        检索相关文本块（用于RAG增强提取）
+        :param query: 查询文本
+        :param top_k: 返回结果数量
+        :param score_threshold: 相似度阈值
+        :param filter_criteria: 过滤条件
+        :return: 检索到的文本块列表
+        """
+        top_k = top_k or RAG_EXTRACTION_TOP_K
+        score_threshold = score_threshold or RAG_EXTRACTION_THRESHOLD
+        
+        try:
+            logger.debug(f"开始RAG检索: query='{query[:50]}...', top_k={top_k}")
+            
+            # 构建where条件
+            where_clause = None
+            if filter_criteria:
+                where_clause = filter_criteria
+            
+            # 执行向量检索
+            results = self._corpus_collection.query(
+                query_texts=[query],
+                n_results=top_k,
+                where=where_clause,
+            )
+            
+            retrieved_chunks = []
+            
+            if results["ids"] and len(results["ids"]) > 0:
+                for idx, (doc_id, doc, metadata, distance) in enumerate(zip(
+                    results["ids"][0],
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0],
+                )):
+                    # 将距离转换为相似度分数 (1 - distance)
+                    score = 1 - distance
+                    
+                    # 过滤低相似度结果
+                    if score < score_threshold:
+                        continue
+                    
+                    chunk = RetrievedChunk(
+                        text=doc,
+                        score=score,
+                        corpus_id=metadata.get("corpus_id", ""),
+                        file_name=metadata.get("file_name", ""),
+                        chunk_index=metadata.get("chunk_index", 0),
+                        metadata=metadata,
+                    )
+                    retrieved_chunks.append(chunk)
+            
+            logger.info(f"RAG检索完成: 找到 {len(retrieved_chunks)} 个相关块")
+            return retrieved_chunks
+            
+        except Exception as e:
+            logger.error(f"RAG检索失败: {str(e)}")
+            raise ValidationException(f"RAG检索失败: {str(e)}") from e
+
+    def enhance_extraction(
+        self,
+        field_name: str,
+        extracted_content: str,
+        source_text: str,
+        company_name: str = "",
+        report_year: int = 0,
+    ) -> ExtractionEnhancement:
+        """
+        增强单个字段的提取结果（RAG增强）
+        :param field_name: 字段名称
+        :param extracted_content: 原始提取内容
+        :param source_text: 原文
+        :param company_name: 企业名称
+        :param report_year: 报告年份
+        :return: 增强后的提取结果
+        """
+        if not USE_RAG_ENHANCEMENT:
+            return ExtractionEnhancement(
+                original_extraction=extracted_content,
+                enhanced_extraction=extracted_content,
+                confidence_boost=0.0,
+                supporting_evidence=[],
+                inconsistencies=[],
+                suggestions=[],
+            )
+        
+        try:
+            logger.debug(f"开始RAG增强提取: {field_name}")
+            
+            # 1. 从知识库检索相关信息
+            query = f"{field_name} {extracted_content} {company_name} {report_year}"
+            retrieved_chunks = self.retrieve_for_extraction(query, top_k=3)
+            
+            # 2. 验证原始提取与知识库的一致性
+            inconsistencies = []
+            for chunk in retrieved_chunks:
+                extracted_numbers = self._extract_numbers(extracted_content)
+                chunk_numbers = self._extract_numbers(chunk.text)
+                for num in extracted_numbers:
+                    if num not in chunk_numbers:
+                        inconsistencies.append(f"提取的数值({num})在知识库参考文档中未找到")
+            
+            # 3. 构建增强Prompt
+            try:
+                enhancement_prompt = load_prompt_template("rag_extraction_enhancement_prompt")
+                context = self._format_retrieved_context(retrieved_chunks)
+                
+                prompt = enhancement_prompt.render(
+                    field_name=field_name,
+                    original_extraction=extracted_content,
+                    source_text=source_text[:2000],
+                    retrieved_context=context,
+                    company_name=company_name,
+                    report_year=report_year,
+                )
+                
+                messages = [{"role": "user", "content": prompt}]
+                llm_output = call_llm(messages, temperature=0.1)
+                
+                # 4. 解析增强结果
+                enhancement_result = self._parse_enhancement_result(llm_output)
+                enhanced_extraction = enhancement_result.get("enhanced_extraction", extracted_content)
+                suggestions = enhancement_result.get("suggestions", [])
+            except Exception as e:
+                logger.warning(f"LLM增强失败: {str(e)}")
+                enhanced_extraction = extracted_content
+                suggestions = []
+            
+            # 5. 计算置信度提升
+            confidence_boost = 0.0
+            if retrieved_chunks:
+                avg_score = sum(c.score for c in retrieved_chunks) / len(retrieved_chunks)
+                confidence_boost = min(avg_score * 0.1, 0.2)
+            
+            return ExtractionEnhancement(
+                original_extraction=extracted_content,
+                enhanced_extraction=enhanced_extraction,
+                confidence_boost=confidence_boost,
+                supporting_evidence=self._extract_supporting_evidence(retrieved_chunks),
+                inconsistencies=inconsistencies,
+                suggestions=suggestions,
+            )
+            
+        except Exception as e:
+            logger.error(f"RAG增强提取失败: {str(e)}")
+            return ExtractionEnhancement(
+                original_extraction=extracted_content,
+                enhanced_extraction=extracted_content,
+                confidence_boost=0.0,
+                supporting_evidence=[],
+                inconsistencies=[],
+                suggestions=[],
+            )
+
+    def _extract_numbers(self, text: str) -> List[str]:
+        """提取文本中的所有数字"""
+        return re.findall(r'\d+[\.,]?\d*', text)
+
+    def _format_retrieved_context(self, chunks: List[RetrievedChunk]) -> str:
+        """格式化检索到的上下文"""
+        if not chunks:
+            return "无相关知识库内容"
+        
+        context_parts = []
+        for i, chunk in enumerate(chunks, 1):
+            context_parts.append(
+                f"[参考{i}] 来源: {chunk.file_name} (相关度: {chunk.score:.1%})\n"
+                f"{chunk.text[:500]}..."
+            )
+        
+        return "\n\n".join(context_parts)
+
+    def _parse_enhancement_result(self, llm_output: str) -> Dict[str, Any]:
+        """解析LLM增强结果"""
+        try:
+            result = json.loads(llm_output)
+            return result
+        except:
+            return {
+                "enhanced_extraction": llm_output.strip(),
+                "suggestions": [],
+            }
+
+    def _extract_supporting_evidence(self, chunks: List[RetrievedChunk]) -> List[Dict[str, Any]]:
+        """提取支撑证据"""
+        return [
+            {
+                "text": c.text[:200] + "...",
+                "source": c.file_name,
+                "relevance": round(c.score, 4),
+            }
+            for c in chunks[:3]
+        ]
+
 
 # 全局单例
 _chroma_manager = None
@@ -628,3 +847,21 @@ def get_esg_metrics(corpus_id: str) -> List[Dict[str, Any]]:
     """便捷函数：获取ESG指标"""
     manager = get_chroma_manager()
     return manager.get_esg_metrics_by_corpus(corpus_id)
+
+
+def enhance_extraction_with_rag(
+    field_name: str,
+    extracted_content: str,
+    source_text: str,
+    company_name: str = "",
+    report_year: int = 0,
+) -> ExtractionEnhancement:
+    """便捷函数：使用RAG增强提取"""
+    manager = get_chroma_manager()
+    return manager.enhance_extraction(
+        field_name=field_name,
+        extracted_content=extracted_content,
+        source_text=source_text,
+        company_name=company_name,
+        report_year=report_year,
+    )

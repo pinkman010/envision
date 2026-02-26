@@ -1,83 +1,205 @@
 {
-  "project_name": "新能源行业ESG实质性议题规则",
-  "version": "1.0.0",
-  "description": "P0阶段外置配置化规则，支持关键词+正则双匹配",
+  "version": "1.0",
   "supported_industries": ["新能源"],
   "topics": [
     {
-      "id": "climate_change_ghg",
-      "name": "气候变化与温室气体排放",
+      "id": "carbon_emission",
+      "name": "温室气体排放",
       "priority": 1,
-      "keywords": [
-        "scope 1", "scope1", "scope 2", "scope2",
-        "温室气体", "碳排放", "co2", "二氧化碳",
-        "碳减排", "碳足迹", "碳强度"
-      ],
+      "keywords": ["碳排放", "温室气体", "CO2", "二氧化碳", "范围1", "范围2", "范围3", "Scope 1", "Scope 2", "Scope 3", "吨CO2e"],
       "regex_patterns": [
-        "scope\\s*1.*?(\\d+(?:\\.\\d+)?)\\s*(?:万吨|吨|万吨co2|吨co2|万吨二氧化碳|吨二氧化碳)",
-        "scope\\s*2.*?(\\d+(?:\\.\\d+)?)\\s*(?:万吨|吨|万吨co2|吨co2|万吨二氧化碳|吨二氧化碳)",
-        "碳强度.*?(\\d+(?:\\.\\d+)?)\\s*(?:吨co2/万元|吨co2/mwh)"
-      ]
+        "(\\d+[\\.\\d]*)\\s*[万]?\\s*吨\\s*CO2e",
+        "(\\d+[\\.\\d]*)\\s*[万]?\\s*tCO2e",
+        "Scope\\s*[123]\\s*[:：]\\s*(\\d+[\\.\\d]*)",
+        "范围[一二三123]\\s*[:：]\\s*(\\d+[\\.\\d]*)"
+      ],
+      "description": "企业运营产生的直接和间接温室气体排放"
     },
     {
-      "id": "renewable_energy_installation",
-      "name": "可再生能源装机、发电量与消纳",
+      "id": "renewable_energy",
+      "name": "可再生能源使用",
       "priority": 2,
-      "keywords": [
-        "可再生能源", "风电", "光伏", "储能",
-        "装机容量", "发电量", "消纳", "并网",
-        "新能源装机", "风光储", "光伏组件", "风机"
-      ],
+      "keywords": ["可再生能源", "清洁能源", "风电", "光伏", "太阳能", "绿色电力", "绿电", "新能源"],
       "regex_patterns": [
-        "装机容量.*?(\\d+(?:\\.\\d+)?)\\s*(?:gw|mw|万千瓦|兆瓦|吉瓦)",
-        "发电量.*?(\\d+(?:\\.\\d+)?)\\s*(?:亿千瓦时|kwh|mwh|gwh)",
-        "消纳率.*?(\\d+(?:\\.\\d+)?)\\s*%"
-      ]
+        "(\\d+[\\.\\d]*)\\s*%\\s*可再生能源",
+        "可再生能源.*?(\\d+[\\.\\d]*)\\s*%",
+        "(\\d+[\\.\\d]*)\\s*MWh.*可再生能源"
+      ],
+      "description": "企业使用可再生能源的比例和总量"
     },
     {
-      "id": "occupational_safety_health",
-      "name": "安全生产与职业健康",
+      "id": "energy_consumption",
+      "name": "能源消耗",
       "priority": 3,
-      "keywords": [
-        "安全生产", "职业健康", "安全事故", "伤亡",
-        "职业病", "安全培训", "应急预案",
-        "ohsas", "iso 45001", "安全投入", "零事故"
-      ],
+      "keywords": ["能源消耗", "能耗", "用电量", "用能", "GJ", "MWh", "kWh"],
       "regex_patterns": [
-        "安全事故.*?(\\d+)\\s*(?:起|次)",
-        "死亡.*?(\\d+)|重伤.*?(\\d+)",
-        "安全培训.*?(\\d+)\\s*(?:人次|人)"
-      ]
+        "(\\d+[\\.\\d]*)\\s*[万]?\\s*GJ",
+        "(\\d+[\\.\\d]*)\\s*[万]?\\s*MWh",
+        "能耗.*?(\\d+[\\.\\d]*)"
+      ],
+      "description": "企业运营过程中的能源消耗总量"
     },
     {
-      "id": "supply_chain_esg",
-      "name": "供应链ESG管理",
+      "id": "employee_safety",
+      "name": "员工健康与安全",
       "priority": 4,
-      "keywords": [
-        "供应链", "供应商", "硅料", "叶片", "电池",
-        "采购", "供应商评估", "供应链合规",
-        "绿色供应链", "供应商ESG", "负责任采购"
-      ],
+      "keywords": ["工伤", "安全事故", "职业健康", "TRIR", "LTIR", "可记录工伤率", "损失工时工伤率"],
       "regex_patterns": [
-        "供应商.*?(\\d+)\\s*(?:家|个)",
-        "绿色供应商.*?(\\d+(?:\\.\\d+)?)\\s*%",
-        "核心供应商.*?ESG.*?(\\d+(?:\\.\\d+)?)\\s*%"
-      ]
+        "TRIR[:：]?\\s*(\\d+[\\.\\d]*)",
+        "LTIR[:：]?\\s*(\\d+[\\.\\d]*)",
+        "可记录工伤率[:：]?\\s*(\\d+[\\.\\d]*)",
+        "损失工时工伤率[:：]?\\s*(\\d+[\\.\\d]*)"
+      ],
+      "description": "员工职业健康与安全绩效指标"
     },
     {
-      "id": "circular_economy_waste",
-      "name": "循环经济与废弃物管理",
+      "id": "employee_diversity",
+      "name": "员工多元化",
       "priority": 5,
-      "keywords": [
-        "循环经济", "废弃物", "回收", "退役",
-        "风机叶片", "光伏组件", "资源化",
-        "危废", "固废", "回收利用率", "退役处置"
-      ],
+      "keywords": ["员工多元化", "性别比例", "女性员工", "少数民族", "多元化与包容"],
       "regex_patterns": [
-        "回收.*?(\\d+(?:\\.\\d+)?)\\s*(?:吨|万吨)",
-        "回收利用率.*?(\\d+(?:\\.\\d+)?)\\s*%",
-        "资源化率.*?(\\d+(?:\\.\\d+)?)\\s*%"
-      ]
+        "女性.*?(\\d+[\\.\\d]*)\\s*%",
+        "女性员工[:：]?\\s*(\\d+[\\.\\d]*)\\s*%",
+        "员工总数[:：]?\\s*(\\d+[\\.\\d]*)\\s*人"
+      ],
+      "description": "员工队伍的多元化程度"
+    },
+    {
+      "id": "waste_management",
+      "name": "废弃物管理",
+      "priority": 6,
+      "keywords": ["废弃物", "固废", "危废", "回收率", "循环利用", "废物处理"],
+      "regex_patterns": [
+        "(\\d+[\\.\\d]*)\\s*[万]?\\s*吨.*废弃物",
+        "废弃物.*?(\\d+[\\.\\d]*)\\s*[万]?\\s*吨",
+        "回收率[:：]?\\s*(\\d+[\\.\\d]*)\\s*%"
+      ],
+      "description": "废弃物的产生、处理和回收情况"
+    },
+    {
+      "id": "water_management",
+      "name": "水资源管理",
+      "priority": 7,
+      "keywords": ["用水", "水资源", "水消耗", "m³", "循环水", "节水"],
+      "regex_patterns": [
+        "(\\d+[\\.\\d]*)\\s*[万]?\\s*m³",
+        "用水.*?(\\d+[\\.\\d]*)\\s*[万]?\\s*m³"
+      ],
+      "description": "企业用水量和节水措施"
+    },
+    {
+      "id": "supply_chain",
+      "name": "供应链可持续",
+      "priority": 8,
+      "keywords": ["供应链", "供应商", "绿色供应链", "供应商管理", "供应链ESG"],
+      "regex_patterns": [
+        "供应商[:：]?\\s*(\\d+[\\.\\d]*)\\s*家",
+        "(\\d+[\\.\\d]*)\\s*%.*供应商.*审核"
+      ],
+      "description": "供应链的可持续管理情况"
+    },
+    {
+      "id": "rd_investment",
+      "name": "研发投入",
+      "priority": 9,
+      "keywords": ["研发", "R&D", "研发投入", "研发支出", "创新", "技术投入"],
+      "regex_patterns": [
+        "研发.*?(\\d+[\\.\\d]*)\\s*[亿]?\\s*元",
+        "R&D.*?(\\d+[\\.\\d]*)\\s*%"
+      ],
+      "description": "企业在研发和创新方面的投入"
+    },
+    {
+      "id": "governance",
+      "name": "ESG治理",
+      "priority": 10,
+      "keywords": ["ESG治理", "董事会", "可持续发展委员会", "ESG委员会", "治理架构"],
+      "regex_patterns": [
+        "ESG委员会",
+        "可持续发展委员会",
+        "董事会.*ESG"
+      ],
+      "description": "企业ESG治理架构和机制"
+    },
+    {
+      "id": "climate_risk",
+      "name": "气候相关风险",
+      "priority": 11,
+      "keywords": ["气候风险", "TCFD", "气候相关", "转型风险", "物理风险"],
+      "regex_patterns": [
+        "TCFD",
+        "气候相关风险",
+        "转型风险",
+        "物理风险"
+      ],
+      "description": "气候相关风险的识别和管理"
+    },
+    {
+      "id": "circular_economy",
+      "name": "循环经济",
+      "priority": 12,
+      "keywords": ["循环经济", "资源循环", "再生利用", "产品回收", "生命周期"],
+      "regex_patterns": [
+        "循环经济",
+        "资源循环",
+        "回收利用率[:：]?\\s*(\\d+[\\.\\d]*)\\s*%"
+      ],
+      "description": "循环经济实践和资源利用效率"
+    },
+    {
+      "id": "community",
+      "name": "社区关系",
+      "priority": 13,
+      "keywords": ["社区", "公益", "社会责任", "社区投资", "慈善捐赠"],
+      "regex_patterns": [
+        "公益.*?(\\d+[\\.\\d]*)\\s*[万]?\\s*元",
+        "捐赠.*?(\\d+[\\.\\d]*)\\s*[万]?\\s*元"
+      ],
+      "description": "企业与社区的关系和社会贡献"
+    },
+    {
+      "id": "anti_corruption",
+      "name": "反贪污",
+      "priority": 14,
+      "keywords": ["反贪污", "反腐败", "商业道德", "合规", "廉洁"],
+      "regex_patterns": [
+        "反贪污",
+        "反腐败",
+        "廉洁培训[:：]?\\s*(\\d+[\\.\\d]*)\\s*%"
+      ],
+      "description": "反贪污和合规管理情况"
+    },
+    {
+      "id": "product_responsibility",
+      "name": "产品责任",
+      "priority": 15,
+      "keywords": ["产品安全", "产品质量", "客户隐私", "数据安全", "产品责任"],
+      "regex_patterns": [
+        "产品安全",
+        "数据安全",
+        "客户投诉[:：]?\\s*(\\d+[\\.\\d]*)"
+      ],
+      "description": "产品安全和客户权益保护"
     }
+  ],
+  "fixed_extraction_fields": [
+    "company_name",
+    "report_year",
+    "scope1_emission",
+    "scope2_emission",
+    "scope3_emission",
+    "total_energy_consumption",
+    "renewable_energy_ratio",
+    "renewable_energy_mwh",
+    "total_employees",
+    "female_ratio",
+    "trir",
+    "ltir",
+    "waste_total",
+    "waste_recycle_rate",
+    "water_consumption",
+    "rd_investment",
+    "supplier_count",
+    "supplier_audit_ratio"
   ]
 }

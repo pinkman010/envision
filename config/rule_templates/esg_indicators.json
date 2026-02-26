@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "description": "ESG指标定义配置",
+  "indicators": {
+    "scope1_emission": {
+      "name": "范围1温室气体排放量",
+      "unit": "tCO2e"
+    },
+    "scope2_emission": {
+      "name": "范围2温室气体排放量",
+      "unit": "tCO2e"
+    },
+    "scope3_emission": {
+      "name": "范围3温室气体排放量",
+      "unit": "tCO2e"
+    },
+    "energy_intensity": {
+      "name": "能耗强度",
+      "unit": "GJ/MW"
+    },
+    "trir": {
+      "name": "工伤率(TRIR)",
+      "unit": ""
+    },
+    "ltir": {
+      "name": "工伤率(LTIR)",
+      "unit": ""
+    },
+    "total_employees": {
+      "name": "员工总数",
+      "unit": "人"
+    },
+    "renewable_energy_ratio": {
+      "name": "可再生能源使用占比",
+      "unit": "%"
+    },
+    "renewable_energy_mwh": {
+      "name": "可再生能源发电量",
+      "unit": "MWh"
+    },
+    "waste_total": {
+      "name": "废弃物总量",
+      "unit": "吨"
+    },
+    "waste_recycle_rate": {
+      "name": "废弃物回收率",
+      "unit": "%"
+    },
+    "water_consumption": {
+      "name": "水消耗量",
+      "unit": "m³"
+    },
+    "female_ratio": {
+      "name": "女性员工比例",
+      "unit": "%"
+    },
+    "rd_investment": {
+      "name": "研发投入",
+      "unit": "元"
+    }
+  }
+}

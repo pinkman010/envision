@@ -116,10 +116,16 @@ class MasterAgent(BaseAgent):
         if workflow_type == FixedWorkflow.SINGLE_REPORT_ANALYSIS:
             return self._execute_single_report_analysis(task_input)
         elif workflow_type == FixedWorkflow.MULTI_COMPANY_BENCHMARK:
-            # TODO: MVP阶段先实现单报告分析，多企业对标后续扩展
-            raise BaseESGException("多企业对标流程暂未实现（MVP阶段）")
+            # TODO[P2]: 多企业对标流程 - 预留接口，待后续迭代实现
+            # 功能规划：支持多企业ESG报告对比分析、同业对标、排名展示
+            # Issue: 当前MVP阶段仅支持单报告分析，此流程作为预留扩展点
+            # 预计实现时间：v2.0 版本
+            raise BaseESGException("多企业对标流程暂未实现（MVP阶段预留接口）")
         elif workflow_type == FixedWorkflow.BATCH_CORPUS_PROCESSING:
-            # TODO: MVP阶段先实现单报告分析，批量处理后续扩展
-            raise BaseESGException("批量语料处理流程暂未实现（MVP阶段）")
+            # TODO[P2]: 批量语料处理流程 - 预留接口，待后续迭代实现
+            # 功能规划：支持批量上传PDF/Word报告，自动队列处理，批量导出结果
+            # Issue: 当前MVP阶段仅支持单报告分析，此流程作为预留扩展点
+            # 预计实现时间：v2.0 版本
+            raise BaseESGException("批量语料处理流程暂未实现（MVP阶段预留接口）")
         else:
             raise BaseESGException(f"未知流程类型: {workflow_type}")

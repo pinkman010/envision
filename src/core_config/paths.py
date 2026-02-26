@@ -17,6 +17,7 @@ SRC_DIR: Path = ROOT_DIR / "src"  # 核心源码目录
 # ------------------------------
 CONFIG_DIR: Path = ROOT_DIR / "config"
 PROMPT_TEMPLATES_DIR: Path = CONFIG_DIR / "prompt_templates"
+PROMPT_DIR: Path = PROMPT_TEMPLATES_DIR  # 别名，用于兼容测试
 RULE_TEMPLATES_DIR: Path = CONFIG_DIR / "rule_templates"
 EXPORT_TEMPLATES_DIR: Path = CONFIG_DIR / "export_templates"
 

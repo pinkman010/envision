@@ -1,21 +1,154 @@
 {
-  "project_name": "ESG披露标准配置",
-  "version": "1.0.0",
+  "version": "1.0",
   "core_standards": [
     {
-      "id": "ISSB-IFRS-S1",
-      "name": "IFRS S1 一般财务报告相关的可持续发展相关财务信息披露",
-      "description": "要求企业披露与可持续发展相关的风险和机遇，以及治理情况"
+      "id": "ISSB_S1",
+      "name": "IFRS S1 - 可持续发展相关财务信息披露一般要求",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露可持续发展相关风险和机遇的治理、战略、风险管理、指标和目标",
+      "reference_clause": "IFRS S1 第10-35段",
+      "key_disclosure_items": [
+        "治理：监督可持续发展相关风险和机遇的治理流程、控制措施和程序",
+        "战略：可持续发展相关风险和机遇如何影响企业战略和决策",
+        "风险管理：识别、评估和管理可持续发展相关风险的流程",
+        "指标和目标：用于衡量和管理可持续发展相关风险和机遇的指标和目标"
+      ]
     },
     {
-      "id": "ISSB-IFRS-S2",
-      "name": "IFRS S2 气候相关披露",
-      "description": "要求企业披露气候相关的风险、机遇、温室气体排放数据"
+      "id": "ISSB_S2_GHG",
+      "name": "IFRS S2 - 气候相关披露：温室气体排放",
+      "applicable_industries": ["新能源", "制造业", "能源"],
+      "requirement": "披露范围1、范围2、范围3温室气体排放总量",
+      "reference_clause": "IFRS S2 第29段",
+      "key_disclosure_items": [
+        "范围1排放：直接温室气体排放",
+        "范围2排放：外购能源间接排放",
+        "范围3排放：价值链其他间接排放",
+        "排放强度：单位产出/收入的排放量"
+      ]
     },
     {
-      "id": "SASB-RENEW",
-      "name": "SASB 可再生能源行业标准",
-      "description": "可再生能源行业的特定ESG披露要求"
+      "id": "ISSB_S2_TARGETS",
+      "name": "IFRS S2 - 气候相关披露：气候目标",
+      "applicable_industries": ["新能源", "制造业", "能源"],
+      "requirement": "披露气候相关目标及实现进展",
+      "reference_clause": "IFRS S2 第33段",
+      "key_disclosure_items": [
+        "碳中和目标及时间表",
+        "减排目标及基准年",
+        "目标实现进展",
+        "使用的碳抵消额度"
+      ]
+    },
+    {
+      "id": "SASB_RE_ENVIRONMENT",
+      "name": "SASB可再生能源行业标准 - 环境维度",
+      "applicable_industries": ["新能源", "可再生能源"],
+      "requirement": "披露温室气体排放、能源管理、水资源管理、废弃物管理",
+      "reference_clause": "SASB IF-RE-110a.1至IF-RE-150a.2",
+      "key_disclosure_items": [
+        "温室气体排放总量及强度",
+        "可再生能源使用比例",
+        "水资源消耗及回收率",
+        "废弃物产生及回收率"
+      ]
+    },
+    {
+      "id": "SASB_RE_SOCIAL",
+      "name": "SASB可再生能源行业标准 - 社会维度",
+      "applicable_industries": ["新能源", "可再生能源"],
+      "requirement": "披露员工健康与安全、多元化与包容性、社区关系",
+      "reference_clause": "SASB IF-RE-310a.1至IF-RE-410a.1",
+      "key_disclosure_items": [
+        "可记录工伤率(TRIR)",
+        "损失工时工伤率(LTIR)",
+        "员工多元化指标",
+        "社区投资金额"
+      ]
+    },
+    {
+      "id": "HKEX_ENV_A1",
+      "name": "HKEX ESG报告指引 - 环境范畴A1：排放物",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露废气及温室气体排放、向水及土地的排污、有害及无害废弃物的产生",
+      "reference_clause": "HKEX附录C2 环境关键绩效指标A1",
+      "key_disclosure_items": [
+        "排放物种类及相关排放数据",
+        "直接及间接能源消耗",
+        "温室气体总排放量",
+        "所产生有害废弃物总量"
+      ]
+    },
+    {
+      "id": "HKEX_ENV_A2",
+      "name": "HKEX ESG报告指引 - 环境范畴A2：资源使用",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露有效使用资源（包括能源、水及其他原材料）的政策",
+      "reference_clause": "HKEX附录C2 环境关键绩效指标A2",
+      "key_disclosure_items": [
+        "按类型划分的直接及间接能源消耗",
+        "总耗水量及密度",
+        "能源使用效益措施及成果",
+        "水资源使用效益措施及成果"
+      ]
+    },
+    {
+      "id": "HKEX_ENV_A3",
+      "name": "HKEX ESG报告指引 - 环境范畴A3：环境及天然资源",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露减低发行人对环境及天然资源造成重大影响的政策",
+      "reference_clause": "HKEX附录C2 环境关键绩效指标A3",
+      "key_disclosure_items": [
+        "业务活动对环境及天然资源的重大影响及已采取管理有关影响的行动",
+        "环境保护措施及成果"
+      ]
+    },
+    {
+      "id": "HKEX_ENV_A4",
+      "name": "HKEX ESG报告指引 - 环境范畴A4：气候变化",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露识别及应对已经及可能会对发行人产生影响的重大气候相关事宜的政策",
+      "reference_clause": "HKEX附录C2 环境关键绩效指标A4",
+      "key_disclosure_items": [
+        "已经及可能产生的重大气候相关事宜及其影响",
+        "应对气候相关事宜的行动及成果"
+      ]
+    },
+    {
+      "id": "HKEX_SOC_B1",
+      "name": "HKEX ESG报告指引 - 社会范畴B1：雇佣",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露有关薪酬及解雇、招聘及晋升、工作时数、假期、平等机会、多元化、反歧视以及其他待遇及福利的政策",
+      "reference_clause": "HKEX附录C2 社会关键绩效指标B1",
+      "key_disclosure_items": [
+        "按性别、雇佣类型、年龄组别及地区划分的雇员总数",
+        "按性别、年龄组别及地区划分的雇员流失比率"
+      ]
+    },
+    {
+      "id": "HKEX_SOC_B2",
+      "name": "HKEX ESG报告指引 - 社会范畴B2：健康与安全",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露有关提供安全工作环境及保障雇员避免职业性危害的政策",
+      "reference_clause": "HKEX附录C2 社会关键绩效指标B2",
+      "key_disclosure_items": [
+        "过去三年每年因工亡故的人数及比率",
+        "因工伤损失工作日数",
+        "职业健康与安全措施及成果"
+      ]
+    },
+    {
+      "id": "HKEX_GOV",
+      "name": "HKEX ESG报告指引 - 治理架构",
+      "applicable_industries": ["全部行业"],
+      "requirement": "披露董事会对ESG事宜的监管、ESG管理方针及策略",
+      "reference_clause": "HKEX附录C2 强制披露要求",
+      "key_disclosure_items": [
+        "董事会声明",
+        "ESG治理架构",
+        "汇报原则（重要性、量化、一致性、平衡）",
+        "汇报范围"
+      ]
     }
   ]
 }

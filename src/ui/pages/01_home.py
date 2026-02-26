@@ -62,13 +62,13 @@ st.markdown("### 🚀 快速开始")
 col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("📄 导入ESG语料", use_container_width=True, type="primary"):
-        st.switch_page("pages/02_ESG语料管理中心.py")
+        st.switch_page("pages/02_upload.py")
 with col2:
     if st.button("🔍 分析实质性议题", use_container_width=True):
-        st.switch_page("pages/03_实质性议题分析中心.py")
+        st.switch_page("pages/03_materiality.py")
 with col3:
     if st.button("📊 做企业对标分析", use_container_width=True):
-        st.switch_page("pages/04_ESG对标分析中心.py")
+        st.switch_page("pages/06_benchmarking.py")
 
 st.divider()
 

@@ -33,7 +33,7 @@ if "corpus_result" not in st.session_state:
 
 # 1. 处理上传的文件
 if process_button and uploaded_file:
-    with st.spinner("正在处理语料，请稍候..."):
+    with st.spinner("正在处理，请稍候..."):
         try:
             logger.info(f"用户上传语料: {uploaded_file.name}")
             # 调用API层的语料处理接口
@@ -48,10 +48,10 @@ if process_button and uploaded_file:
             
             if result["code"] == 200:
                 st.session_state.corpus_result = result["data"]
-                st.success("✅ 语料处理成功！")
+                st.success("✅ 处理成功！")
                 logger.info(f"语料处理成功: {uploaded_file.name}")
             else:
-                st.error(f"❌ 语料处理失败: {result['message']}")
+                st.error(f"❌ 处理失败: {result['message']}")
                 logger.error(f"语料处理失败: {result['message']}")
         
         except requests.exceptions.RequestException as e:
@@ -95,4 +95,4 @@ if st.session_state.corpus_result:
     # 2.3 下一步操作
     st.subheader("➡️ 下一步操作")
     if st.button("🔍 进入信息抽取", use_container_width=True):
-        st.switch_page("pages/03_实质性议题分析中心.py")
+        st.switch_page("pages/03_materiality.py")

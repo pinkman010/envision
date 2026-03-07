@@ -103,7 +103,7 @@ class ESGMetricsResponse(BaseModel):
 @router.post("/process", response_model=CorpusProcessResponse)
 async def process_corpus(file: UploadFile = File(...)):
     """
-    上传并处理ESG语料文件（PDF/Word）
+    上传并处理ESG语料文件（PDF/Word/Excel）
     :param file: 上传的文件
     :return: 语料处理结果（文本、分块、元数据）
     """

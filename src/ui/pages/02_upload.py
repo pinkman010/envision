@@ -19,9 +19,9 @@ st.divider()
 # 上传文件区域
 st.subheader("📤 上传ESG报告")
 uploaded_file = st.file_uploader(
-    "选择PDF/Word文件",
-    type=["pdf", "docx"],
-    help="支持PDF、Word格式，最大200MB",
+    "选择PDF/Word/Excel文件",
+    type=["pdf", "docx", "xlsx"],
+    help="支持PDF、Word、Excel格式，最大50MB",
 )
 process_button = st.button("🚀 开始处理文件", use_container_width=True)
 st.divider()

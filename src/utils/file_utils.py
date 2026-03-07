@@ -9,6 +9,7 @@ from typing import List, Tuple
 
 from src.core_config.settings import MAX_FILE_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
 from src.utils.exception_utils import FileProcessingException
+import io
 
 
 def validate_file(file_path: Path) -> None:
@@ -21,7 +22,7 @@ def validate_file(file_path: Path) -> None:
         raise FileProcessingException(f"文件不存在: {file_path}")
     if file_path.stat().st_size > MAX_FILE_SIZE:
         raise FileProcessingException(f"文件大小超过限制（最大{MAX_FILE_SIZE/1024/1024}MB）")
-    if file_path.suffix.lower() not in [".pdf", ".docx", ".doc"]:
+    if file_path.suffix.lower() not in [".pdf", ".docx", ".doc", ".xlsx", ".xls"]:
         raise FileProcessingException(f"不支持的文件格式: {file_path.suffix}")
 
 
@@ -60,13 +61,56 @@ def extract_text_from_docx(file_path: Path) -> str:
         raise FileProcessingException(f"Word解析失败: {str(e)}", original_exception=e) from e
 
 
+def extract_text_from_excel(file_path: Path) -> str:
+    """
+    从Excel文件提取文本（将所有sheet转换为文本表格）
+    :param file_path: Excel文件路径
+    :return: 纯文本内容
+    """
+    try:
+        import pandas as pd
+        
+        # 读取所有sheet
+        excel_file = pd.ExcelFile(file_path)
+        text_parts = []
+        
+        for sheet_name in excel_file.sheet_names:
+            df = pd.read_excel(excel_file, sheet_name=sheet_name)
+            
+            # 添加sheet标题
+            text_parts.append(f"\n=== Sheet: {sheet_name} ===\n")
+            
+            # 将DataFrame转换为文本表格格式
+            if not df.empty:
+                # 表头
+                headers = " | ".join(str(col) for col in df.columns)
+                text_parts.append(headers)
+                text_parts.append("-" * len(headers))
+                
+                # 数据行
+                for _, row in df.iterrows():
+                    row_text = " | ".join(str(val) for val in row.values)
+                    text_parts.append(row_text)
+        
+        text = "\n".join(text_parts)
+        # 清洗多余空白
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
+        
+    except Exception as e:
+        raise FileProcessingException(f"Excel解析失败: {str(e)}", original_exception=e) from e
+
+
 def extract_text(file_path: Path) -> str:
     """统一文件提取入口"""
     validate_file(file_path)
-    if file_path.suffix.lower() == ".pdf":
+    suffix = file_path.suffix.lower()
+    if suffix == ".pdf":
         return extract_text_from_pdf(file_path)
-    elif file_path.suffix.lower() in [".docx", ".doc"]:
+    elif suffix in [".docx", ".doc"]:
         return extract_text_from_docx(file_path)
+    elif suffix in [".xlsx", ".xls"]:
+        return extract_text_from_excel(file_path)
     else:
         raise FileProcessingException(f"不支持的文件格式: {file_path.suffix}")
 

@@ -41,14 +41,6 @@ TEST_OUTPUT_DIR: Path = TMP_DIR / "test_output"
 DRAFT_SCRIPTS_DIR: Path = TMP_DIR / "draft_scripts"
 
 # ------------------------------
-# 演示数据目录（可提交Git，脱敏公开数据）
-# ------------------------------
-DEMO_DATA_DIR: Path = ROOT_DIR / "demo_data"
-DEMO_CORPUS_DIR: Path = DEMO_DATA_DIR / "demo_corpus"
-DEMO_CONFIG_DIR: Path = DEMO_DATA_DIR / "demo_config"
-DEMO_DB_DIR: Path = DEMO_DATA_DIR / "demo_db"
-
-# ------------------------------
 # UI页面目录
 # ------------------------------
 UI_PAGES_DIR: Path = SRC_DIR / "ui" / "pages"
@@ -60,6 +52,7 @@ LOGS_DIR: Path = ROOT_DIR / "logs"
 APP_LOG_DIR: Path = LOGS_DIR / "app"  # 应用运行日志
 API_LOG_DIR: Path = LOGS_DIR / "api"  # API请求日志
 
+
 # ------------------------------
 # 确保所有必要的目录存在
 # ------------------------------
@@ -70,17 +63,29 @@ def ensure_all_paths() -> None:
     """
     required_dirs: List[Path] = [
         # 配置目录
-        CONFIG_DIR, PROMPT_TEMPLATES_DIR, RULE_TEMPLATES_DIR, EXPORT_TEMPLATES_DIR,
+        CONFIG_DIR,
+        PROMPT_TEMPLATES_DIR,
+        RULE_TEMPLATES_DIR,
+        EXPORT_TEMPLATES_DIR,
         # 数据目录
-        DATA_DIR, CHROMA_DB_DIR, SQLITE_DB_DIR, RAW_CORPUS_DIR, VERSIONED_CORPUS_DIR, UNVERSIONED_CORPUS_DIR, EXPORT_RESULTS_DIR,
+        DATA_DIR,
+        CHROMA_DB_DIR,
+        SQLITE_DB_DIR,
+        RAW_CORPUS_DIR,
+        VERSIONED_CORPUS_DIR,
+        UNVERSIONED_CORPUS_DIR,
+        EXPORT_RESULTS_DIR,
         # 临时目录
-        TMP_DIR, DEBUG_CACHE_DIR, TEST_OUTPUT_DIR, DRAFT_SCRIPTS_DIR,
-        # 演示目录
-        DEMO_DATA_DIR, DEMO_CORPUS_DIR, DEMO_CONFIG_DIR, DEMO_DB_DIR,
+        TMP_DIR,
+        DEBUG_CACHE_DIR,
+        TEST_OUTPUT_DIR,
+        DRAFT_SCRIPTS_DIR,
         # UI目录
         UI_PAGES_DIR,
         # 日志目录
-        LOGS_DIR, APP_LOG_DIR, API_LOG_DIR,
+        LOGS_DIR,
+        APP_LOG_DIR,
+        API_LOG_DIR,
     ]
     for dir_path in required_dirs:
         dir_path.mkdir(parents=True, exist_ok=True)

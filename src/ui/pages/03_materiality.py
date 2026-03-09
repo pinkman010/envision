@@ -1,44 +1,42 @@
 """
-实质性议题分析中心页面
-功能：调用信息抽取接口、查看抽取结果、相似度校验、进入合规提示
+议题识别与知识库检索页面
+功能：调用议题检索接口、查看识别结果、进入差距分析
 """
 
 import streamlit as st
 import requests
 
 from src.core_config import settings, get_logger
-from src.ui.components import highlight_text
 
 # 初始化logger
 logger = get_logger(__name__)
 
 # 页面配置
-st.title("🔍 实质性议题分析中心")
+st.title("🔍 议题识别与知识库检索")
 st.divider()
 
 # 检查是否有语料处理结果
 if "corpus_result" not in st.session_state or not st.session_state.corpus_result:
     st.warning("⚠️ 请先在「ESG语料管理中心」上传并处理语料")
     if st.button("📄 前往语料管理中心", use_container_width=True):
-        st.switch_page("pages/02_upload.py")
+        st.switch_page("pages/02_corpus.py")
     st.stop()
 
 # 主内容区
-if "extract_result" not in st.session_state:
-    st.session_state.extract_result = None
+if "retrieval_result" not in st.session_state:
+    st.session_state.retrieval_result = None
 
 corpus_data = st.session_state.corpus_result
-fixed_text = corpus_data["fixed_text"]
 
-# 1. 调用信息抽取接口
-if not st.session_state.extract_result:
-    with st.spinner("正在执行信息抽取，请稍候..."):
+# 1. 调用议题检索接口
+if not st.session_state.retrieval_result:
+    with st.spinner("正在执行议题识别与知识库检索，请稍候..."):
         try:
-            logger.info("用户开始信息抽取")
-            # 调用API层的信息抽取接口
+            logger.info("用户开始议题检索")
+            # 调用API层的议题检索接口
             request_data = {"corpus_result": corpus_data}
             response = requests.post(
-                f"{settings.API_BASE_URL}{settings.API_PREFIX}/extract/run",
+                f"{settings.API_BASE_URL}{settings.API_PREFIX}/retrieval/run",
                 json=request_data,
                 timeout=300,
             )
@@ -46,142 +44,115 @@ if not st.session_state.extract_result:
             result = response.json()
             
             if result["code"] == 200:
-                st.session_state.extract_result = result["data"]
-                st.success("✅ 信息抽取成功！")
-                logger.info("信息抽取成功")
+                st.session_state.retrieval_result = result["data"]
+                st.success("✅ 议题识别成功！")
+                logger.info("议题检索成功")
             else:
-                st.error(f"❌ 信息抽取失败: {result['message']}")
-                logger.error(f"信息抽取失败: {result['message']}")
+                st.error(f"❌ 议题识别失败: {result['message']}")
+                logger.error(f"议题检索失败: {result['message']}")
         
         except Exception as e:
             st.error(f"❌ 系统错误: {str(e)}")
             logger.critical(f"系统错误: {str(e)}", exc_info=True)
 
-# 2. 显示信息抽取结果
-if st.session_state.extract_result:
-    extract_data = st.session_state.extract_result
-    extraction_results = extract_data["extraction_results"]
+# 2. 显示识别结果
+if st.session_state.retrieval_result:
+    retrieval_data = st.session_state.retrieval_result
+    identified_topics = retrieval_data.get("identified_topics", [])
+    retrieved_standards = retrieval_data.get("retrieved_standards", [])
+    retrieved_peers = retrieval_data.get("retrieved_peers", [])
+    coverage_summary = retrieval_data.get("coverage_summary", "")
     
-    # 2.1 显示抽取统计
-    st.subheader("📊 抽取结果统计")
-    passed_count = len([r for r in extraction_results if r.get("validation_status") == "passed"])
-    failed_count = len([r for r in extraction_results if r.get("validation_status") == "failed"])
+    # 2.1 显示摘要统计
+    st.subheader("📊 识别结果摘要")
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("总抽取字段数", len(extraction_results))
+        st.metric("识别议题数", len(identified_topics))
     with col2:
-        st.metric("校验通过", passed_count, delta_color="normal")
+        st.metric("检索标准条文", len(retrieved_standards))
     with col3:
-        st.metric("校验失败", failed_count, delta_color="inverse")
+        st.metric("参考同行案例", len(retrieved_peers))
+    
+    if coverage_summary:
+        st.info(f"💡 {coverage_summary}")
     
     st.divider()
     
-    # 2.2 显示详细抽取结果
-    st.subheader("📝 详细抽取结果")
-    for idx, result in enumerate(extraction_results):
-        field_name = result["field_name"]
-        extracted_content = result["extracted_content"]
-        validation_status = result["validation_status"]
-        similarity = result.get("similarity")  # 可能是 float 或 None
-        char_start = result.get("char_start")
-        char_end = result.get("char_end")
-        line_number = result.get("line_number")  # 获取行号
-
-        # 根据校验状态显示不同的颜色
-        if validation_status == "passed":
-            status_color = "#00A86B"
-            status_text = "✅ 校验通过"
-        elif validation_status == "not_found":
-            status_color = "#6B7280"
-            status_text = "⬜ 原文未找到"
-        else:  # failed
-            status_color = "#DC2626"
-            status_text = "❌ 校验失败"
-
-        similarity_str = f"{similarity:.2%}" if similarity is not None else "N/A"
-        with st.expander(
-            f"{status_text} | {field_name} | 相似度: {similarity_str}",
-            expanded=validation_status == "failed",
-        ):
-            st.markdown(f"**字段名**: {field_name}")
-            st.markdown(f"**抽取内容**: {extracted_content}")
-            # 显示行号
-            line_display = f"第 {line_number} 行" if line_number is not None else "N/A"
-            st.markdown(f"**行号**: {line_display}")
-            # 显示字符位置
-            char_display = f"{char_start} - {char_end}" if char_start is not None else "N/A"
-            st.markdown(f"**字符位置**: {char_display}")
-            st.markdown(f"**校验状态**: <span style='color:{status_color};font-weight:bold;'>{status_text}</span>", unsafe_allow_html=True)
-
-            # 显示高亮原文片段（仅在找到原文时）
-            if char_start is not None and char_end is not None:
-                st.markdown("**原文对应片段（高亮显示）**:")
-                
-                # 按句子分割文本，获取前后各一句作为上下文
-                def get_sentence_context(text: str, start: int, end: int) -> tuple:
-                    """获取目标位置前后各一句的上下文"""
-                    # 定义句子分隔符
-                    separators = ['。', '！', '？', '！', '？', '；', ';\n', '. ', '! ', '? ', '\n']
-                    
-                    # 向前查找句子边界
-                    context_start = 0
-                    for sep in separators:
-                        pos = text.rfind(sep, 0, start)
-                        if pos >= 0 and pos + 1 > context_start:
-                            context_start = pos + 1
-                    
-                    # 确保不超过目标位置的前一个句子
-                    if context_start < start:
-                        # 再向前找一个句子分隔符，取前一句
-                        for sep in separators:
-                            pos = text.rfind(sep, 0, context_start)
-                            if pos >= 0 and pos + 1 > 0:
-                                context_start = pos + 1
-                                break
-                    
-                    # 向后查找句子边界
-                    context_end = len(text)
-                    for sep in separators:
-                        pos = text.find(sep, end)
-                        if pos >= 0 and pos + 1 < context_end:
-                            context_end = pos + 1
-                    
-                    # 确保包含目标位置的后一个句子
-                    if context_end > end:
-                        # 再向后找一个句子分隔符，取后一句
-                        for sep in separators:
-                            pos = text.find(sep, context_end)
-                            if pos >= 0 and pos + 1 < len(text):
-                                context_end = pos + 1
-                                break
-                    
-                    return context_start, context_end
-                
-                context_start, context_end = get_sentence_context(fixed_text, char_start, char_end)
-                context_start = max(0, context_start)
-                context_end = min(len(fixed_text), context_end)
-                
-                highlighted_snippet = highlight_text(
-                    fixed_text[context_start:context_end],
-                    char_start - context_start,
-                    char_end - context_start,
-                    color=status_color,
-                )
-                # 只有当上下文不是完整文本时才显示省略号
-                prefix = "..." if context_start > 0 else ""
-                suffix = "..." if context_end < len(fixed_text) else ""
-                st.markdown(f"{prefix}{highlighted_snippet}{suffix}", unsafe_allow_html=True)
+    # 2.2 显示识别出的ESG议题
+    st.subheader("🏷️ 识别出的ESG议题")
+    if identified_topics:
+        # 按置信度分组显示
+        high_conf = [t for t in identified_topics if t.get("confidence") == "high"]
+        medium_conf = [t for t in identified_topics if t.get("confidence") == "medium"]
+        low_conf = [t for t in identified_topics if t.get("confidence") == "low"]
+        
+        # 使用badge样式展示
+        cols = st.columns(3)
+        
+        with cols[0]:
+            if high_conf:
+                st.markdown("**高置信度**")
+                for topic in high_conf:
+                    st.success(f"✓ {topic.get('topic_name', '未知')}")
+        
+        with cols[1]:
+            if medium_conf:
+                st.markdown("**中置信度**")
+                for topic in medium_conf:
+                    st.info(f"◐ {topic.get('topic_name', '未知')}")
+        
+        with cols[2]:
+            if low_conf:
+                st.markdown("**低置信度**")
+                for topic in low_conf:
+                    st.warning(f"○ {topic.get('topic_name', '未知')}")
+        
+        # 展开显示详情
+        st.markdown("**议题详情**")
+        for idx, topic in enumerate(identified_topics):
+            topic_name = topic.get("topic_name", "未知议题")
+            confidence = topic.get("confidence", "unknown")
+            evidence = topic.get("evidence", "无证据")
+            
+            confidence_label = {"high": "高", "medium": "中", "low": "低"}.get(confidence, "未知")
+            
+            with st.expander(f"{topic_name}（置信度：{confidence_label}）"):
+                st.markdown(f"**议题ID**: {topic.get('topic_id', 'N/A')}")
+                st.markdown(f"**置信度**: {confidence_label}")
+                st.markdown(f"**证据原文**:")
+                st.text_area(f"evidence_{idx}", value=evidence, height=100, label_visibility="collapsed")
+    else:
+        st.warning("未识别到任何ESG议题")
     
     st.divider()
     
-    # 2.3 下一步操作
+    # 2.3 显示检索到的相关标准
+    st.subheader("📚 检索到的相关标准")
+    if retrieved_standards:
+        for idx, standard in enumerate(retrieved_standards):
+            source = standard.get("source", "Unknown")
+            clause_id = standard.get("clause_id", "")
+            content = standard.get("content", "")[:300]
+            score = standard.get("score", 0)
+            
+            with st.expander(f"{source} {clause_id}（相关度：{score:.1%}）"):
+                st.markdown(f"**来源**: {source}")
+                st.markdown(f"**条款**: {clause_id}")
+                st.markdown(f"**内容**:")
+                st.markdown(content + "..." if len(standard.get("content", "")) > 300 else content)
+    else:
+        st.info("知识库中暂无相关标准条文（standards集合为空）")
+    
+    st.divider()
+    
+    # 2.4 下一步操作
     st.subheader("➡️ 下一步操作")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("⚠️ 进入合规提示", use_container_width=True):
-            st.switch_page("pages/04_disclosure.py")
+        if st.button("📊 进入差距分析", use_container_width=True):
+            st.switch_page("pages/04_analysis.py")
     with col2:
         if st.button("📄 重新上传语料", use_container_width=True):
             st.session_state.corpus_result = None
-            st.session_state.extract_result = None
-            st.switch_page("pages/02_upload.py")
+            st.session_state.retrieval_result = None
+            st.switch_page("pages/02_corpus.py")

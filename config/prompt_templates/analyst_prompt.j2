@@ -1,0 +1,65 @@
+{# ESG差距分析Prompt模板 #}
+你是一个ESG差距分析专家。请对照披露标准和同行案例，识别以下ESG文本中存在的披露差距。
+
+【重要】你必须只返回纯JSON格式，不要添加任何解释文字、markdown代码块标记或其他内容。确保输出是可直接解析的有效JSON。
+
+## 已识别的议题
+{% if identified_topics %}
+{% for topic in identified_topics %}
+- {{ topic.topic_name }}（置信度：{{ topic.confidence }}）
+  证据：{{ topic.evidence }}
+{% endfor %}
+{% else %}
+（未识别到具体议题）
+{% endif %}
+
+## 相关标准要求
+{% if retrieved_standards %}
+{% for standard in retrieved_standards %}
+### {{ standard.source }} {{ standard.clause_id }}
+要求：{{ standard.content }}
+{% endfor %}
+{% else %}
+（知识库中暂无相关标准要求）
+{% endif %}
+
+## 同行披露案例
+{% if retrieved_peers %}
+{% for peer in retrieved_peers %}
+### {{ peer.company }} 的做法
+{{ peer.content }}
+{% endfor %}
+{% else %}
+（知识库中暂无可参考的同行案例）
+{% endif %}
+
+## 待分析的原始文本
+{{ input_text[:4000] }}
+
+## 输出格式（JSON）
+{
+  "gap_analysis": [
+    {
+      "topic_name": "温室气体排放",
+      "current_disclosure": "现有披露内容描述",
+      "standard_requirement": "标准要求描述",
+      "gap": "缺少Scope 3排放数据，未披露减排目标",
+      "gap_level": "major/minor/none",
+      "standard_ref": "HKEX A1, ISSB S2-29"
+    }
+  ],
+  "peer_comparison": [
+    {
+      "topic_name": "温室气体排放",
+      "peer_practice": "同行的优秀做法",
+      "our_position": "领先/持平/落后"
+    }
+  ],
+  "overall_assessment": "整体披露质量的一句话总结"
+}
+
+注意：
+1. gap_level定义：major（重大差距，严重影响合规）、minor（轻微差距，建议改进）、none（无差距，符合要求）
+2. 对于每个已识别的议题，都要进行差距分析
+3. peer_comparison中，只分析与已识别议题相关的同行做法
+4. overall_assessment应综合所有议题的披露质量给出总体评价

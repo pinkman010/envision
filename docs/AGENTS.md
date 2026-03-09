@@ -15,14 +15,14 @@
 3. **三重幻觉锁死** - 输入锁死 → 输出锁死 → 校验锁死
 4. **人工最终决策** - 所有对外披露内容必须有人工复核留痕
 
-### 核心架构：1+5轻量化Agent混合架构
+### 核心架构：1+4轻量化Agent混合架构
 
-- **1个总控Agent** (MasterAgent)：固定流程调度、状态跟踪、异常上报
-- **5个执行Agent**：
+- **1个总控Agent** (OrchestratorAgent)：固定流程调度、状态跟踪、异常上报
+- **4个执行Agent**：
   - CorpusAgent：PDF/Word解析、文本分块、元数据标注
-  - ExtractAgent：按预设固定字段提取原文事实
-  - ComplianceAgent：按预设标准做合规风险高亮标注（仅提示，无决策权）
-  - ContentAgent：按固定模板填充人工确认后的结构化数据
+  - RetrievalAgent：RAG检索 + LLM议题识别（检索standards/和peer_reports/集合）
+  - AnalystAgent：差距分析（对照标准+同行对比，输出gap_analysis+peer_comparison）
+  - AdvisorAgent：披露建议生成（消费notes_gap和notes_peer字段）
 
 ---
 
@@ -46,25 +46,24 @@
 ```
 envision/
 ├── .env.example              # 环境变量配置示例
-├── requirements.txt          # Python依赖
 ├── pyproject.toml           # 项目元数据与构建配置
 ├── Makefile                 # 常用命令快捷方式
 ├── environment.yml          # Conda环境配置
 ├── src/                     # 核心源码
 │   ├── main.py              # FastAPI后端入口
-│   ├── agent/               # Agent模块（1+5架构实现）
+│   ├── agent/               # Agent模块（1+4架构实现）
 │   │   ├── base_agent.py    # 所有Agent的抽象基类
-│   │   ├── master_agent.py  # 总控调度Agent
+│   │   ├── orchestrator_agent.py  # 总控调度Agent
 │   │   ├── corpus_agent.py  # 语料处理Agent
-│   │   ├── extract_agent.py # 信息抽取Agent
-│   │   ├── compliance_agent.py # 合规提示Agent
-│   │   └── content_agent.py # 内容生成Agent
+│   │   ├── retrieval_agent.py     # 议题检索Agent
+│   │   ├── analyst_agent.py       # 差距分析Agent
+│   │   └── advisor_agent.py       # 优化建议Agent
 │   ├── api/                 # API路由模块
 │   │   ├── router.py        # 全局总路由注册
 │   │   ├── corpus_router.py # 语料处理接口
-│   │   ├── extract_router.py# 信息抽取接口
-│   │   ├── compliance_router.py # 合规提示接口
-│   │   └── content_router.py # 内容生成接口
+│   │   ├── retrieval_router.py    # 议题检索接口
+│   │   ├── analyst_router.py      # 差距分析接口
+│   │   └── advisor_router.py      # 优化建议接口
 │   ├── core_config/         # 核心配置
 │   │   ├── settings.py      # 环境变量与配置项
 │   │   ├── paths.py         # 全局路径统一配置
@@ -73,14 +72,14 @@ envision/
 │   │   ├── app.py           # Streamlit入口
 │   │   ├── components/      # 可复用组件
 │   │   └── pages/           # 多页面应用页面
-│   │       ├── 01_首页_概览看板.py
-│   │       ├── 02_ESG语料管理中心.py
-│   │       ├── 03_实质性议题分析中心.py
-│   │       ├── 04_ESG对标分析中心.py
-│   │       ├── 05_披露优化与策略助手.py
-│   │       ├── 06_审计日志中心.py
-│   │       ├── 07_规则配置中心.py
-│   │       └── 08_人工复核中心.py
+│   │       ├── 01_home.py
+│   │       ├── 02_corpus.py
+│   │       ├── 03_materiality.py
+│   │       ├── 04_analysis.py
+│   │       ├── 05_review.py
+│   │       ├── 06_benchmarking.py
+│   │       ├── 07_audit.py
+│   │       └── 08_rules.py
 │   └── utils/               # 工具模块
 │       ├── exception_utils.py  # 全局异常类
 │       ├── file_utils.py       # 文件处理
@@ -94,18 +93,15 @@ envision/
 │       └── chroma_utils.py     # Chroma向量库
 ├── config/                  # 外置配置（业务规则、模板）
 │   ├── prompt_templates/    # Prompt模板（Jinja2）
-│   │   ├── corpus_fix_prompt.j2
-│   │   ├── extract_prompt.j2
-│   │   ├── compliance_prompt.j2
-│   │   └── content_prompt.j2
+│   │   ├── corpus_prompt.j2
+│   │   ├── retrieval_prompt.j2
+│   │   ├── analyst_prompt.j2
+│   │   └── advisor_prompt.j2
 │   ├── rule_templates/      # ESG业务规则（JSON）
 │   │   ├── esg_standards.json
 │   │   ├── topic_rules.json
 │   │   └── match_rules.json
 │   └── export_templates/    # 导出模板
-├── tests/                   # 测试用例
-│   ├── conftest.py
-│   └── test_agent/
 ├── data/                    # 数据存储（不上传Git）
 │   ├── chroma_db/          # 向量数据库
 │   ├── sqlite_db/          # SQLite数据库
@@ -114,12 +110,8 @@ envision/
 ├── logs/                    # 运行日志（不上传Git）
 ├── tmp/                     # 临时文件（不上传Git）
 ├── demo_data/               # 演示数据
-└── deploy/                  # 部署配置
-    ├── Dockerfile
-    ├── docker-compose.yml
-    ├── entrypoint.sh
-    ├── quick_start.sh
-    └── quick_start.bat
+└── scripts/                 # 运维脚本
+    └── import_standards.py  # 标准条款导入ChromaDB
 ```
 
 ---
@@ -130,7 +122,7 @@ envision/
 
 ```bash
 # 使用pip
-pip install -r requirements.txt
+pip install -e .
 
 # 或使用Makefile
 make install-dev
@@ -153,36 +145,6 @@ make run-api
 # 启动前端（Streamlit）
 make run-ui
 # 或：streamlit run src/ui/app.py
-```
-
-### 运行测试
-
-```bash
-make test
-# 或：pytest tests/ -v --cov=src --cov-report=html
-```
-
-### 代码检查与格式化
-
-```bash
-# 代码检查
-make lint
-# 或：flake8 src/ tests/ && mypy src/
-
-# 代码格式化
-make format
-# 或：black src/ tests/
-```
-
-### Docker部署
-
-```bash
-# Linux/Mac
-chmod +x deploy/quick_start.sh
-./deploy/quick_start.sh
-
-# Windows
-deploy\quick_start.bat
 ```
 
 ---
@@ -239,28 +201,13 @@ def example_function(param: str) -> dict:
 
 ## 测试策略
 
-### 测试框架
-
-- **测试运行器**：pytest
-- **覆盖率工具**：pytest-cov
-- **测试目录**：`tests/`
-
-### 测试分类
-
-```
-tests/
-├── conftest.py              # pytest配置和fixture
-└── test_agent/              # Agent单元测试
-    ├── test_corpus_agent.py
-    ├── test_extract_agent.py
-    └── test_master_agent.py
-```
-
 ### 测试原则
 
 1. **Agent测试重点**：状态流转、异常处理、审计日志记录
 2. **工具函数测试**：输入输出边界、异常场景
 3. **禁止测试**：LLM输出内容（非确定性）
+
+> 注：当前项目未配置测试框架，如需添加测试请参考 `pyproject.toml` 中的 `dev` 依赖。
 
 ---
 
@@ -321,6 +268,7 @@ tests/
 ## 相关文档
 
 - `README.md` - 项目简介和快速开始
+- `CLAUDE.md` - 项目背景和架构说明
 - `docs/部署说明文档.md` - 详细部署指南
 - `docs/用户操作手册.md` - 用户使用指南
 - `docs/FAQ.md` - 常见问题解答

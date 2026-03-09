@@ -81,6 +81,8 @@ class ChromaManager:
     _client = None
     _corpus_collection = None
     _metrics_collection = None
+    _standards_collection = None  # ESG标准条文集合（预留）
+    _peer_reports_collection = None  # 同行报告案例集合（预留）
     _embedding_function = None
     
     def __new__(cls):
@@ -124,7 +126,21 @@ class ChromaManager:
                 metadata={"description": "ESG结构化指标存储", "version": "1.0"},
             )
             
-            logger.info("ChromaManager 初始化完成")
+            # 获取或创建ESG标准条文集合（预留，用于RetrievalAgent检索标准要求）
+            self._standards_collection = self._client.get_or_create_collection(
+                name="standards",
+                embedding_function=self._embedding_function,
+                metadata={"description": "ESG披露标准条文（ISSB/HKEX/SASB等）", "version": "1.0"},
+            )
+            
+            # 获取或创建同行报告案例集合（预留，用于RetrievalAgent检索优秀案例）
+            self._peer_reports_collection = self._client.get_or_create_collection(
+                name="peer_reports",
+                embedding_function=self._embedding_function,
+                metadata={"description": "同行业ESG报告披露案例", "version": "1.0"},
+            )
+            
+            logger.info("ChromaManager 初始化完成（含standards和peer_reports预留集合）")
             
         except Exception as e:
             logger.error(f"ChromaManager 初始化失败: {str(e)}")
@@ -789,6 +805,143 @@ class ChromaManager:
             for c in chunks[:3]
         ]
 
+    # ==================== ESG标准条文检索（standards集合）====================
+    
+    def search_standards(
+        self,
+        query: str,
+        n_results: int = 5,
+        score_threshold: float = 0.5,
+    ) -> List[Dict[str, Any]]:
+        """
+        从standards集合检索相关ESG标准条文
+        供RetrievalAgent使用，识别议题时关联标准要求
+        
+        :param query: 查询文本（如议题关键词）
+        :param n_results: 返回结果数量
+        :param score_threshold: 相似度阈值
+        :return: 检索到的标准条文列表
+        """
+        try:
+            results = self._standards_collection.query(
+                query_texts=[query],
+                n_results=n_results,
+            )
+            
+            search_results = []
+            if results["ids"] and len(results["ids"]) > 0:
+                for idx, (doc_id, doc, metadata, distance) in enumerate(zip(
+                    results["ids"][0],
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0],
+                )):
+                    score = 1 - distance  # 转换为相似度分数
+                    if score < score_threshold:
+                        continue
+                    
+                    search_results.append({
+                        "id": doc_id,
+                        "content": doc,
+                        "source": metadata.get("source", "Unknown"),
+                        "clause_id": metadata.get("clause_id", ""),
+                        "standard_name": metadata.get("standard_name", ""),
+                        "score": round(score, 4),
+                        **{k: v for k, v in metadata.items() if k not in ["source", "clause_id", "standard_name"]}
+                    })
+            
+            logger.info(f"标准条文检索完成: query='{query[:50]}...', 找到 {len(search_results)} 条")
+            return search_results
+            
+        except Exception as e:
+            logger.error(f"标准条文检索失败: {str(e)}")
+            # 预留阶段：集合为空时返回空列表，不阻断流程
+            return []
+    
+    def search_peer_reports(
+        self,
+        query: str,
+        n_results: int = 3,
+        score_threshold: float = 0.5,
+        filter_industry: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        从peer_reports集合检索同行业优秀披露案例
+        供RetrievalAgent使用，为差距分析提供同行参考
+        
+        :param query: 查询文本（如议题描述）
+        :param n_results: 返回结果数量
+        :param score_threshold: 相似度阈值
+        :param filter_industry: 可选的行业过滤
+        :return: 检索到的同行案例列表
+        """
+        try:
+            # 构建where条件（如果指定了行业）
+            where_clause = None
+            if filter_industry:
+                where_clause = {"industry": filter_industry}
+            
+            results = self._peer_reports_collection.query(
+                query_texts=[query],
+                n_results=n_results,
+                where=where_clause,
+            )
+            
+            search_results = []
+            if results["ids"] and len(results["ids"]) > 0:
+                for idx, (doc_id, doc, metadata, distance) in enumerate(zip(
+                    results["ids"][0],
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0],
+                )):
+                    score = 1 - distance
+                    if score < score_threshold:
+                        continue
+                    
+                    search_results.append({
+                        "id": doc_id,
+                        "content": doc,
+                        "company": metadata.get("company", "Unknown"),
+                        "year": metadata.get("year", ""),
+                        "industry": metadata.get("industry", ""),
+                        "topic": metadata.get("topic", ""),
+                        "score": round(score, 4),
+                        **{k: v for k, v in metadata.items() if k not in ["company", "year", "industry", "topic"]}
+                    })
+            
+            logger.info(f"同行案例检索完成: query='{query[:50]}...', 找到 {len(search_results)} 条")
+            return search_results
+            
+        except Exception as e:
+            logger.error(f"同行案例检索失败: {str(e)}")
+            # 预留阶段：集合为空时返回空列表，不阻断流程
+            return []
+
+    def get_standards_collection_info(self) -> Dict[str, Any]:
+        """获取standards集合信息（用于调试/监控）"""
+        try:
+            count = self._standards_collection.count()
+            return {
+                "name": "standards",
+                "count": count,
+                "status": "ready" if count > 0 else "empty (reserved)",
+            }
+        except Exception as e:
+            return {"name": "standards", "count": 0, "status": f"error: {str(e)}"}
+    
+    def get_peer_reports_collection_info(self) -> Dict[str, Any]:
+        """获取peer_reports集合信息（用于调试/监控）"""
+        try:
+            count = self._peer_reports_collection.count()
+            return {
+                "name": "peer_reports",
+                "count": count,
+                "status": "ready" if count > 0 else "empty (reserved)",
+            }
+        except Exception as e:
+            return {"name": "peer_reports", "count": 0, "status": f"error: {str(e)}"}
+
 
 # 全局单例
 _chroma_manager = None
@@ -865,3 +1018,24 @@ def enhance_extraction_with_rag(
         company_name=company_name,
         report_year=report_year,
     )
+
+
+def search_standards(query: str, n_results: int = 5, score_threshold: float = 0.5) -> List[Dict[str, Any]]:
+    """便捷函数：检索ESG标准条文（供RetrievalAgent使用）"""
+    manager = get_chroma_manager()
+    return manager.search_standards(query, n_results, score_threshold)
+
+
+def search_peer_reports(query: str, n_results: int = 3, score_threshold: float = 0.5, filter_industry: Optional[str] = None) -> List[Dict[str, Any]]:
+    """便捷函数：检索同行报告案例（供RetrievalAgent使用）"""
+    manager = get_chroma_manager()
+    return manager.search_peer_reports(query, n_results, score_threshold, filter_industry)
+
+
+def get_knowledge_base_info() -> Dict[str, Any]:
+    """获取知识库集合状态信息（用于监控）"""
+    manager = get_chroma_manager()
+    return {
+        "standards": manager.get_standards_collection_info(),
+        "peer_reports": manager.get_peer_reports_collection_info(),
+    }

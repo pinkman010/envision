@@ -1,0 +1,51 @@
+{# ESG优化建议生成Prompt模板 #}
+你是一个ESG披露优化顾问。请根据差距分析结果，结合同行优秀案例，生成具体可操作的改进建议。
+
+## 差距分析结果
+{% if gap_analysis %}
+{% for gap in gap_analysis %}
+### {{ gap.topic_name }}（差距程度：{{ gap.gap_level }}）
+- 现有披露：{{ gap.current_disclosure }}
+- 标准要求：{{ gap.standard_requirement }}
+- 差距说明：{{ gap.gap }}
+- 参考标准：{{ gap.standard_ref }}
+{% endfor %}
+{% else %}
+（无差距分析结果）
+{% endif %}
+
+## 同行对比
+{% if peer_comparison %}
+{% for peer in peer_comparison %}
+### {{ peer.topic_name }}
+- 同行做法：{{ peer.peer_practice }}
+- 我方位置：{{ peer.our_position }}
+{% endfor %}
+{% else %}
+（无同行对比信息）
+{% endif %}
+
+## 整体评估
+{{ overall_assessment if overall_assessment else "未提供整体评估" }}
+
+## 输出格式（JSON）
+{
+  "recommendations": [
+    {
+      "topic_name": "温室气体排放",
+      "action": "建立Scope 1/2/3排放核算体系，参照GHG Protocol方法论",
+      "priority": "high/medium/low",
+      "reference_case": "同行企业XXX的做法：...",
+      "standard_basis": "HKEX A1.2, ISSB S2-29"
+    }
+  ],
+  "priority_actions": ["最重要行动1", "最重要行动2", "最重要行动3"],
+  "generated_content": "整合所有建议后的完整披露优化建议文本（可直接参考使用）"
+}
+
+注意：
+1. priority定义：high（必须立即执行）、medium（建议近期执行）、low（可考虑执行）
+2. 每个major差距必须对应至少一条high priority建议
+3. reference_case引用同行对比中的具体优秀做法
+4. priority_actions只列出Top 3最重要的行动，按优先级排序
+5. generated_content是一段完整的、可直接参考使用的披露优化建议文本，整合所有recommendations的内容

@@ -21,47 +21,14 @@ ensure_all_paths()
 # ========== 使用 st.navigation 完全接管页面导航 ==========
 
 # 1. 定义所有页面（按业务流程顺序）
-page_01 = st.Page(
-    "pages/01_home.py",
-    title="首页概览",
-    icon="🏠",
-    default=True
-)
-page_02 = st.Page(
-    "pages/02_upload.py",
-    title="报告上传",
-    icon="📄"
-)
-page_03 = st.Page(
-    "pages/03_materiality.py",
-    title="议题识别",
-    icon="🔍"
-)
-page_04 = st.Page(
-    "pages/04_disclosure.py",
-    title="合规披露",
-    icon="⚠️"
-)
-page_05 = st.Page(
-    "pages/05_review.py",
-    title="人工复核",
-    icon="✅"
-)
-page_06 = st.Page(
-    "pages/06_benchmarking.py",
-    title="对标分析",
-    icon="📊"
-)
-page_07 = st.Page(
-    "pages/07_audit.py",
-    title="审计日志",
-    icon="📜"
-)
-page_08 = st.Page(
-    "pages/08_rules.py",
-    title="规则配置",
-    icon="⚙️"
-)
+page_01 = st.Page("pages/01_home.py", title="首页概览", icon="🏠", default=True)
+page_02 = st.Page("pages/02_corpus.py", title="报告上传", icon="📄")
+page_03 = st.Page("pages/03_materiality.py", title="议题识别", icon="🔍")
+page_04 = st.Page("pages/04_analysis.py", title="差距分析", icon="⚠️")
+page_05 = st.Page("pages/05_review.py", title="人工复核", icon="✅")
+page_06 = st.Page("pages/06_benchmarking.py", title="对标分析", icon="📊")
+page_07 = st.Page("pages/07_audit.py", title="审计日志", icon="📜")
+page_08 = st.Page("pages/08_rules.py", title="规则配置", icon="⚙️")
 
 # 2. 页面分组（按业务流程位置）
 pages = {

@@ -1,0 +1,49 @@
+{# ESG议题识别与知识库检索Prompt模板 #}
+你是一个ESG议题识别助手。请从以下ESG报告文本中识别涉及的核心议题，并关联到相关标准条文。
+
+## 可识别的议题清单（从以下15个中选择）
+{% for topic in topics %}
+- {{ topic.id }}: {{ topic.name }}（关键词：{{ topic.keywords | join(', ') }}）
+{% endfor %}
+
+## 检索到的相关标准条文
+{% if retrieved_standards %}
+{% for standard in retrieved_standards %}
+### {{ standard.source }} - {{ standard.clause_id }}
+{{ standard.content }}
+{% endfor %}
+{% else %}
+（知识库中暂无相关标准条文）
+{% endif %}
+
+## 检索到的同行案例
+{% if retrieved_peers %}
+{% for peer in retrieved_peers %}
+### {{ peer.company }} ({{ peer.year }})
+{{ peer.content }}
+{% endfor %}
+{% else %}
+（知识库中暂无可参考的同行案例）
+{% endif %}
+
+## 待分析文本
+{{ input_text[:6000] }}
+
+## 输出格式（JSON）
+{
+  "identified_topics": [
+    {
+      "topic_id": "T01",
+      "topic_name": "温室气体排放",
+      "evidence": "原文中支持识别的文字片段",
+      "confidence": "high/medium/low"
+    }
+  ],
+  "coverage_summary": "整体议题覆盖情况的一句话总结"
+}
+
+注意：
+1. 只从提供的15个议题清单中选择，不要自创议题
+2. 每个识别出的议题必须提供原文中的证据片段
+3. confidence根据证据的明确程度判断：high（明确提及）、medium（间接提及）、low（可能相关）
+4. 如果某个议题完全没有涉及，不要出现在结果中

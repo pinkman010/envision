@@ -96,6 +96,8 @@ LLM_THINKING_DISABLED: bool = os.getenv("LLM_THINKING_DISABLED", "false").lower(
 # ------------------------------
 # 硬规则校验阈值（ESG合规核心）
 # ------------------------------
+# 注意：SIMILARITY_THRESHOLD仅保留用于兼容性（src/utils/similarity_utils.py使用）
+# 新的RetrievalAgent/AnalystAgent/AdvisorAgent不再使用此配置
 SIMILARITY_THRESHOLD: float = get_required_env("SIMILARITY_THRESHOLD", float)
 MAX_FILE_SIZE: int = get_required_env("MAX_FILE_SIZE", int)
 CHUNK_SIZE: int = get_required_env("CHUNK_SIZE", int)

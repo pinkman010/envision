@@ -14,9 +14,6 @@ tmp/
 data/
 logs/
 
-# 演示数据
-demo_data/
-
 # Python缓存
 __pycache__/
 *.pyc
@@ -44,3 +41,6 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Ruff缓存
+.ruff_cache/

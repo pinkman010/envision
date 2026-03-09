@@ -4,15 +4,17 @@ Agent模块导出
 
 from src.agent.base_agent import BaseAgent, AgentState
 from src.agent.corpus_agent import CorpusAgent
-from src.agent.extract_agent import ExtractAgent
-from src.agent.compliance_agent import ComplianceAgent
-from src.agent.content_agent import ContentAgent
+from src.agent.retrieval_agent import RetrievalAgent
+from src.agent.analyst_agent import AnalystAgent
+from src.agent.advisor_agent import AdvisorAgent
+from src.agent.orchestrator_agent import OrchestratorAgent
 
 __all__ = [
     "BaseAgent",
     "AgentState",
     "CorpusAgent",
-    "ExtractAgent",
-    "ComplianceAgent",
-    "ContentAgent",
+    "RetrievalAgent",
+    "AnalystAgent",
+    "AdvisorAgent",
+    "OrchestratorAgent",
 ]

@@ -89,9 +89,9 @@ def clean_and_parse_json(
     
     cleaned = llm_output.strip()
     
-    # 移除 Markdown 代码块
-    markdown_pattern = r'^```(?:json)?\s*\n?(.*?)\n?```$'
-    markdown_match = re.match(markdown_pattern, cleaned, re.DOTALL | re.IGNORECASE)
+    # 移除 Markdown 代码块（支持多行和嵌套）
+    markdown_pattern = r'```(?:json)?\s*\n?(.*?)\n?```'
+    markdown_match = re.search(markdown_pattern, cleaned, re.DOTALL | re.IGNORECASE)
     if markdown_match:
         cleaned = markdown_match.group(1).strip()
     
@@ -101,7 +101,15 @@ def clean_and_parse_json(
     except json.JSONDecodeError:
         pass
     
-    # 暴力提取JSON
+    # 移除常见的前缀文字，找到第一个 { 的位置
+    json_start = cleaned.find('{')
+    if json_start > 0:
+        try:
+            return json.loads(cleaned[json_start:])
+        except json.JSONDecodeError:
+            pass
+    
+    # 暴力提取最外层的大括号内容
     json_pattern = r'\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\})*)*\})*)*\}'
     json_match = re.search(json_pattern, cleaned, re.DOTALL)
     
@@ -111,4 +119,6 @@ def clean_and_parse_json(
         except json.JSONDecodeError:
             pass
     
+    # 记录失败时的原始输出，便于调试
+    log.error(f"[JSON_PARSE_FAILED] 无法解析的LLM输出: {llm_output[:1000]}")
     raise ValidationException("无法从LLM输出中提取有效JSON")

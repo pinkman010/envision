@@ -15,8 +15,7 @@ st.divider()
 # 系统介绍
 st.markdown("### 系统定位")
 st.info(
-    "本系统针对新能源行业ESG披露的强合规、强监管场景设计，"
-    "采用「人工定规则+AI做提取+白盒做校验+人工做决策」的混合架构。"
+    "上传ESG报告 → AI识别议题 → 对照标准找差距 → 生成优化建议"
 )
 st.caption(f"版本：v{settings.VERSION} | 环境：{settings.ENVIRONMENT}")
 
@@ -49,10 +48,10 @@ with col3:
     )
 with col4:
     st.metric(
-        label="合规审计覆盖率",
-        value="100%",
-        delta="字符级双向溯源",
-        help="所有操作全链路留痕，AI抽取内容支持字符级溯源到原文",
+        label="优化建议生成",
+        value="分条",
+        delta="可操作",
+        help="基于差距分析生成具体可操作的改进建议，支持人工复核确认",
     )
 
 st.divider()
@@ -62,7 +61,7 @@ st.markdown("### 🚀 快速开始")
 col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("📄 导入ESG语料", use_container_width=True, type="primary"):
-        st.switch_page("pages/02_upload.py")
+        st.switch_page("pages/02_corpus.py")
 with col2:
     if st.button("🔍 分析实质性议题", use_container_width=True):
         st.switch_page("pages/03_materiality.py")

@@ -7,9 +7,9 @@ from fastapi import APIRouter
 
 # 直接从子模块导入，不经过 src.api（避免循环导入）
 from src.api.corpus_router import router as corpus_router
-from src.api.extract_router import router as extract_router
-from src.api.compliance_router import router as compliance_router
-from src.api.content_router import router as content_router
+from src.api.retrieval_router import router as retrieval_router
+from src.api.analyst_router import router as analyst_router
+from src.api.advisor_router import router as advisor_router
 
 # 初始化全局总路由
 api_router = APIRouter()
@@ -21,17 +21,17 @@ api_router.include_router(
     tags=["语料处理"],
 )
 api_router.include_router(
-    extract_router,
-    prefix="/extract",
-    tags=["信息抽取"],
+    retrieval_router,
+    prefix="/retrieval",
+    tags=["议题检索"],
 )
 api_router.include_router(
-    compliance_router,
-    prefix="/compliance",
-    tags=["合规提示"],
+    analyst_router,
+    prefix="/analyst",
+    tags=["差距分析"],
 )
 api_router.include_router(
-    content_router,
-    prefix="/content",
-    tags=["内容生成"],
+    advisor_router,
+    prefix="/advisor",
+    tags=["优化建议"],
 )

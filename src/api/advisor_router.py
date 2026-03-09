@@ -45,7 +45,7 @@ async def run_recommendation(request: AdvisorRequest):
         )
     except ValidationException as e:
         logger.error(f"优化建议生成失败: {e.message}", exc_info=True)
-        raise HTTPException(status_code=400, detail=e.to_dict())
+        raise HTTPException(status_code=400, detail={"error_code": "E4001", "message": e.message})
     except BaseESGException as e:
         logger.error(f"优化建议生成未知错误: {e.message}", exc_info=True)
         raise HTTPException(

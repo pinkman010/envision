@@ -45,7 +45,7 @@ async def run_retrieval(request: RetrievalRequest):
         )
     except ValidationException as e:
         logger.error(f"议题检索失败: {e.message}", exc_info=True)
-        raise HTTPException(status_code=400, detail=e.to_dict())
+        raise HTTPException(status_code=400, detail={"error_code": "E4001", "message": e.message})
     except BaseESGException as e:
         logger.error(f"议题检索未知错误: {e.message}", exc_info=True)
         raise HTTPException(

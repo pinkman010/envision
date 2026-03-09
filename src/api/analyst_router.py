@@ -45,7 +45,7 @@ async def run_analysis(request: AnalystRequest):
         )
     except ValidationException as e:
         logger.error(f"差距分析失败: {e.message}", exc_info=True)
-        raise HTTPException(status_code=400, detail=e.to_dict())
+        raise HTTPException(status_code=400, detail={"error_code": "E4001", "message": e.message})
     except BaseESGException as e:
         logger.error(f"差距分析未知错误: {e.message}", exc_info=True)
         raise HTTPException(

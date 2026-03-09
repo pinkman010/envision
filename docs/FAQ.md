@@ -3,10 +3,10 @@
 ## 1. 系统部署
 
 ### Q: 如何部署系统？
-A: 请参考《部署说明文档.md》，使用Docker一键部署或手动部署。
+A: 请参考《部署说明文档.md》，使用pip安装依赖后手动启动服务。
 
 ### Q: 需要哪些环境依赖？
-A: Python 3.11+, Docker (可选), Ollama (本地嵌入模型)
+A: Python 3.10+, Ollama (本地嵌入模型)
 
 ### Q: 如何配置大模型API？
 A: 在.env文件中配置LLM_API_KEY和LLM_BASE_URL。
@@ -17,9 +17,9 @@ A: 在.env文件中配置LLM_API_KEY和LLM_BASE_URL。
 A: PDF (.pdf) 和 Word (.docx)
 
 ### Q: 最大支持多大的文件？
-A: 默认200MB，可在.env中修改MAX_FILE_SIZE配置
+A: 默认50MB，可在.env中修改MAX_FILE_SIZE配置
 
-### Q: 如何添加新的ESG字段？
+### Q: 如何添加新的ESG议题？
 A: 在config/rule_templates/topic_rules.json中添加
 
 ### Q: 如何修改相似度阈值？

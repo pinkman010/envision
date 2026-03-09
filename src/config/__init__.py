@@ -7,9 +7,9 @@
 - logging_utils: 日志工具（get_logger, init_logging）
 """
 
-from src.core_config.logging_utils import get_logger, init_logging
-from src.core_config.settings import settings
-from src.core_config.paths import (
+from src.config.logging_utils import get_logger, init_logging
+from src.config.settings import settings
+from src.config.paths import (
     ROOT_DIR,
     SRC_DIR,
     CONFIG_DIR,
@@ -20,13 +20,7 @@ from src.core_config.paths import (
     CHROMA_DB_DIR,
     SQLITE_DB_DIR,
     RAW_CORPUS_DIR,
-    VERSIONED_CORPUS_DIR,
-    UNVERSIONED_CORPUS_DIR,
     EXPORT_RESULTS_DIR,
-    TMP_DIR,
-    DEBUG_CACHE_DIR,
-    TEST_OUTPUT_DIR,
-    DRAFT_SCRIPTS_DIR,
     UI_PAGES_DIR,
     LOGS_DIR,
     APP_LOG_DIR,
@@ -51,13 +45,7 @@ __all__ = [
     "CHROMA_DB_DIR",
     "SQLITE_DB_DIR",
     "RAW_CORPUS_DIR",
-    "VERSIONED_CORPUS_DIR",
-    "UNVERSIONED_CORPUS_DIR",
     "EXPORT_RESULTS_DIR",
-    "TMP_DIR",
-    "DEBUG_CACHE_DIR",
-    "TEST_OUTPUT_DIR",
-    "DRAFT_SCRIPTS_DIR",
     "UI_PAGES_DIR",
     "LOGS_DIR",
     "APP_LOG_DIR",

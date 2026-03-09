@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Any
 from jinja2 import Environment, BaseLoader, Template
 
-from src.core_config.paths import (
+from src.config.paths import (
     CONFIG_DIR,
     PROMPT_TEMPLATES_DIR,
     RULE_TEMPLATES_DIR,

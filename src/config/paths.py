@@ -15,7 +15,7 @@ SRC_DIR: Path = ROOT_DIR / "src"  # 核心源码目录
 # ------------------------------
 # 外置配置目录（业务规则、模板）
 # ------------------------------
-CONFIG_DIR: Path = ROOT_DIR / "config"
+CONFIG_DIR: Path = ROOT_DIR / "templates"
 PROMPT_TEMPLATES_DIR: Path = CONFIG_DIR / "prompt_templates"
 PROMPT_DIR: Path = PROMPT_TEMPLATES_DIR  # 别名，用于兼容测试
 RULE_TEMPLATES_DIR: Path = CONFIG_DIR / "rule_templates"
@@ -28,17 +28,7 @@ DATA_DIR: Path = ROOT_DIR / "data"
 CHROMA_DB_DIR: Path = DATA_DIR / "chroma_db"
 SQLITE_DB_DIR: Path = DATA_DIR / "sqlite_db"
 RAW_CORPUS_DIR: Path = DATA_DIR / "raw_corpus"
-VERSIONED_CORPUS_DIR: Path = RAW_CORPUS_DIR / "versioned"
-UNVERSIONED_CORPUS_DIR: Path = RAW_CORPUS_DIR / "unversioned"
 EXPORT_RESULTS_DIR: Path = DATA_DIR / "export_results"
-
-# ------------------------------
-# 临时调试目录（.gitignore完全忽略）
-# ------------------------------
-TMP_DIR: Path = ROOT_DIR / "tmp"
-DEBUG_CACHE_DIR: Path = TMP_DIR / "debug_cache"
-TEST_OUTPUT_DIR: Path = TMP_DIR / "test_output"
-DRAFT_SCRIPTS_DIR: Path = TMP_DIR / "draft_scripts"
 
 # ------------------------------
 # UI页面目录
@@ -72,14 +62,7 @@ def ensure_all_paths() -> None:
         CHROMA_DB_DIR,
         SQLITE_DB_DIR,
         RAW_CORPUS_DIR,
-        VERSIONED_CORPUS_DIR,
-        UNVERSIONED_CORPUS_DIR,
         EXPORT_RESULTS_DIR,
-        # 临时目录
-        TMP_DIR,
-        DEBUG_CACHE_DIR,
-        TEST_OUTPUT_DIR,
-        DRAFT_SCRIPTS_DIR,
         # UI目录
         UI_PAGES_DIR,
         # 日志目录

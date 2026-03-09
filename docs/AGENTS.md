@@ -64,7 +64,7 @@ envision/
 │   │   ├── retrieval_router.py    # 议题检索接口
 │   │   ├── analyst_router.py      # 差距分析接口
 │   │   └── advisor_router.py      # 优化建议接口
-│   ├── core_config/         # 核心配置
+│   ├── config/         # 核心配置
 │   │   ├── settings.py      # 环境变量与配置项
 │   │   ├── paths.py         # 全局路径统一配置
 │   │   └── logging_utils.py # 日志初始化工具
@@ -91,7 +91,7 @@ envision/
 │       ├── config_utils.py     # 配置加载
 │       ├── rule_match.py       # 规则匹配
 │       └── chroma_utils.py     # Chroma向量库
-├── config/                  # 外置配置（业务规则、模板）
+├── templates/                  # 外置配置（业务规则、模板）
 │   ├── prompt_templates/    # Prompt模板（Jinja2）
 │   │   ├── corpus_prompt.j2
 │   │   ├── retrieval_prompt.j2

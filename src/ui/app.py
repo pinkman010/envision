@@ -13,8 +13,8 @@ import sys
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.core_config.settings import settings
-from src.core_config import ensure_all_paths
+from src.config.settings import settings
+from src.config import ensure_all_paths
 
 ensure_all_paths()
 

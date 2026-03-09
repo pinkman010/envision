@@ -8,8 +8,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from src.core_config import settings, get_logger
-from src.core_config.paths import RULE_TEMPLATES_DIR, EXPORT_RESULTS_DIR
+from src.config import settings, get_logger
+from src.config.paths import RULE_TEMPLATES_DIR, EXPORT_RESULTS_DIR
 from src.utils.config_utils import load_topic_rules, load_esg_standards, load_match_rules
 from src.utils.audit_utils import write_audit_log
 

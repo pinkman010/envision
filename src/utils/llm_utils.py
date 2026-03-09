@@ -6,7 +6,7 @@ AI仅做工具调用，不做专业判断
 import time
 from typing import Dict, List, Optional
 
-from src.core_config.settings import (
+from src.config.settings import (
     LLM_API_KEY,
     LLM_BASE_URL,
     LLM_MODEL,
@@ -18,7 +18,7 @@ from src.core_config.settings import (
     LLM_THINKING_DISABLED,
 )
 from src.utils.exception_utils import LLMCallException
-from src.core_config import get_logger
+from src.config import get_logger
 
 logger = get_logger(__name__)
 

@@ -23,7 +23,7 @@ from typing import List, Dict, Any
 # 把项目根目录加入sys.path，才能import src.*
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.core_config.settings import CHROMA_DB_PERSIST_DIR, OLLAMA_BASE_URL, EMBEDDING_MODEL
+from src.config.settings import CHROMA_DB_PERSIST_DIR, OLLAMA_BASE_URL, EMBEDDING_MODEL
 from chromadb.utils.embedding_functions.ollama_embedding_function import OllamaEmbeddingFunction
 
 # 配置

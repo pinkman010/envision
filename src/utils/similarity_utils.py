@@ -5,7 +5,7 @@ ESG合规核心工具：确保AI抽取内容100%还原原文
 
 from typing import Tuple
 
-from src.core_config.settings import SIMILARITY_THRESHOLD
+from src.config.settings import SIMILARITY_THRESHOLD
 
 
 def calculate_similarity(str1: str, str2: str) -> float:

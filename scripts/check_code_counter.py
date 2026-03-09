@@ -128,7 +128,7 @@ def is_core_business_file(filepath, root_path):
     """
     判断是否为真正的核心业务代码：
     ✅ 包含：src/main.py、src/start_windows.py、src/esg/下非__init__.py的文件
-    ❌ 排除：其他所有文件（包括src/utils/、src/config/、tests/、scripts/等）
+    ❌ 排除：其他所有文件（包括src/utils/、src/templates/、tests/、scripts/等）
     """
     path = Path(filepath)
     try:

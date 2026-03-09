@@ -83,8 +83,8 @@ def find_test_dir(project_root):
 def is_core_business_file(filepath, root_path):
     """
     判断是否为真正的核心业务代码
-    ✅ 核心业务：esg/目录下(除config/外) + main.py + start_windows.py
-    ❌ 排除：tests/, scripts/, logs/, esg/config/, temp_chroma_test/, egg-info等
+    ✅ 核心业务：esg/目录下(除templates/外) + main.py + start_windows.py
+    ❌ 排除：tests/, scripts/, logs/, esg/templates/, temp_chroma_test/, egg-info等
     """
     path = Path(filepath)
     try:
@@ -117,12 +117,12 @@ def is_core_business_file(filepath, root_path):
     if any(p in exclude_dirs for p in parts):
         return False
 
-    # 2. 排除 esg/config/ 目录（纯配置数据）
-    if "esg" in parts and "config" in parts:
+    # 2. 排除 esg/templates/ 目录（纯配置数据）
+    if "esg" in parts and "templates" in parts:
         try:
             esg_idx = parts.index("esg")
-            config_idx = parts.index("config")
-            # 确保是 esg/ 直接下的 config/
+            config_idx = parts.index("templates")
+            # 确保是 esg/ 直接下的 templates/
             if config_idx == esg_idx + 1:
                 return False
         except ValueError:

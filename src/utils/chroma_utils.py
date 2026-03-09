@@ -16,9 +16,9 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 
-from src.core_config.paths import CHROMA_DB_DIR, RAW_CORPUS_DIR, ROOT_DIR
-from src.core_config import get_logger
-from src.core_config.settings import (
+from src.config.paths import CHROMA_DB_DIR, RAW_CORPUS_DIR, ROOT_DIR
+from src.config import get_logger
+from src.config.settings import (
     OLLAMA_BASE_URL,
     EMBEDDING_MODEL,
     EMBEDDING_DIMENSION,

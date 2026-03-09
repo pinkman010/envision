@@ -9,7 +9,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.agent import CorpusAgent
-from src.core_config import get_logger
+from src.config import get_logger
 from src.utils import (
     FileProcessingException,
     BaseESGException,

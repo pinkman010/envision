@@ -20,7 +20,7 @@ A: PDF (.pdf) 和 Word (.docx)
 A: 默认50MB，可在.env中修改MAX_FILE_SIZE配置
 
 ### Q: 如何添加新的ESG议题？
-A: 在config/rule_templates/topic_rules.json中添加
+A: 在templates/rule_templates/topic_rules.json中添加
 
 ### Q: 如何修改相似度阈值？
 A: 在.env中修改SIMILARITY_THRESHOLD配置
@@ -90,7 +90,7 @@ A: 1. 继承BaseAgent类
    4. 在app.py中添加页面
 
 ### Q: 如何修改Prompt模板？
-A: 在config/prompt_templates/目录下修改对应的.j2文件
+A: 在templates/prompt_templates/目录下修改对应的.j2文件
 
 ### Q: 如何添加新的ESG标准？
-A: 在config/rule_templates/esg_standards.json中添加
+A: 在templates/rule_templates/esg_standards.json中添加

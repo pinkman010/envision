@@ -7,7 +7,7 @@ import streamlit as st
 import requests
 from pathlib import Path
 
-from src.core_config import settings, get_logger
+from src.config import settings, get_logger
 
 # 初始化logger
 logger = get_logger(__name__)

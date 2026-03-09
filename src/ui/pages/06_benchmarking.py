@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-from src.core_config import settings, get_logger
+from src.config import settings, get_logger
 from src.utils.chroma_utils import get_corpus_list, get_esg_metrics
 
 # 初始化logger

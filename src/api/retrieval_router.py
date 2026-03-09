@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from src.agent import RetrievalAgent
-from src.core_config import get_logger
+from src.config import get_logger
 from src.utils import ValidationException, BaseESGException
 
 # 初始化路由和logger

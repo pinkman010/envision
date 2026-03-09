@@ -43,7 +43,7 @@ OrchestratorAgent（总控调度，固定流程状态机）
 src/
 ├── agent/          # 所有Agent实现
 ├── api/            # FastAPI路由
-├── core_config/    # 配置、日志、路径
+├── templates/    # 配置、日志、路径
 ├── ui/             # Streamlit前端（8页）
 └── utils/          # ChromaDB、LLM、审计、相似度等工具
 data/
@@ -51,19 +51,28 @@ data/
     ├── standards/      # 披露标准条文（已建：standards_kb.xlsx）
     ├── peer_reports/   # 同行ESG报告语料（对接第1组）
     └── topic_taxonomy/ # 议题分类标签体系（对接第2组）
-config/             # 配置文件
+templates/
+└── rule_templates/ # Agent运行时规则配置（代码读取，不参与向量化）
+    ├── topic_rules.json      # 议题定义：id/关键词/正则，必须与standards_kb.xlsx的topic_id对齐
+    ├── esg_standards.json    # 标准元数据：ISSB/HKEX/SASB要求摘要，差距判断参考
+    ├── match_rules.json      # 匹配策略：关键词/正则/语义权重和开关
+    ├── esg_indicators.json   # 指标名称和单位定义，报告展示用
+    └── unit_conversions.json # 单位换算表（万吨→吨、GWh→MWh等），数值归一化用
 scripts/            # 运维脚本
 ```
 
 ## 关键文件路径
 - Agent基类：`src/agent/base_agent.py`
 - 总控Agent：`src/agent/orchestrator_agent.py`
-- 配置入口：`src/core_config/settings.py`（从`.env`读取，无默认值）
+- 配置入口：`src/core_templates/settings.py`（从`.env`读取，无默认值）
 - 向量库工具：`src/utils/chroma_utils.py`（含 `search_standards()`、`search_peer_reports()`）
 - LLM工具：`src/utils/llm_utils.py`
 - 主入口：`src/main.py`
-- 知识库导入脚本：`scripts/import_standards.py`（注意：ChromaDB初始化方式待修复）
+- 知识库导入脚本：`scripts/import_standards.py`（已修复，已运行）
 - 标准条款Excel：`data/knowledge_base/standards/standards_kb.xlsx`
+- 议题规则配置：`templates/rule_templates/topic_rules.json`（topic_id必须与Excel对齐）
+- 标准元数据配置：`templates/rule_templates/esg_standards.json`
+- 匹配策略配置：`templates/rule_templates/match_rules.json`
 
 ---
 
@@ -76,7 +85,7 @@ scripts/            # 运维脚本
 **字段规范**（standards_kb.xlsx各Sheet通用）：
 - `clause_id`：条款编号，ChromaDB的metadata key（如 `A1-KPI1`、`S2-29`）
 - `standard_name`：`HKEX_2024` 或 `ISSB_S2` 或 `ISSB_S1`
-- `topic_id`：严格对应 `config/rule_templates/topic_rules.json` 里的 `id` 字段
+- `topic_id`：严格对应 `templates/rule_templates/topic_rules.json` 里的 `id` 字段
 - `topic_taxonomy_id`：第2组议题分类ID，对齐前留空
 - `requirement_text`：条款原文，向量化主体
 - `industry_applicability`：极高/高/中/低
@@ -108,7 +117,7 @@ scripts/            # 运维脚本
 # 当前重点任务
 
 1. ~~建立 `standards/` 知识库~~ **已完成**：`data/knowledge_base/standards/standards_kb.xlsx` 已创建
-2. 运行 `scripts/import_standards.py`，将Excel导入ChromaDB `standards` 集合（脚本已修复，可直接运行）**已运行**
+2. ~~运行 `scripts/import_standards.py`，将Excel导入ChromaDB `standards` 集合（脚本已修复，可直接运行）~~ **已完成**
 3. 与第1组对齐 `peer_reports/` 数据格式
 4. 与第2组对齐 `topic_taxonomy/` 议题分类标签，填入 `topic_taxonomy_id` 字段
 5. 4月中期前完成单报告分析Demo（输入ESG文本→识别议题→差距分析→优化建议）

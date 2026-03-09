@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from typing import List, Tuple
 
-from src.core_config.settings import MAX_FILE_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
+from src.config.settings import MAX_FILE_SIZE, CHUNK_SIZE, CHUNK_OVERLAP
 from src.utils.exception_utils import FileProcessingException
 import io
 

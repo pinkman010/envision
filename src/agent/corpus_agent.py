@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from src.agent.base_agent import BaseAgent
-from src.core_config import get_logger, settings
+from src.config import get_logger, settings
 from src.utils import (
     validate_file,
     extract_text,

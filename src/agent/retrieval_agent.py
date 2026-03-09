@@ -12,7 +12,7 @@
 from typing import Dict, Any, List
 
 from src.agent.base_agent import BaseAgent
-from src.core_config import get_logger
+from src.config import get_logger
 from src.utils import (
     load_prompt_template,
     load_topic_rules,

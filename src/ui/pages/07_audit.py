@@ -8,8 +8,8 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from src.core_config import settings, get_logger
-from src.core_config.paths import EXPORT_RESULTS_DIR
+from src.config import settings, get_logger
+from src.config.paths import EXPORT_RESULTS_DIR
 from src.utils.audit_utils import (
     query_audit_logs,
     verify_log_integrity,

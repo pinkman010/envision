@@ -5,7 +5,7 @@
 
 import streamlit as st
 
-from src.core_config import settings
+from src.config import settings
 
 # 页面配置（app.py全局配置）
 st.header("🌱 ESG信息披露与沟通智能分析系统")

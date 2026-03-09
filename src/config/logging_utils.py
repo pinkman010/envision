@@ -9,7 +9,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
 
-from src.core_config.settings import (
+from src.config.settings import (
     ENVIRONMENT,
     DEBUG,
     LOG_LEVEL,
@@ -18,7 +18,7 @@ from src.core_config.settings import (
     LOG_MAX_BYTES,
     LOG_BACKUP_COUNT,
 )
-from src.core_config.paths import APP_LOG_DIR, API_LOG_DIR
+from src.config.paths import APP_LOG_DIR, API_LOG_DIR
 
 
 def init_logging() -> logging.Logger:

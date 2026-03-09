@@ -8,7 +8,7 @@ import requests
 import json
 from datetime import datetime
 
-from src.core_config import settings, get_logger
+from src.config import settings, get_logger
 
 # 初始化logger
 logger = get_logger(__name__)

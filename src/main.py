@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.core_config.settings import settings
-from src.core_config.paths import ensure_all_paths
+from src.config.settings import settings
+from src.config.paths import ensure_all_paths
 from src.api.router import api_router
 
 # 1. 确保所有必要的目录存在（data/、tmp/等）

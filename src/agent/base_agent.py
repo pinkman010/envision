@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-from src.core_config import get_logger
+from src.config import get_logger
 from src.utils import write_audit_log, BaseESGException
 
 

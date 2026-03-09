@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from src.core_config.paths import SQLITE_DB_DIR
+from src.config.paths import SQLITE_DB_DIR
 from src.utils.hash_utils import generate_sha256_hash
 from src.utils.exception_utils import AuditException
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 项目代码统计工具 (核心业务版)
-只统计核心业务代码：src/main.py、src/start_windows.py、src/esg/目录(除__init__.py外)
+只统计核心业务代码：src/agent, src/utils, src/api, src/ui, src/config, src/core_templates
 """
 
 import os
@@ -29,7 +29,13 @@ class CodeStats:
         self.blank_lines += blank
         self.comment_lines += comment
         self.file_details.append(
-            {"path": filepath, "total": lines, "code": code, "blank": blank, "comment": comment}
+            {
+                "path": filepath,
+                "total": lines,
+                "code": code,
+                "blank": blank,
+                "comment": comment,
+            }
         )
 
     def avg_lines_per_file(self):
@@ -46,27 +52,14 @@ def find_project_root(start_path=None):
 
     current = start_path
 
-    # 向上查找，直到找到包含 src 目录的目录（且 src 里有 esg 或 main.py）
+    # 向上查找，直到找到包含 src 目录的父目录
     for _ in range(5):
-        # 检查当前目录是否包含 src 子目录，且 src 看起来像业务代码目录
+        # 检查当前目录是否包含 src 子目录
         src_dir = current / "src"
         if src_dir.exists() and src_dir.is_dir():
-            # 进一步确认：src 里应该有 esg/ 或 main.py
-            if (src_dir / "esg").exists() or (src_dir / "main.py").exists():
+            # 进一步确认：src 里应该有 agent/ 或 main.py
+            if (src_dir / "agent").exists() or (src_dir / "main.py").exists():
                 return current  # 返回包含 src 的父目录（envision）
-
-        # 如果没有，检查当前目录本身是否是 src（向上回溯的情况）
-        if current.name == "src":
-            parent = current.parent
-            if parent.exists():
-                return parent
-
-        # 检查其他项目标志
-        markers = [".git", "tests", "test", "pyproject.toml", "setup.py", "requirements.txt"]
-        if any((current / marker).exists() for marker in markers):
-            # 如果找到了项目标志，检查是否有 src 子目录
-            if (current / "src").exists():
-                return current
 
         parent = current.parent
         if parent == current:  # 到达根目录
@@ -127,8 +120,8 @@ def analyze_file(filepath):
 def is_core_business_file(filepath, root_path):
     """
     判断是否为真正的核心业务代码：
-    ✅ 包含：src/main.py、src/start_windows.py、src/esg/下非__init__.py的文件
-    ❌ 排除：其他所有文件（包括src/utils/、src/templates/、tests/、scripts/等）
+    ✅ 包含：src/agent, src/utils, src/api, src/ui, src/config, src/core_templates
+    ❌ 排除：其他所有文件（包括tests/、scripts/等）
     """
     path = Path(filepath)
     try:
@@ -164,11 +157,18 @@ def is_core_business_file(filepath, root_path):
     if len(remaining_parts) == 1:
         return filename in ("main.py", "start_windows.py")
 
-    # 6. src/esg/ 目录及其子目录下的文件：保留（核心业务）
-    if len(remaining_parts) >= 1 and remaining_parts[0] == "esg":
+    # 6. src/下的核心业务目录：保留（agent, utils, api, ui, config, core_templates）
+    if len(remaining_parts) >= 1 and remaining_parts[0] in [
+        "agent",
+        "utils",
+        "api",
+        "ui",
+        "config",
+        "core_templates",
+    ]:
         return True
 
-    # 7. 其他 src/ 子目录（如 src/utils/、src/config/ 等）：排除
+    # 7. 其他 src/ 子目录：排除
     return False
 
 
@@ -216,7 +216,9 @@ def scan_directory(directory):
         current_dir = Path(root)
 
         # 检查是否是 src 目录（用于调试）
-        if current_dir.name == "src" and "esg" in dirs:
+        if current_dir.name == "src" and any(
+            d in ["agent", "utils", "api", "ui", "config"] for d in dirs
+        ):
             found_src = True
             print(f"   ✅ 发现 src 目录: {current_dir}")
 
@@ -254,19 +256,16 @@ def scan_directory(directory):
                     result["blank"],
                     result["comment"],
                 )
-                # 按目录分组统计（显示 esg/ 下的子目录）
+                # 按目录分组统计（显示 src/ 下的子目录）
                 rel_str = str(relative_path)
-                if "esg" in rel_str:
-                    # 提取 esg/ 下的第一级子目录
+                dir_name = "src"  # 默认值
+                if "src" in rel_str:
+                    # 提取 src/ 下的第一级子目录
                     parts = relative_path.parts
-                    if "esg" in parts:
-                        esg_idx = parts.index("esg")
-                        if len(parts) > esg_idx + 1:
-                            dir_name = f"esg/{parts[esg_idx + 1]}"
-                        else:
-                            dir_name = "esg"
-                    else:
-                        dir_name = "esg"
+                    if "src" in parts:
+                        src_idx = parts.index("src")
+                        if len(parts) > src_idx + 1:
+                            dir_name = f"src/{parts[src_idx + 1]}"
                 else:
                     dir_name = str(relative_path.parent)
                     if dir_name == ".":
@@ -301,20 +300,22 @@ def print_results(all_stats, core_stats, dir_stats, project_root):
     print("=" * 85)
     print(f"📅 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"📁 项目路径: {project_root}")
-    print(f"📊 统计范围: 核心业务代码 (src/main.py, src/start_windows.py, src/esg/*)")
+    print(
+        f"📊 统计范围: 核心业务代码 (src/agent, src/utils, src/api, src/ui, src/config + main.py)"
+    )
 
     # 1. 全部文件统计（参考）
     print(f"\n📁 【项目全部文件统计】（参考）")
     print(f"   文件总数: {all_stats.total_files} 个")
     print(f"   总行数:   {all_stats.total_lines:,} 行")
     print(
-        f"   代码行:   {all_stats.code_lines:,} 行 ({all_stats.code_lines/all_stats.total_lines*100:.1f}%)"
+        f"   代码行:   {all_stats.code_lines:,} 行 ({all_stats.code_lines / all_stats.total_lines * 100:.1f}%)"
     )
     print(
-        f"   注释行:   {all_stats.comment_lines:,} 行 ({all_stats.comment_lines/all_stats.total_lines*100:.1f}%)"
+        f"   注释行:   {all_stats.comment_lines:,} 行 ({all_stats.comment_lines / all_stats.total_lines * 100:.1f}%)"
     )
     print(
-        f"   空行:     {all_stats.blank_lines:,} 行 ({all_stats.blank_lines/all_stats.total_lines*100:.1f}%)"
+        f"   空行:     {all_stats.blank_lines:,} 行 ({all_stats.blank_lines / all_stats.total_lines * 100:.1f}%)"
     )
 
     # 2. 核心业务代码统计
@@ -323,24 +324,24 @@ def print_results(all_stats, core_stats, dir_stats, project_root):
         print(f"   文件总数: {core_stats.total_files} 个")
         print(f"   总行数:   {core_stats.total_lines:,} 行")
         print(
-            f"   代码行:   {core_stats.code_lines:,} 行 ({core_stats.code_lines/core_stats.total_lines*100:.1f}%)"
+            f"   代码行:   {core_stats.code_lines:,} 行 ({core_stats.code_lines / core_stats.total_lines * 100:.1f}%)"
         )
         print(
-            f"   注释行:   {core_stats.comment_lines:,} 行 ({core_stats.comment_lines/core_stats.total_lines*100:.1f}%)"
+            f"   注释行:   {core_stats.comment_lines:,} 行 ({core_stats.comment_lines / core_stats.total_lines * 100:.1f}%)"
         )
         print(
-            f"   空行:     {core_stats.blank_lines:,} 行 ({core_stats.blank_lines/core_stats.total_lines*100:.1f}%)"
+            f"   空行:     {core_stats.blank_lines:,} 行 ({core_stats.blank_lines / core_stats.total_lines * 100:.1f}%)"
         )
         print(f"   平均每文件: {core_stats.avg_lines_per_file():.0f} 行")
     else:
         print("   ⚠️  未找到核心业务代码文件")
-        print("   检查: 项目根目录是否正确？是否包含 src/esg/ 目录？")
+        print("   检查: 项目根目录是否正确？是否包含 src/agent, src/utils 等目录？")
         return
 
     # 3. 业务代码 vs 其他对比
     print(f"\n📊 核心业务代码占比")
     print(f"   {'指标':<20} {'全部项目':>12} {'核心业务':>12} {'占比':>10}")
-    print(f"   {'-'*20} {'-'*12} {'-'*12} {'-'*10}")
+    print(f"   {'-' * 20} {'-' * 12} {'-' * 12} {'-' * 10}")
 
     if all_stats.total_files > 0:
         file_ratio = core_stats.total_files / all_stats.total_files * 100
@@ -363,17 +364,23 @@ def print_results(all_stats, core_stats, dir_stats, project_root):
     # 4. 核心业务目录分布 (Top 15)
     if dir_stats and core_stats.total_files > 0:
         print(f"\n📂 【核心业务目录分布】")
-        sorted_dirs = sorted(dir_stats.items(), key=lambda x: x[1]["lines"], reverse=True)
+        sorted_dirs = sorted(
+            dir_stats.items(), key=lambda x: x[1]["lines"], reverse=True
+        )
         max_lines = max(x[1]["lines"] for x in sorted_dirs) if sorted_dirs else 0
 
         for i, (dir_name, info) in enumerate(sorted_dirs[:15], 1):
             bar = print_bar(info["lines"], max_lines, 20)
-            print(f"   {i:2d}. {dir_name:<35} {bar} {info['files']:>3}文件, {info['lines']:>6,}行")
+            print(
+                f"   {i:2d}. {dir_name:<35} {bar} {info['files']:>3}文件, {info['lines']:>6,}行"
+            )
 
     # 5. 最大核心业务文件 Top 10
     if core_stats.file_details:
         print(f"\n📝 【最大核心业务文件 Top 10】")
-        sorted_files = sorted(core_stats.file_details, key=lambda x: x["total"], reverse=True)
+        sorted_files = sorted(
+            core_stats.file_details, key=lambda x: x["total"], reverse=True
+        )
         for i, f in enumerate(sorted_files[:10], 1):
             print(
                 f"   {i:2d}. {f['path']:<50} {f['total']:>6,}行 "
@@ -383,13 +390,17 @@ def print_results(all_stats, core_stats, dir_stats, project_root):
     # 6. 代码密度分析
     if core_stats.file_details:
         high_code_density = [
-            f for f in core_stats.file_details if f["total"] > 50 and f["code"] / f["total"] > 0.8
+            f
+            for f in core_stats.file_details
+            if f["total"] > 50 and f["code"] / f["total"] > 0.8
         ]
         if high_code_density:
             print(f"\n🎯 【高代码密度文件】(>80%实际代码, 超过50行)")
             for f in high_code_density[:5]:
                 ratio = f["code"] / f["total"] * 100
-                print(f"   • {f['path']}: {ratio:.1f}% 为实际代码 ({f['code']}/{f['total']}行)")
+                print(
+                    f"   • {f['path']}: {ratio:.1f}% 为实际代码 ({f['code']}/{f['total']}行)"
+                )
 
     print("\n" + "=" * 85)
 
@@ -403,7 +414,9 @@ def main():
         print(f"🔍 脚本位置: {script_dir}")
         print(f"🔍 检测到项目根目录: {project_root}")
         print("📊 正在统计核心业务代码...")
-        print("   (范围: src/main.py, src/start_windows.py, src/esg/*)")
+        print(
+            "   (范围: src/agent, src/utils, src/api, src/ui, src/config, src/core_templates + main.py)"
+        )
 
         all_stats, core_stats, dir_stats = scan_directory(project_root)
 

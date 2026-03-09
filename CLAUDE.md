@@ -43,7 +43,7 @@ OrchestratorAgent（总控调度，固定流程状态机）
 src/
 ├── agent/          # 所有Agent实现
 ├── api/            # FastAPI路由
-├── templates/    # 配置、日志、路径
+├── config/         # 配置、日志、路径
 ├── ui/             # Streamlit前端（8页）
 └── utils/          # ChromaDB、LLM、审计、相似度等工具
 data/
@@ -64,7 +64,7 @@ scripts/            # 运维脚本
 ## 关键文件路径
 - Agent基类：`src/agent/base_agent.py`
 - 总控Agent：`src/agent/orchestrator_agent.py`
-- 配置入口：`src/core_templates/settings.py`（从`.env`读取，无默认值）
+- 配置入口：`src/config/settings.py`（从`.env`读取，无默认值）
 - 向量库工具：`src/utils/chroma_utils.py`（含 `search_standards()`、`search_peer_reports()`）
 - LLM工具：`src/utils/llm_utils.py`
 - 主入口：`src/main.py`
@@ -118,6 +118,44 @@ scripts/            # 运维脚本
 
 1. ~~建立 `standards/` 知识库~~ **已完成**：`data/knowledge_base/standards/standards_kb.xlsx` 已创建
 2. ~~运行 `scripts/import_standards.py`，将Excel导入ChromaDB `standards` 集合（脚本已修复，可直接运行）~~ **已完成**
-3. 与第1组对齐 `peer_reports/` 数据格式
-4. 与第2组对齐 `topic_taxonomy/` 议题分类标签，填入 `topic_taxonomy_id` 字段
+3. ~~与第1组对齐 `peer_reports/` 数据格式~~ **无需协商**：让他们提供 txt+CSV 格式即可（见下方说明）
+4. ~~与第2组对齐 `topic_taxonomy/` 议题分类标签~~ **无需协商**：等他们给出 ID 后填入 `topic_taxonomy_id` 列即可（见下方说明）
 5. 4月中期前完成单报告分析Demo（输入ESG文本→识别议题→差距分析→优化建议）
+
+---
+
+# 三组对齐说明
+
+## 与第二组（议题分类标签）
+
+**第二组负责**：核心实质性议题的数据标注和预测，会产出一套议题分类标签 ID 体系。
+
+**只需要做一件事**：等他们给出议题分类 ID 列表后，填入 `standards_kb.xlsx` 的 `topic_taxonomy_id` 列，重跑 `import_standards.py` 即可。
+
+- `topic_id`（系统内部用，已在跑）**不需要改**
+- `topic_taxonomy_id` 只是附加的元数据字段，没有 Agent 代码依赖它做检索，填入备查即可
+- **无需协商，单向接收数据后填表重建索引**
+
+---
+
+## 与第一组（同行报告语料库）
+
+**第一组负责**：构建新能源行业ESG语料库，`peer_reports/` 目录里已有部分 PDF（远景/金风/Vestas/Siemens Gamesa）。
+
+**对接方式：不能让他们直接给外部 RAG API**，原因：`RetrievalAgent` 直接调用本地 `chroma_utils.search_peer_reports()`，没有调用外部 API 的逻辑，接入外部 API 需大改代码。
+
+**正确对接方式**：
+- 让第一组提供 **txt + metadata.csv** 格式（不要 PDF，不要 JSON）
+  - 每份报告一个 `.txt` 文件（UTF-8 编码）
+  - 一个 `metadata.csv`，字段：`file_name, company, year, industry, language`
+- 放入 `data/knowledge_base/peer_reports/`
+- 自己写 `scripts/import_peer_reports.py`（参考 `import_standards.py`），读 CSV 拿元数据，读 txt 分块，`topic` 由本地 `RuleMatcher` 自动打标，向量化导入本地 ChromaDB `peer_reports` 集合
+- **无需与第一组协商任何其他格式**
+
+---
+
+## 待办
+
+- [ ] 等第二组给出议题分类 ID → 填入 `standards_kb.xlsx` 的 `topic_taxonomy_id` 列 → 重跑 `import_standards.py`
+- [ ] 编写 `scripts/import_peer_reports.py` 向量化导入 peer_reports
+- [ ] 验证 `search_peer_reports()` 可正常检索

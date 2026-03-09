@@ -31,7 +31,7 @@ except Exception as e:
 if not corpus_list:
     st.info("📋 暂无可用语料数据，请先上传ESG报告")
     if st.button("📄 前往语料管理中心", use_container_width=True):
-        st.switch_page("pages/02_upload.py")
+        st.switch_page("pages/02_corpus.py")
     st.stop()
 
 # 2. 选择对比企业

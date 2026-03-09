@@ -48,4 +48,11 @@ async def run_analysis(request: AnalystRequest):
         raise HTTPException(status_code=400, detail=e.to_dict())
     except BaseESGException as e:
         logger.error(f"差距分析未知错误: {e.message}", exc_info=True)
-        raise HTTPException(status_code=500, detail=e.to_dict())
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E5001", "message": e.message}
+        )
+    except Exception as e:
+        logger.critical(f"差距分析系统未知错误: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E5001", "message": str(e)}
+        )

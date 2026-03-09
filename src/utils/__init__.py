@@ -58,9 +58,6 @@ from src.utils.chroma_utils import (
     search_corpus,
     get_esg_metrics,
     get_chroma_manager,
-    enhance_extraction_with_rag,
-    RetrievedChunk,
-    ExtractionEnhancement,
 )
 
 __all__ = [
@@ -113,7 +110,4 @@ __all__ = [
     "search_corpus",
     "get_esg_metrics",
     "get_chroma_manager",
-    "enhance_extraction_with_rag",
-    "RetrievedChunk",
-    "ExtractionEnhancement",
 ]

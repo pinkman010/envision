@@ -9,7 +9,7 @@
 - 使用clean_and_parse_json替代validate_json_format
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from src.agent.base_agent import BaseAgent
 from src.core_config import get_logger
@@ -44,7 +44,7 @@ class AnalystAgent(BaseAgent):
         retrieval_result = task_input.get("retrieval_result")
         if not retrieval_result:
             raise ValidationException("任务输入缺少必填字段: retrieval_result")
-        
+
         identified_topics = retrieval_result.get("identified_topics", [])
         retrieved_standards = retrieval_result.get("retrieved_standards", [])
         retrieved_peers = retrieval_result.get("retrieved_peers", [])
@@ -77,16 +77,16 @@ class AnalystAgent(BaseAgent):
         # 4. 宽松解析JSON（替代原来的validate_json_format）
         self.logger.debug("开始解析差距分析结果")
         analyst_data = clean_and_parse_json(llm_output, logger=self.logger)
-        
+
         # 5. 确保必要字段存在
         if "gap_analysis" not in analyst_data:
             self.logger.warning("LLM输出缺少gap_analysis字段，返回空列表")
             analyst_data["gap_analysis"] = []
-        
+
         if "peer_comparison" not in analyst_data:
             self.logger.warning("LLM输出缺少peer_comparison字段，返回空列表")
             analyst_data["peer_comparison"] = []
-        
+
         if "overall_assessment" not in analyst_data:
             analyst_data["overall_assessment"] = "未生成整体评估"
 
@@ -102,7 +102,7 @@ class AnalystAgent(BaseAgent):
         self.logger.info(
             f"差距分析完成: 重大差距={major_count}, 轻微差距={minor_count}, 无差距={none_count}"
         )
-        
+
         return {
             "identified_topics": identified_topics,
             "gap_analysis": gap_analysis,

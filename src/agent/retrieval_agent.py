@@ -51,16 +51,13 @@ class RetrievalAgent(BaseAgent):
         if not fixed_text:
             raise ValidationException("语料处理结果缺少fixed_text字段")
 
-        # 获取企业和年份信息
         metadata = corpus_result.get("metadata", {})
-        company_name = metadata.get("company_name", "")
-        report_year = metadata.get("report_year", 0)
 
         # 2. RAG检索知识库
         self.logger.debug("开始RAG检索知识库")
         try:
             chroma_manager = get_chroma_manager()
-            
+
             # 2.1 检索标准条文（standards集合）
             # 使用文本摘要作为查询，获取相关标准
             query_text = fixed_text[:500]  # 取前500字符作为查询
@@ -69,16 +66,18 @@ class RetrievalAgent(BaseAgent):
                 n_results=5,
                 score_threshold=0.5,
             )
-            
+
             # 2.2 检索同行案例（peer_reports集合）
             retrieved_peers = chroma_manager.search_peer_reports(
                 query=query_text,
                 n_results=3,
                 score_threshold=0.5,
             )
-            
-            self.logger.info(f"RAG检索完成: standards={len(retrieved_standards)}, peers={len(retrieved_peers)}")
-            
+
+            self.logger.info(
+                f"RAG检索完成: standards={len(retrieved_standards)}, peers={len(retrieved_peers)}"
+            )
+
         except Exception as e:
             self.logger.warning(f"RAG检索失败（可能集合为空）: {str(e)}")
             retrieved_standards = []
@@ -101,11 +100,11 @@ class RetrievalAgent(BaseAgent):
         # 5. 清洗并解析JSON
         self.logger.debug(f"LLM返回内容长度: {len(llm_output) if llm_output else 0}")
         retrieval_data = clean_and_parse_json(llm_output, logger=self.logger)
-        
+
         if "identified_topics" not in retrieval_data:
             self.logger.warning("LLM输出缺少identified_topics字段，返回空列表")
             retrieval_data["identified_topics"] = []
-        
+
         if "coverage_summary" not in retrieval_data:
             retrieval_data["coverage_summary"] = "未能生成覆盖情况总结"
 
@@ -113,7 +112,7 @@ class RetrievalAgent(BaseAgent):
 
         # 6. 返回结果
         self.logger.info(f"议题识别完成: 识别到 {len(identified_topics)} 个议题")
-        
+
         return {
             "corpus_metadata": metadata,
             "input_text": fixed_text[:6000],  # 保留输入文本供后续使用

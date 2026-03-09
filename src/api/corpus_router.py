@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from src.agent import CorpusAgent
 from src.core_config import get_logger
 from src.utils import (
-    FileProcessingException, 
+    FileProcessingException,
     BaseESGException,
     get_corpus_list,
     get_corpus_detail,
@@ -33,6 +33,7 @@ class CorpusProcessResponse(BaseModel):
 
 class CorpusListItem(BaseModel):
     """语料列表项"""
+
     corpus_id: str = Field(..., description="语料唯一ID")
     file_name: str = Field(..., description="文件名")
     file_suffix: str = Field(..., description="文件后缀")
@@ -46,6 +47,7 @@ class CorpusListItem(BaseModel):
 
 class CorpusListResponse(BaseModel):
     """语料列表响应"""
+
     code: int = Field(200, description="响应状态码")
     message: str = Field("success", description="响应消息")
     data: List[CorpusListItem] = Field(..., description="语料列表")
@@ -53,6 +55,7 @@ class CorpusListResponse(BaseModel):
 
 class CorpusChunk(BaseModel):
     """语料分块"""
+
     chunk_index: int = Field(..., description="分块索引")
     start: int = Field(..., description="起始位置")
     end: int = Field(..., description="结束位置")
@@ -61,6 +64,7 @@ class CorpusChunk(BaseModel):
 
 class CorpusDetail(BaseModel):
     """语料详情"""
+
     corpus_id: str = Field(..., description="语料唯一ID")
     file_name: str = Field(..., description="文件名")
     file_suffix: str = Field(..., description="文件后缀")
@@ -76,6 +80,7 @@ class CorpusDetail(BaseModel):
 
 class CorpusDetailResponse(BaseModel):
     """语料详情响应"""
+
     code: int = Field(200, description="响应状态码")
     message: str = Field("success", description="响应消息")
     data: Optional[CorpusDetail] = Field(None, description="语料详情")
@@ -83,6 +88,7 @@ class CorpusDetailResponse(BaseModel):
 
 class ESGMetricItem(BaseModel):
     """ESG指标项"""
+
     metric_key: str = Field(..., description="指标键名")
     metric_name: str = Field(..., description="指标名称")
     original_value: float = Field(..., description="原始数值")
@@ -95,6 +101,7 @@ class ESGMetricItem(BaseModel):
 
 class ESGMetricsResponse(BaseModel):
     """ESG指标响应"""
+
     code: int = Field(200, description="响应状态码")
     message: str = Field("success", description="响应消息")
     data: List[ESGMetricItem] = Field(..., description="ESG指标列表")
@@ -110,33 +117,42 @@ async def process_corpus(file: UploadFile = File(...)):
     try:
         # 1. 保存上传的文件到临时目录
         import tempfile
-        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
+
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=Path(file.filename).suffix
+        ) as tmp:
             content = await file.read()
             tmp.write(content)
             tmp_path = Path(tmp.name)
-        
+
         logger.info(f"接收到语料处理请求: {file.filename}")
-        
+
         # 2. 调用CorpusAgent处理
         task_input = {"file_path": str(tmp_path)}
         result = corpus_agent.run(task_input)
-        
+
         # 3. 返回结果
         return CorpusProcessResponse(
             code=200,
             message="语料处理成功",
             data=result,
         )
-    
+
     except FileProcessingException as e:
         logger.error(f"语料处理失败: {e.message}", exc_info=True)
-        raise HTTPException(status_code=400, detail=e.to_dict())
+        raise HTTPException(
+            status_code=400, detail={"error_code": "E0001", "message": e.message}
+        )
     except BaseESGException as e:
         logger.error(f"语料处理未知错误: {e.message}", exc_info=True)
-        raise HTTPException(status_code=500, detail=e.to_dict())
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E0001", "message": e.message}
+        )
     except Exception as e:
         logger.critical(f"语料处理系统错误: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail={"error_code": "E0001", "message": str(e)})
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E0001", "message": str(e)}
+        )
 
 
 @router.get("/list", response_model=CorpusListResponse)
@@ -160,7 +176,9 @@ async def list_corpus(
         )
     except Exception as e:
         logger.error(f"语料列表查询失败: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail={"error_code": "E0002", "message": str(e)})
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E0002", "message": str(e)}
+        )
 
 
 @router.get("/detail/{corpus_id}", response_model=CorpusDetailResponse)
@@ -174,7 +192,9 @@ async def get_corpus(corpus_id: str):
         logger.info(f"查询语料详情: {corpus_id}")
         corpus_detail = get_corpus_detail(corpus_id)
         if corpus_detail is None:
-            raise HTTPException(status_code=404, detail={"error_code": "E0003", "message": "语料不存在"})
+            raise HTTPException(
+                status_code=404, detail={"error_code": "E0003", "message": "语料不存在"}
+            )
         return CorpusDetailResponse(
             code=200,
             message="查询成功",
@@ -184,7 +204,9 @@ async def get_corpus(corpus_id: str):
         raise
     except Exception as e:
         logger.error(f"语料详情查询失败: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail={"error_code": "E0004", "message": str(e)})
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E0004", "message": str(e)}
+        )
 
 
 @router.get("/esg-metrics/{corpus_id}", response_model=ESGMetricsResponse)
@@ -204,4 +226,6 @@ async def get_corpus_esg_metrics(corpus_id: str):
         )
     except Exception as e:
         logger.error(f"ESG指标查询失败: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail={"error_code": "E0005", "message": str(e)})
+        raise HTTPException(
+            status_code=500, detail={"error_code": "E0005", "message": str(e)}
+        )

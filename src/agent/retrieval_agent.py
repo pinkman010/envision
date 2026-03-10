@@ -58,20 +58,30 @@ class RetrievalAgent(BaseAgent):
         try:
             chroma_manager = get_chroma_manager()
 
-            # 2.1 检索标准条文（standards集合）
-            # 使用文本摘要作为查询，获取相关标准
-            query_text = fixed_text[:500]  # 取前500字符作为查询
+            # 2.1 构建检索Query：提取所有议题关键词，拼接代表性词组
+            #     比取原文前N字符更有针对性——覆盖所有待识别议题的语义空间
+            all_keywords = []
+            for topic in self.topics:
+                all_keywords.extend(topic.get("keywords", [])[:3])  # 每个议题取前3个关键词
+
+            # 标准检索Query：议题关键词 + 行业背景词
+            standards_query = "新能源行业ESG披露标准 " + " ".join(all_keywords[:20])
+
+            # 同行检索Query：优先用原文前段，确保语义匹配更准确
+            peer_query = fixed_text[:800].strip() or standards_query
+
+            # 2.2 检索标准条文（standards集合）
             retrieved_standards = chroma_manager.search_standards(
-                query=query_text,
-                n_results=5,
-                score_threshold=0.5,
+                query=standards_query,
+                n_results=8,          # 从5增加到8，后续Prompt里再筛选
+                score_threshold=0.45, # 略降低阈值，避免漏检
             )
 
-            # 2.2 检索同行案例（peer_reports集合）
+            # 2.3 检索同行案例（peer_reports集合）
             retrieved_peers = chroma_manager.search_peer_reports(
-                query=query_text,
-                n_results=3,
-                score_threshold=0.5,
+                query=peer_query,
+                n_results=5,          # 从3增加到5
+                score_threshold=0.45,
             )
 
             self.logger.info(

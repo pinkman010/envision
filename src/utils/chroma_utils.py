@@ -1,6 +1,6 @@
 """
 Chroma 向量数据库工具：语料存储、检索、管理
-使用本地 Ollama 嵌入模型（配置项：EMBEDDING_MODEL）
+使用硅基流动 BAAI/bge-m3 嵌入模型（API调用，替代本地 Ollama）
 优化：批量向量化 + 并发处理
 
 包含RAG增强提取功能：利用语料库知识库提高信息提取精准度
@@ -20,6 +20,7 @@ from src.config.paths import CHROMA_DB_DIR, RAW_CORPUS_DIR, ROOT_DIR
 from src.config import get_logger
 from src.config.settings import (
     OLLAMA_BASE_URL,
+    SILICONFLOW_API_KEY,
     EMBEDDING_MODEL,
     EMBEDDING_DIMENSION,
     EMBEDDING_BATCH_SIZE,
@@ -98,14 +99,15 @@ class ChromaManager:
 
         try:
             import chromadb
-            from chromadb.utils.embedding_functions.ollama_embedding_function import (
-                OllamaEmbeddingFunction,
+            from chromadb.utils.embedding_functions.openai_embedding_function import (
+                OpenAIEmbeddingFunction,
             )
 
-            # 初始化 Ollama 嵌入函数（使用配置项）
-            self._embedding_function = OllamaEmbeddingFunction(
-                url=OLLAMA_BASE_URL,
+            # 使用硅基流动 bge-m3 嵌入函数（替代本地 Ollama）
+            self._embedding_function = OpenAIEmbeddingFunction(
+                api_key=SILICONFLOW_API_KEY,
                 model_name=EMBEDDING_MODEL,
+                api_base="https://api.siliconflow.cn/v1",
             )
 
             # 确保目录存在
@@ -135,6 +137,7 @@ class ChromaManager:
                 metadata={
                     "description": "ESG披露标准条文（ISSB/HKEX/SASB等）",
                     "version": "1.0",
+                    "hnsw:space": "cosine",
                 },
             )
 
@@ -142,7 +145,7 @@ class ChromaManager:
             self._peer_reports_collection = self._client.get_or_create_collection(
                 name="peer_reports",
                 embedding_function=self._embedding_function,
-                metadata={"description": "同行业ESG报告披露案例", "version": "1.0"},
+                metadata={"description": "同行业ESG报告披露案例", "version": "1.0", "hnsw:space": "cosine"},
             )
 
             logger.info("ChromaManager 初始化完成（含standards和peer_reports预留集合）")

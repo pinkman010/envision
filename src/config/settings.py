@@ -122,6 +122,7 @@ CHROMA_DB_PERSIST_DIR: str = get_required_env("CHROMA_DB_PERSIST_DIR")
 # Ollama 嵌入模型配置（向量数据库用）
 # ------------------------------
 OLLAMA_BASE_URL: str = get_required_env("OLLAMA_BASE_URL")
+SILICONFLOW_API_KEY: str = get_required_env("SILICONFLOW_API_KEY")
 EMBEDDING_MODEL: str = get_required_env("EMBEDDING_MODEL")
 EMBEDDING_DIMENSION: int = get_required_env("EMBEDDING_DIMENSION", int)
 EMBEDDING_BATCH_SIZE: int = get_required_env("EMBEDDING_BATCH_SIZE", int)
@@ -184,6 +185,7 @@ class Settings:
     
     # Ollama 嵌入模型
     OLLAMA_BASE_URL = OLLAMA_BASE_URL
+    SILICONFLOW_API_KEY = SILICONFLOW_API_KEY
     EMBEDDING_MODEL = EMBEDDING_MODEL
     EMBEDDING_DIMENSION = EMBEDDING_DIMENSION
     EMBEDDING_BATCH_SIZE = EMBEDDING_BATCH_SIZE

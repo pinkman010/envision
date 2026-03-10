@@ -23,11 +23,9 @@ from pypdf import PdfReader
 # 把项目根目录加入sys.path，才能import src.*
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.config.settings import CHROMA_DB_PERSIST_DIR, OLLAMA_BASE_URL, EMBEDDING_MODEL
+from src.config.settings import CHROMA_DB_PERSIST_DIR, SILICONFLOW_API_KEY, EMBEDDING_MODEL
 from src.utils.rule_match import get_rule_matcher
-from chromadb.utils.embedding_functions.ollama_embedding_function import (
-    OllamaEmbeddingFunction,
-)
+from chromadb.utils.embedding_functions.openai_embedding_function import OpenAIEmbeddingFunction
 
 # 配置
 PEER_REPORTS_DIR = (
@@ -43,11 +41,12 @@ CHUNK_OVERLAP = 200  # 块之间的重叠字符数
 
 def _get_embedding_function():
     """
-    获取Ollama嵌入函数（与chroma_utils.py一致）
+    获取硅基流动 bge-m3 嵌入函数（与chroma_utils.py一致）
     """
-    return OllamaEmbeddingFunction(
-        url=OLLAMA_BASE_URL,
+    return OpenAIEmbeddingFunction(
+        api_key=SILICONFLOW_API_KEY,
         model_name=EMBEDDING_MODEL,
+        api_base="https://api.siliconflow.cn/v1",
     )
 
 

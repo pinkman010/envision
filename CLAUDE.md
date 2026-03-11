@@ -159,3 +159,13 @@ scripts/            # 运维脚本
 - [ ] 等第二组给出议题分类 ID → 填入 `standards_kb.xlsx` 的 `topic_taxonomy_id` 列 → 重跑 `import_standards.py`
 - [ ] 编写 `scripts/import_peer_reports.py` 向量化导入 peer_reports
 - [ ] 验证 `search_peer_reports()` 可正常检索
+
+---
+
+# 开发协作规范
+
+## Claude + MiniMax 分工
+
+**原则**：Claude 只出方案和做事后检查，不自己写文件；MiniMax 只执行写文件，不自行决策。
+
+**详细工作流与调用命令**：见 `~/.claude/projects/.../memory/minimax_workflow.md`

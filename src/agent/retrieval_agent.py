@@ -43,6 +43,10 @@ class RetrievalAgent(BaseAgent):
         :param task_input: 必须包含 corpus_result 字段
         :return: 议题识别结果 + 检索到的标准条文 + 检索到的同行案例
         """
+        # 每次执行前热重载议题规则，确保 UI 的配置修改立即生效
+        self.topic_rules = load_topic_rules()
+        self.topics = self.topic_rules.get("topics", [])
+
         # 1. 解析任务输入
         corpus_result = task_input.get("corpus_result")
         if not corpus_result:

@@ -44,15 +44,58 @@ st.subheader("📋 现有议题列表")
 topics = topic_rules.get("topics", [])
 if topics:
     for idx, topic in enumerate(topics):
-        with st.expander(f"{topic.get('name', '未命名议题')} (ID: {topic.get('id', 'N/A')})"):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"**议题ID**: {topic.get('id', 'N/A')}")
-                st.markdown(f"**议题名称**: {topic.get('name', 'N/A')}")
-                st.markdown(f"**优先级**: {topic.get('priority', 'N/A')}")
-            with col2:
-                st.markdown(f"**关键词**: {', '.join(topic.get('keywords', []))}")
-                st.markdown(f"**正则模式**: `{', '.join(topic.get('regex_patterns', []))}`")
+        with st.expander(f"{topic.get('name', '未命名')} (ID: {topic.get('id', 'N/A')})"):
+            with st.form(f"edit_topic_form_{idx}"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    edit_id = st.text_input("议题ID", value=topic.get("id", ""), key=f"id_{idx}")
+                    edit_name = st.text_input("议题名称", value=topic.get("name", ""), key=f"name_{idx}")
+                    edit_priority = st.number_input("优先级", min_value=1, max_value=100,
+                                                    value=topic.get("priority", 50), key=f"pri_{idx}")
+                with col2:
+                    edit_keywords = st.text_area("关键词（逗号分隔）",
+                                                 value=", ".join(topic.get("keywords", [])),
+                                                 key=f"kw_{idx}")
+                    edit_patterns = st.text_area("正则模式（逗号分隔）",
+                                                 value=", ".join(topic.get("regex_patterns", [])),
+                                                 key=f"re_{idx}")
+                col_save, col_del = st.columns(2)
+                with col_save:
+                    save_edit = st.form_submit_button("💾 保存修改", use_container_width=True)
+                with col_del:
+                    delete_topic = st.form_submit_button("🗑️ 删除此议题",
+                                                         use_container_width=True,
+                                                         type="secondary")
+
+            if save_edit:
+                topic_rules["topics"][idx] = {
+                    "id": edit_id,
+                    "name": edit_name,
+                    "priority": edit_priority,
+                    "keywords": [k.strip() for k in edit_keywords.split(",") if k.strip()],
+                    "regex_patterns": [p.strip() for p in edit_patterns.split(",") if p.strip()],
+                }
+                rules_file = RULE_TEMPLATES_DIR / "topic_rules.json"
+                with open(rules_file, "w", encoding="utf-8") as f:
+                    json.dump(topic_rules, f, ensure_ascii=False, indent=2)
+                write_audit_log(operation_type="RULE_CONFIG_UPDATE", operator="admin",
+                                operation_detail={"action": "edit_topic", "topic_id": edit_id},
+                                status="success")
+                st.success(f"✅ 议题 '{edit_name}' 已更新")
+                st.rerun()
+
+            if delete_topic:
+                deleted_name = topic.get("name", "")
+                topic_rules["topics"].pop(idx)
+                rules_file = RULE_TEMPLATES_DIR / "topic_rules.json"
+                with open(rules_file, "w", encoding="utf-8") as f:
+                    json.dump(topic_rules, f, ensure_ascii=False, indent=2)
+                write_audit_log(operation_type="RULE_CONFIG_UPDATE", operator="admin",
+                                operation_detail={"action": "delete_topic",
+                                                  "topic_id": topic.get("id")},
+                                status="success")
+                st.warning(f"🗑️ 议题 '{deleted_name}' 已删除")
+                st.rerun()
 else:
     st.info("📋 暂无配置议题")
 
@@ -195,6 +238,54 @@ if submit_standard:
         except Exception as e:
             st.error(f"❌ 添加标准失败: {str(e)}")
             logger.error(f"添加标准失败: {str(e)}", exc_info=True)
+
+st.divider()
+
+# ==================== 新增：匹配策略配置 ====================
+st.markdown("### 🎛️ 匹配策略配置")
+st.info("控制议题识别时关键词/正则/语义三路的权重和开关，影响检索召回率")
+
+try:
+    match_rules = load_match_rules()
+except Exception as e:
+    st.error(f"❌ 加载匹配策略失败: {str(e)}")
+    match_rules = {}
+
+with st.form("match_rules_form"):
+    strategy = match_rules.get("default_strategy", {})
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        kw_enabled = st.checkbox("关键词匹配", value=strategy.get("keyword_enabled", True))
+        kw_weight = st.slider("关键词权重", 0.0, 1.0,
+                              value=float(strategy.get("keyword_weight", 0.4)), step=0.05)
+    with col2:
+        re_enabled = st.checkbox("正则匹配", value=strategy.get("regex_enabled", True))
+        re_weight = st.slider("正则权重", 0.0, 1.0,
+                              value=float(strategy.get("regex_weight", 0.3)), step=0.05)
+    with col3:
+        sem_enabled = st.checkbox("语义匹配", value=strategy.get("semantic_enabled", True))
+        sem_weight = st.slider("语义权重", 0.0, 1.0,
+                               value=float(strategy.get("semantic_weight", 0.3)), step=0.05)
+
+    save_match = st.form_submit_button("💾 保存匹配策略", use_container_width=True)
+
+if save_match:
+    match_rules["default_strategy"] = {
+        "keyword_enabled": kw_enabled,
+        "keyword_weight": kw_weight,
+        "regex_enabled": re_enabled,
+        "regex_weight": re_weight,
+        "semantic_enabled": sem_enabled,
+        "semantic_weight": sem_weight,
+    }
+    match_file = RULE_TEMPLATES_DIR / "match_rules.json"
+    with open(match_file, "w", encoding="utf-8") as f:
+        json.dump(match_rules, f, ensure_ascii=False, indent=2)
+    write_audit_log(operation_type="RULE_CONFIG_UPDATE", operator="admin",
+                    operation_detail={"action": "update_match_strategy"},
+                    status="success")
+    st.success("✅ 匹配策略已更新")
+    st.rerun()
 
 st.divider()
 

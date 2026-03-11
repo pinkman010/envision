@@ -40,6 +40,9 @@ class AnalystAgent(BaseAgent):
         :param task_input: 必须包含 retrieval_result 字段
         :return: 差距分析结果 + 同行对比结果
         """
+        # 每次执行前热重载ESG标准配置，确保 UI 添加新标准后立即生效
+        self.esg_standards = load_esg_standards()
+
         # 1. 解析任务输入
         retrieval_result = task_input.get("retrieval_result")
         if not retrieval_result:

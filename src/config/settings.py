@@ -119,9 +119,8 @@ SQLITE_DB_NAME: str = get_required_env("SQLITE_DB_NAME")
 CHROMA_DB_PERSIST_DIR: str = get_required_env("CHROMA_DB_PERSIST_DIR")
 
 # ------------------------------
-# Ollama 嵌入模型配置（向量数据库用）
+# 嵌入模型配置（硅基流动 API）
 # ------------------------------
-OLLAMA_BASE_URL: str = get_required_env("OLLAMA_BASE_URL")
 SILICONFLOW_API_KEY: str = get_required_env("SILICONFLOW_API_KEY")
 EMBEDDING_MODEL: str = get_required_env("EMBEDDING_MODEL")
 EMBEDDING_DIMENSION: int = get_required_env("EMBEDDING_DIMENSION", int)
@@ -183,8 +182,7 @@ class Settings:
     SQLITE_DB_NAME = SQLITE_DB_NAME
     CHROMA_DB_PERSIST_DIR = CHROMA_DB_PERSIST_DIR
     
-    # Ollama 嵌入模型
-    OLLAMA_BASE_URL = OLLAMA_BASE_URL
+    # 嵌入模型
     SILICONFLOW_API_KEY = SILICONFLOW_API_KEY
     EMBEDDING_MODEL = EMBEDDING_MODEL
     EMBEDDING_DIMENSION = EMBEDDING_DIMENSION

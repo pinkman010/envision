@@ -1,16 +1,13 @@
 """
 Chroma 向量数据库工具：语料存储、检索、管理
-使用硅基流动 BAAI/bge-m3 嵌入模型（API调用，替代本地 Ollama）
-优化：批量向量化 + 并发处理
+使用硅基流动 BAAI/bge-m3 嵌入模型（通过 ChromaDB 自动嵌入）
 
 包含RAG增强提取功能：利用语料库知识库提高信息提取精准度
 """
 
 import json
 import uuid
-import time
 import re
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
@@ -19,13 +16,8 @@ from dataclasses import dataclass
 from src.config.paths import CHROMA_DB_DIR, RAW_CORPUS_DIR, ROOT_DIR
 from src.config import get_logger
 from src.config.settings import (
-    OLLAMA_BASE_URL,
     SILICONFLOW_API_KEY,
     EMBEDDING_MODEL,
-    EMBEDDING_DIMENSION,
-    EMBEDDING_BATCH_SIZE,
-    EMBEDDING_MAX_WORKERS,
-    EMBEDDING_TIMEOUT,
     USE_RAG_ENHANCEMENT,
     RAG_EXTRACTION_TOP_K,
     RAG_EXTRACTION_THRESHOLD,
@@ -180,113 +172,6 @@ class ChromaManager:
             fixed_path.relative_to(ROOT_DIR)
         )
 
-    def _batch_embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """
-        批量生成文本向量（优化核心：批量调用 Ollama）
-        :param texts: 文本列表
-        :return: 向量列表
-        """
-        try:
-            import requests
-
-            response = requests.post(
-                f"{OLLAMA_BASE_URL}/api/embed",
-                json={
-                    "model": EMBEDDING_MODEL,
-                    "input": texts,
-                },
-                timeout=EMBEDDING_TIMEOUT,
-            )
-            response.raise_for_status()
-            result = response.json()
-
-            return result["embeddings"]
-
-        except Exception as e:
-            logger.error(f"批量向量化失败: {str(e)}, 批次大小: {len(texts)}")
-            raise
-
-    def _embed_with_fallback(self, texts: List[str]) -> List[List[float]]:
-        """
-        批量生成向量，失败时回退到单条处理
-        """
-        try:
-            return self._batch_embed_texts(texts)
-        except Exception as e:
-            logger.warning(f"批量向量化失败，回退到单条处理: {str(e)}")
-            # 单条处理回退
-            embeddings = []
-            for text in texts:
-                try:
-                    emb = self._batch_embed_texts([text])
-                    embeddings.append(emb[0])
-                except Exception as e2:
-                    logger.error(f"单条向量化失败: {str(e2)}")
-                    # 返回零向量作为占位（避免整个批次失败）
-                    embeddings.append([0.0] * EMBEDDING_DIMENSION)
-            return embeddings
-
-    def _generate_embeddings_parallel(
-        self, chunks: List[Tuple[int, int, str]]
-    ) -> List[List[float]]:
-        """
-        并行批量生成所有分块的向量
-        :return: 按 chunks 顺序的向量列表
-        """
-        chunk_count = len(chunks)
-        if chunk_count == 0:
-            return []
-
-        # 提取所有文本
-        texts = [chunk[2] for chunk in chunks]
-
-        # 分批处理
-        batches = []
-        for i in range(0, chunk_count, EMBEDDING_BATCH_SIZE):
-            batch = texts[i : i + EMBEDDING_BATCH_SIZE]
-            batches.append((i, batch))
-
-        logger.info(
-            f"开始批量生成向量: 总分块={chunk_count}, 批次数={len(batches)}, 批次大小={EMBEDDING_BATCH_SIZE}"
-        )
-        start_time = time.time()
-
-        # 并发处理批次
-        batch_results = {}
-        with ThreadPoolExecutor(max_workers=EMBEDDING_MAX_WORKERS) as executor:
-            # 提交所有批次任务
-            future_to_idx = {
-                executor.submit(self._embed_with_fallback, batch): idx
-                for idx, batch in batches
-            }
-
-            # 收集结果
-            for future in as_completed(future_to_idx):
-                idx = future_to_idx[future]
-                try:
-                    embeddings = future.result()
-                    batch_results[idx] = embeddings
-                    logger.debug(
-                        f"批次 {idx // EMBEDDING_BATCH_SIZE + 1}/{len(batches)} 完成"
-                    )
-                except Exception as e:
-                    logger.error(f"批次 {idx} 处理失败: {str(e)}")
-                    # 填充零向量
-                    batch_size = len(batches[idx // EMBEDDING_BATCH_SIZE][1])
-                    batch_results[idx] = [[0.0] * EMBEDDING_DIMENSION] * batch_size
-
-        # 按原始顺序组装结果
-        all_embeddings = []
-        for i in range(0, chunk_count, EMBEDDING_BATCH_SIZE):
-            all_embeddings.extend(batch_results[i])
-
-        elapsed = time.time() - start_time
-        logger.info(
-            f"向量生成完成: {chunk_count} 个分块, 耗时 {elapsed:.2f} 秒, 平均 {elapsed / chunk_count:.3f} 秒/块"
-        )
-
-        return all_embeddings
-
     def save_corpus(
         self,
         file_name: str,
@@ -298,23 +183,18 @@ class ChromaManager:
         esg_metrics: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
-        保存语料到 Chroma 数据库（优化版：批量向量化）
+        保存语料到 Chroma 数据库（使用 ChromaDB 自动嵌入）
         :return: corpus_id（文档唯一标识）
         """
         try:
-            start_time = time.time()
-
-            # 生成唯一文档ID
             corpus_id = f"{Path(file_name).stem}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
-            # 保存原始文本到文件（选项B）
             raw_text_path, fixed_text_path = self._save_raw_text_to_file(
                 corpus_id, raw_text, fixed_text
             )
 
             chunk_count = len(chunks)
 
-            # 准备分块数据
             documents = []
             metadatas = []
             ids = []
@@ -325,48 +205,33 @@ class ChromaManager:
                 documents.append(chunk_text)
 
                 metadata = {
-                    # 基础信息
                     "corpus_id": corpus_id,
                     "file_name": file_name,
                     "file_suffix": file_suffix,
                     "file_size": file_size,
                     "text_length": len(fixed_text),
-                    # 分块信息
                     "chunk_index": idx,
                     "total_chunks": chunk_count,
                     "chunk_start": start,
                     "chunk_end": end,
-                    # 时间戳
                     "processed_at": datetime.now().isoformat(),
-                    # 文件路径（选项B）
                     "raw_text_path": raw_text_path,
                     "fixed_text_path": fixed_text_path,
-                    # ESG 指标标识
                     "has_esg_extraction": esg_metrics is not None,
                 }
                 metadatas.append(metadata)
 
-            # 批量生成向量（优化核心）
-            logger.info(f"开始为 {chunk_count} 个分块生成向量...")
-            embeddings = self._generate_embeddings_parallel(chunks)
-
-            # 批量添加到 Chroma（直接传入 embeddings，跳过自动向量化）
             logger.info(f"开始保存到 Chroma 数据库...")
             self._corpus_collection.add(
                 documents=documents,
-                embeddings=embeddings,  # 直接传入预生成的向量
                 metadatas=metadatas,
                 ids=ids,
             )
 
-            # 如果有 ESG 指标，保存到指标集合
             if esg_metrics:
                 self._save_esg_metrics(corpus_id, esg_metrics)
 
-            total_elapsed = time.time() - start_time
-            logger.info(
-                f"语料保存成功: {corpus_id}, 分块数: {chunk_count}, 总耗时: {total_elapsed:.2f} 秒"
-            )
+            logger.info(f"语料保存成功: {corpus_id}, 分块数: {chunk_count}")
             return corpus_id
 
         except Exception as e:

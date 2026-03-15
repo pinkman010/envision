@@ -11,16 +11,10 @@ from src.utils.file_utils import (
     save_text_to_file,
 )
 from src.utils.validate_utils import (
-    validate_json_format,
-    validate_extraction_result,
     validate_file_suffix,
     clean_and_parse_json,
 )
-from src.utils.similarity_utils import (
-    calculate_similarity,
-    validate_similarity,
-    validate_similarity_by_line,
-)
+from src.utils.similarity_utils import calculate_similarity
 from src.utils.llm_utils import call_llm
 from src.utils.audit_utils import (
     write_audit_log,
@@ -69,14 +63,10 @@ __all__ = [
     "split_text_into_chunks",
     "save_text_to_file",
     # 校验
-    "validate_json_format",
-    "validate_extraction_result",
     "validate_file_suffix",
     "clean_and_parse_json",
     # 相似度
     "calculate_similarity",
-    "validate_similarity",
-    "validate_similarity_by_line",
     # LLM
     "call_llm",
     # 审计日志

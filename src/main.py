@@ -46,7 +46,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": exc.errors(), "message": "请求参数验证失败"},
     )
 
-# 6. 健康检查接口（用于Docker部署、监控）
+# 6. 健康检查接口（用于服务状态监控）
 @app.get("/health", tags=["系统监控"])
 async def health_check():
     return {
@@ -55,7 +55,7 @@ async def health_check():
         "project_name": settings.PROJECT_NAME,
     }
 
-# 7. 本地启动入口（仅用于开发调试，生产环境用uvicorn命令或Docker）
+# 7. 本地启动入口（用于开发调试）
 if __name__ == "__main__":
     uvicorn.run(
         "src.main:app",

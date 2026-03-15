@@ -12,55 +12,6 @@ from pathlib import Path
 from src.utils.exception_utils import ValidationException
 
 
-def validate_json_format(json_str: str) -> dict[str, Any]:
-    """
-    校验JSON格式并解析
-    :param json_str: JSON字符串
-    :return: 解析后的字典
-    """
-    try:
-        return json.loads(json_str)
-    except json.JSONDecodeError as e:
-        raise ValidationException(f"JSON格式错误: {str(e)}") from e
-
-
-def validate_extraction_result(result: dict[str, Any]) -> bool:
-    """
-    校验信息抽取结果的完整性
-    :param result: 抽取结果字典
-    :return: True表示有内容需校验相似度，False表示字段未找到
-    """
-    if "field_name" not in result or not result["field_name"]:
-        raise ValidationException("抽取结果缺少必填字段: field_name")
-
-    extracted_content = result.get("extracted_content", None)
-    if extracted_content is None:
-        raise ValidationException(f"抽取结果缺少字段: extracted_content")
-    if extracted_content == "" or (isinstance(extracted_content, str) and extracted_content.strip() == ""):
-        return False
-
-    has_line_number = "line_number" in result and result["line_number"] is not None
-    has_char_anchor = "char_start" in result and "char_end" in result
-    
-    if not has_line_number and not has_char_anchor:
-        raise ValidationException(f"抽取结果有内容但缺少位置锚点")
-    
-    if has_line_number:
-        line_number = result["line_number"]
-        if not isinstance(line_number, int) or line_number < 1:
-            raise ValidationException(f"行号必须为正整数")
-    
-    if has_char_anchor:
-        char_start = result["char_start"]
-        char_end = result["char_end"]
-        if not isinstance(char_start, int) or not isinstance(char_end, int):
-            raise ValidationException(f"字符锚点必须为整数")
-        if char_start < 0 or char_end <= char_start:
-            raise ValidationException(f"字符锚点位置不合法")
-
-    return True
-
-
 def validate_file_suffix(file_path: Path, allowed_suffixes: List[str]) -> None:
     """校验文件后缀"""
     if file_path.suffix.lower() not in allowed_suffixes:

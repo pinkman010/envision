@@ -1,96 +1,180 @@
-# 常见问题 (FAQ)
+# 常见问题（FAQ）
 
-## 1. 系统部署
+## 1. 部署与启动
 
-### Q: 如何部署系统？
-A: 请参考《部署说明文档.md》，使用pip安装依赖后手动启动服务。
+### Q: 当前项目怎么启动？
 
-### Q: 需要哪些环境依赖？
-A: Python 3.10+, Ollama (本地嵌入模型)
+A: 先创建环境并配置 `.env`，再分别启动后端和前端：
 
-### Q: 如何配置大模型API？
-A: 在.env文件中配置LLM_API_KEY和LLM_BASE_URL。
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+streamlit run src/ui/app.py
+```
 
-## 2. 功能使用
+详细步骤见 `docs/部署说明文档.md`。
+
+### Q: 需要哪些外部依赖？
+
+A: 当前实现不依赖 Ollama。默认依赖：
+
+- OpenAI 兼容大模型服务
+- SiliconFlow 嵌入服务
+- 本地 ChromaDB 持久化目录
+- 本地 SQLite 审计日志库
+
+### Q: Python 版本要求是什么？
+
+A: `pyproject.toml` 要求 `Python >=3.10`，仓库自带的 `environment.yml` 使用 `Python 3.13`。
+
+## 2. 配置与模型
+
+### Q: 必填环境变量有哪些？
+
+A: 至少要保证下面几类配置完整：
+
+- 服务基础：`PROJECT_NAME`、`PROJECT_DESCRIPTION`、`VERSION`、`API_PREFIX`
+- 运行地址：`ENVIRONMENT`、`HOST`、`PORT`、`API_BASE_URL`、`ALLOWED_ORIGINS`
+- 大模型：`LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`
+- 嵌入：`SILICONFLOW_API_KEY`、`EMBEDDING_MODEL`
+- 存储：`SQLITE_DB_NAME`、`CHROMA_DB_PERSIST_DIR`
+
+### Q: 嵌入模型可以随便换吗？
+
+A: 不建议。当前仓库默认使用 `BAAI/bge-m3`。如果已经导入过现有知识库或历史语料，改模型会导致向量空间不兼容。
+
+### Q: 系统里的 AI 是怎么接入的？
+
+A: 文本生成走 `LLM_BASE_URL + LLM_API_KEY`，嵌入走 SiliconFlow 的 OpenAI 兼容接口。相关实现见：
+
+- `src/utils/llm_utils.py`
+- `src/utils/chroma_utils.py`
+
+## 3. 功能使用
 
 ### Q: 支持哪些文件格式？
-A: PDF (.pdf) 和 Word (.docx)
 
-### Q: 最大支持多大的文件？
-A: 默认50MB，可在.env中修改MAX_FILE_SIZE配置
+A: 当前上传入口支持：
 
-### Q: 如何添加新的ESG议题？
-A: 在templates/rule_templates/topic_rules.json中添加
+- PDF：`.pdf`
+- Word：`.docx`、`.doc`
+- Excel：`.xlsx`、`.xls`
 
-### Q: 如何修改相似度阈值？
-A: 在.env中修改SIMILARITY_THRESHOLD配置
+### Q: 最大文件大小是多少？
 
-## 3. 数据安全
+A: 由 `.env` 中的 `MAX_FILE_SIZE` 控制，默认示例值是 `52428800`，也就是 `50MB`。
 
-### Q: 数据存储在哪里？
-A: 数据存储在本地：
-- 向量数据: ./data/chroma_db
-- 结构化数据: ./data/esg_system.db
+### Q: 议题识别页面需要手动点“开始识别”吗？
 
-### Q: 数据会上传到云端吗？
-A: 不会。所有数据本地存储，嵌入模型也使用本地Ollama部署。
+A: 不需要。当前页面在拿到 `corpus_result` 后会自动请求 `/retrieval/run`，然后展示识别结果。
 
-### Q: 如何备份数据？
-A: 定期备份./data目录即可。
+### Q: 对标分析现在能用吗？
 
-## 4. 故障排查
+A: 还不能。前端已有“对标分析”页面，但当前是占位说明；`multi_company_benchmark` 工作流也还是预留接口。
+
+### Q: 规则修改后会立刻生效吗？
+
+A: 会。`RetrievalAgent` 和 `AnalystAgent` 在每次运行前都会重新加载规则或标准配置，规则页面保存后无需重启服务。
+
+## 4. 数据与安全
+
+### Q: 数据保存在什么位置？
+
+A: 当前主要会写入以下目录：
+
+- `data/chroma_db/`：向量库
+- `data/raw_corpus/`：原始文本与修复文本
+- `data/sqlite_db/audit_log.db`：审计日志
+- `data/export_results/`：导出文件
+
+### Q: 数据会不会发送到云端？
+
+A: 分两类：
+
+- 文档、向量库和日志文件默认保存在本地
+- 文本片段会发送到你配置的 LLM 服务和嵌入服务
+
+如果你需要完全内网运行，就必须把 `LLM_BASE_URL` 和嵌入服务都换成你自己的兼容部署。
+
+### Q: 如何备份？
+
+A: 至少备份这三部分：
+
+- `.env`
+- `data/`
+- `templates/rule_templates/`
+
+## 5. 故障排查
+
+### Q: 后端启动直接报错“缺少必需的环境变量”？
+
+A: 说明 `.env` 缺字段。当前 `settings.py` 对多数配置项没有默认兜底，必须补齐。
 
 ### Q: 上传文件失败怎么办？
-A: 检查：
-1. 文件格式是否正确（PDF/Word）
+
+A: 先检查：
+
+1. 文件格式是否受支持
 2. 文件大小是否超过限制
-3. 文件是否损坏
+3. 文档是否损坏
+4. 后端是否正常运行
 
-### Q: LLM调用失败怎么办？
-A: 检查：
-1. LLM_API_KEY是否正确配置
-2. 网络连接是否正常
-3. LLM服务是否可用
+### Q: 大模型调用失败怎么办？
 
-### Q: 向量数据库初始化失败怎么办？
-A: 检查：
-1. Ollama服务是否启动
-2. OLLAMA_BASE_URL配置是否正确
-3. 磁盘空间是否充足
+A: 先检查：
 
-## 5. 合规相关
+1. `LLM_API_KEY` 是否有效
+2. `LLM_BASE_URL` 是否可访问
+3. `LLM_MODEL` 是否存在
+4. 目标服务是否支持当前请求参数
 
-### Q: AI生成的内容可以直接使用吗？
-A: 不可以。所有AI输出仅为辅助参考，需经人工复核确认后方可使用。
+### Q: 向量库初始化失败怎么办？
 
-### Q: 如何保证数据不可篡改？
-A: 所有操作记录审计日志，日志带SHA-256哈希，可验证完整性。
+A: 先检查：
 
-### Q: 系统符合哪些ESG标准？
-A: 支持ISSB、SASB、HKEX等主流ESG披露标准。
+1. `SILICONFLOW_API_KEY` 是否有效
+2. `EMBEDDING_MODEL` 是否正确
+3. `data/chroma_db/` 是否可写
+4. 到嵌入服务的网络是否正常
 
-## 6. 性能优化
+### Q: 前端连不上后端怎么办？
 
-### Q: 如何提高处理速度？
-A: 1. 增加EMBEDDING_MAX_WORKERS配置
-   2. 使用更高配置的机器
-   3. 优化网络连接
+A: 先检查：
 
-### Q: 如何减少内存占用？
-A: 1. 减小CHUNK_SIZE配置
-   2. 定期清理历史数据
-   3. 使用更小的嵌入模型
+1. 后端监听地址和端口是否正确
+2. `.env` 中 `API_BASE_URL` 是否匹配
+3. `.env` 中 `ALLOWED_ORIGINS` 是否包含前端地址
 
-## 7. 扩展开发
+## 6. 扩展与维护
 
-### Q: 如何添加新的Agent？
-A: 1. 继承BaseAgent类
-   2. 实现_execute方法
-   3. 在router.py中注册路由
-   4. 在app.py中添加页面
+### Q: Prompt 模板在哪里？
 
-### Q: 如何修改Prompt模板？
-A: 在templates/prompt_templates/目录下修改对应的.j2文件
+A: 当前实际使用的模板在 `templates/prompt_templates/`：
 
-### Q: 如何添加新的ESG标准？
-A: 在templates/rule_templates/esg_standards.json中添加
+- `corpus_fix_prompt.j2`
+- `retrieval_prompt.j2`
+- `analyst_prompt.j2`
+- `advisor_prompt.j2`
+- `rag_extraction_enhancement_prompt.j2`
+
+### Q: 如何添加或修改 ESG 议题？
+
+A: 有两种方式：
+
+- 在“规则配置”页面直接修改
+- 手动编辑 `templates/rule_templates/topic_rules.json`
+
+### Q: 如何补充标准条文？
+
+A: 分两层：
+
+- 规则层标准配置：`templates/rule_templates/esg_standards.json`
+- 检索层标准知识库：`data/knowledge_base/standards/standards_kb.xlsx`，再用 `scripts/import_standards.py` 导入 Chroma
+
+### Q: 如何新增 Agent？
+
+A: 当前主架构固定为 `Orchestrator + Corpus/Retrieval/Analyst/Advisor`。如果确实要新增：
+
+1. 继承 `BaseAgent`
+2. 明确输入输出结构
+3. 在 API 或编排层接入
+4. 同步更新相关文档和前端流程

@@ -340,8 +340,6 @@ streamlit run src/ui/app.py
 - [部署说明文档](docs/部署说明文档.md)
 - [用户操作手册](docs/用户操作手册.md)
 - [项目模型说明文档](docs/项目模型说明文档.md)
-- [模型效果验证报告](docs/模型效果验证报告.md)
-- [课题研究报告附件](docs/课题研究报告附件.md)
 - [FAQ](docs/FAQ.md)
 - [开发日志](docs/DEV_LOG.md)
 

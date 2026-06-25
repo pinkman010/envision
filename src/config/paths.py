@@ -29,6 +29,17 @@ CHROMA_DB_DIR: Path = DATA_DIR / "chroma_db"
 SQLITE_DB_DIR: Path = DATA_DIR / "sqlite_db"
 RAW_CORPUS_DIR: Path = DATA_DIR / "raw_corpus"
 EXPORT_RESULTS_DIR: Path = DATA_DIR / "export_results"
+KNOWLEDGE_BASE_DIR: Path = DATA_DIR / "knowledge_base"
+MANIFESTS_DIR: Path = KNOWLEDGE_BASE_DIR / "manifests"
+P0_SOURCE_MANIFEST_PATH: Path = MANIFESTS_DIR / "p0_source_manifest.json"
+P0_GRI_DISCLOSURE_MANIFEST_PATH: Path = MANIFESTS_DIR / "p0_gri_disclosure_manifest.json"
+STANDARDS_DIR: Path = KNOWLEDGE_BASE_DIR / "standards"
+PEER_REPORTS_DIR: Path = KNOWLEDGE_BASE_DIR / "peer_reports"
+GRI_REFERENCE_DIR: Path = STANDARDS_DIR / "gri_reference"
+GRI_REFERENCE_PDF_PATH: Path = GRI_REFERENCE_DIR / "GRI_Standards_Official_Consolidated_Set_en.pdf"
+ENVISION_2024_ZH_REPORT_PATH: Path = PEER_REPORTS_DIR / "Envision Energy 2024-zh.pdf"
+P0_GRI_REQUIREMENT_PACK_PATH: Path = MANIFESTS_DIR / "p0_gri_requirement_pack.json"
+P0_REPORT_EVIDENCE_INDEX_PATH: Path = MANIFESTS_DIR / "p0_report_evidence_index.json"
 
 # ------------------------------
 # UI页面目录
@@ -63,6 +74,11 @@ def ensure_all_paths() -> None:
         SQLITE_DB_DIR,
         RAW_CORPUS_DIR,
         EXPORT_RESULTS_DIR,
+        KNOWLEDGE_BASE_DIR,
+        MANIFESTS_DIR,
+        STANDARDS_DIR,
+        PEER_REPORTS_DIR,
+        GRI_REFERENCE_DIR,
         # UI目录
         UI_PAGES_DIR,
         # 日志目录

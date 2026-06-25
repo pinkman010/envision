@@ -1,0 +1,565 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Specific Prompt IO Schemas",
+  "description": "按Agent约束输入输出字段，用于支撑多Agent原型链路的可行性验证。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "OrchestratorAgent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "companyName": {
+              "type": "string"
+            },
+            "industry": {
+              "type": "string"
+            },
+            "reportYear": {
+              "type": "integer"
+            },
+            "standardScope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ESRS",
+                  "GRI"
+                ]
+              }
+            },
+            "batchId": {
+              "type": "string"
+            },
+            "agentStages": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "companyName",
+            "industry",
+            "reportYear",
+            "standardScope",
+            "batchId",
+            "agentStages"
+          ]
+        },
+        "output": {
+          "$ref": "#/$defs/AgentRunResult"
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ]
+    },
+    "CorpusAgent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "companyName": {
+              "type": "string"
+            },
+            "reportYear": {
+              "type": "integer"
+            },
+            "sourceReport": {
+              "type": "string"
+            },
+            "reportTextChunks": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "parseMetadata": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "companyName",
+            "reportYear",
+            "sourceReport",
+            "reportTextChunks",
+            "parseMetadata"
+          ]
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceChunk"
+          }
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ]
+    },
+    "RetrievalAgent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "requirementPacks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RequirementPack"
+              }
+            },
+            "evidenceChunks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EvidenceChunk"
+              }
+            },
+            "topicMapping": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "requirementPacks",
+            "evidenceChunks",
+            "topicMapping"
+          ]
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CandidateMatch"
+          }
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ]
+    },
+    "AnalystAgent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "matchedRequirements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CandidateMatch"
+              }
+            },
+            "evidenceChunks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EvidenceChunk"
+              }
+            }
+          },
+          "required": [
+            "matchedRequirements",
+            "evidenceChunks"
+          ]
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DisclosureGap"
+          }
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ]
+    },
+    "AdvisorAgent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "disclosureGaps": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DisclosureGap"
+              }
+            },
+            "materialTopics": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "enterpriseConstraints": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "disclosureGaps",
+            "materialTopics",
+            "enterpriseConstraints"
+          ]
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AdviceResult"
+          }
+        }
+      },
+      "required": [
+        "input",
+        "output"
+      ]
+    }
+  },
+  "required": [
+    "OrchestratorAgent",
+    "CorpusAgent",
+    "RetrievalAgent",
+    "AnalystAgent",
+    "AdvisorAgent"
+  ],
+  "$defs": {
+    "ReviewFlag": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "manual_review_required",
+        "pending",
+        "not_applicable"
+      ]
+    },
+    "RequirementPack": {
+      "type": "object",
+      "properties": {
+        "standardType": {
+          "type": "string",
+          "enum": [
+            "ESRS",
+            "GRI"
+          ]
+        },
+        "clauseId": {
+          "type": "string"
+        },
+        "topicId": {
+          "type": "string"
+        },
+        "topicName": {
+          "type": "string"
+        },
+        "dimension": {
+          "type": "string",
+          "enum": [
+            "E",
+            "S",
+            "G",
+            "C"
+          ]
+        },
+        "requirementType": {
+          "type": "string",
+          "enum": [
+            "mandatory",
+            "voluntary",
+            "conditional",
+            "pending"
+          ]
+        },
+        "requirementText": {
+          "type": "string"
+        },
+        "disclosureExpectation": {
+          "type": "string"
+        },
+        "sourceReference": {
+          "type": "string"
+        },
+        "reviewFlag": {
+          "$ref": "#/$defs/ReviewFlag"
+        }
+      },
+      "required": [
+        "standardType",
+        "clauseId",
+        "topicId",
+        "topicName",
+        "dimension",
+        "requirementType",
+        "requirementText",
+        "disclosureExpectation",
+        "sourceReference",
+        "reviewFlag"
+      ]
+    },
+    "EvidenceChunk": {
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string"
+        },
+        "reportYear": {
+          "type": "integer"
+        },
+        "sourceReport": {
+          "type": "string"
+        },
+        "sourcePage": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reviewFlag": {
+          "$ref": "#/$defs/ReviewFlag"
+        }
+      },
+      "required": [
+        "companyName",
+        "reportYear",
+        "sourceReport",
+        "sourcePage",
+        "section",
+        "evidence",
+        "confidence",
+        "reviewFlag"
+      ]
+    },
+    "CandidateMatch": {
+      "type": "object",
+      "properties": {
+        "standardType": {
+          "type": "string",
+          "enum": [
+            "ESRS",
+            "GRI"
+          ]
+        },
+        "clauseId": {
+          "type": "string"
+        },
+        "topicName": {
+          "type": "string"
+        },
+        "dimension": {
+          "type": "string",
+          "enum": [
+            "E",
+            "S",
+            "G",
+            "C"
+          ]
+        },
+        "requirementType": {
+          "type": "string",
+          "enum": [
+            "mandatory",
+            "voluntary",
+            "conditional",
+            "pending"
+          ]
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "sourcePage": {
+          "type": "string"
+        },
+        "matchReason": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reviewFlag": {
+          "$ref": "#/$defs/ReviewFlag"
+        }
+      },
+      "required": [
+        "standardType",
+        "clauseId",
+        "topicName",
+        "dimension",
+        "requirementType",
+        "evidence",
+        "sourcePage",
+        "matchReason",
+        "confidence",
+        "reviewFlag"
+      ]
+    },
+    "DisclosureGap": {
+      "type": "object",
+      "properties": {
+        "standardType": {
+          "type": "string",
+          "enum": [
+            "ESRS",
+            "GRI"
+          ]
+        },
+        "clauseId": {
+          "type": "string"
+        },
+        "topicName": {
+          "type": "string"
+        },
+        "dimension": {
+          "type": "string",
+          "enum": [
+            "E",
+            "S",
+            "G",
+            "C"
+          ]
+        },
+        "requirementType": {
+          "type": "string",
+          "enum": [
+            "mandatory",
+            "voluntary",
+            "conditional",
+            "pending"
+          ]
+        },
+        "disclosureStatus": {
+          "type": "string",
+          "enum": [
+            "disclosed",
+            "partial",
+            "missing",
+            "pending"
+          ]
+        },
+        "gapLevel": {
+          "type": "string",
+          "enum": [
+            "major",
+            "minor",
+            "none",
+            "pending"
+          ]
+        },
+        "currentDisclosure": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "sourcePage": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "number"
+        },
+        "reviewFlag": {
+          "$ref": "#/$defs/ReviewFlag"
+        }
+      },
+      "required": [
+        "standardType",
+        "clauseId",
+        "topicName",
+        "dimension",
+        "requirementType",
+        "disclosureStatus",
+        "gapLevel",
+        "currentDisclosure",
+        "evidence",
+        "sourcePage",
+        "priority",
+        "reviewFlag"
+      ]
+    },
+    "AdviceResult": {
+      "type": "object",
+      "properties": {
+        "clauseId": {
+          "type": "string"
+        },
+        "topicName": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "number"
+        },
+        "pendingHumanConfirmation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reviewFlag": {
+          "$ref": "#/$defs/ReviewFlag"
+        }
+      },
+      "required": [
+        "clauseId",
+        "topicName",
+        "recommendation",
+        "priority",
+        "pendingHumanConfirmation",
+        "reviewFlag"
+      ]
+    },
+    "AgentRunResult": {
+      "type": "object",
+      "properties": {
+        "agentName": {
+          "type": "string"
+        },
+        "batchId": {
+          "type": "string"
+        },
+        "inputRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reviewNotes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "agentName",
+        "batchId",
+        "inputRefs",
+        "outputs",
+        "reviewNotes"
+      ]
+    }
+  }
+}

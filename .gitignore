@@ -11,7 +11,12 @@ tmp/
 *~
 
 # 数据文件（敏感内容不上传）
-data/
+# 默认忽略 data 下原始数据与 PDF，仅允许来源清单进入版本控制
+data/*
+!data/knowledge_base/
+data/knowledge_base/*
+!data/knowledge_base/manifests/
+!data/knowledge_base/manifests/*.json
 logs/
 
 # Python缓存

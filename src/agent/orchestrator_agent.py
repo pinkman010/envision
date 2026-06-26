@@ -9,12 +9,18 @@
 - 流程4步改为：corpus → retrieval → analyst → advisor
 """
 
+from datetime import datetime, timezone
 from typing import Dict, Any
 from enum import Enum
 
 from src.agent.base_agent import BaseAgent, AgentState
 from src.config import get_logger
+from src.models.analysis_contract import AnalysisRun, AnalysisRunStatus, SourceDocumentRef
 from src.utils import write_audit_log, BaseESGException
+from src.utils.manifest_utils import (
+    load_p0_gri_disclosure_manifest,
+    load_p0_source_manifest,
+)
 
 
 # 预设的固定流程（唯一支持的流程，无动态路由）
@@ -22,6 +28,24 @@ class FixedWorkflow(Enum):
     SINGLE_REPORT_ANALYSIS = "single_report_analysis"  # 单报告分析流程
     MULTI_COMPANY_BENCHMARK = "multi_company_benchmark"  # 多企业对标流程
     BATCH_CORPUS_PROCESSING = "batch_corpus_processing"  # 批量语料处理流程
+
+
+def _p0_source_documents() -> list[SourceDocumentRef]:
+    """Build P0 source document references from the source manifest."""
+    source_manifest = load_p0_source_manifest()
+    docs = []
+    for item in source_manifest.get("sources", []):
+        docs.append(
+            SourceDocumentRef.model_validate(
+                {
+                    "relative_path": item["relative_path"],
+                    "document_type": item["document_type"],
+                    "sha256": str(item["sha256"]).upper(),
+                    "provenance_status": item["provenance_status"],
+                }
+            )
+        )
+    return docs
 
 
 class OrchestratorAgent(BaseAgent):
@@ -96,6 +120,26 @@ class OrchestratorAgent(BaseAgent):
         advisor_input = {"analyst_result": analyst_result, **task_input}
         advisor_result = self.advisor_agent.run(advisor_input, task_id=f"{self.current_task_id}_advisor")
         workflow_result["advisor_result"] = advisor_result
+
+        disclosure_assessments = analyst_result.get("disclosure_assessments", [])
+        if disclosure_assessments:
+            disclosure_manifest = load_p0_gri_disclosure_manifest()
+            manifest_version = disclosure_manifest.get("manifest_version") or disclosure_manifest.get("metadata", {}).get("version", "p0")
+            analysis_run = AnalysisRun.model_validate(
+                {
+                    "report_id": "envision_energy_2024_zh",
+                    "standard_profile_id": "gri_p0_profile_2021_current_gap_with_readiness_watchlist",
+                    "manifest_version": str(manifest_version),
+                    "status": AnalysisRunStatus.COMPLETED.value,
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                    "source_documents": [
+                        doc.model_dump(mode="json") for doc in _p0_source_documents()
+                    ],
+                    "assessments": disclosure_assessments,
+                    "summary": analyst_result.get("summary", {}),
+                }
+            )
+            workflow_result["analysis_run"] = analysis_run.model_dump(mode="json")
 
         # 流程结束
         self.logger.info("单报告分析流程完成")

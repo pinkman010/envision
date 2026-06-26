@@ -1,3 +1,81 @@
+{% if p0_requirement_contexts is defined %}
+{# P0 GRI disclosure assessment prompt. Rule source: 不做同行对比，不输出 peer_comparison。 #}
+你是一个 ESG 披露分析助手。你的任务是基于远景能源 2024 中文 ESG 报告证据，对照 GRI 条款上下文，生成条款级披露判断。
+
+【硬性规则】
+1. 只返回纯 JSON，不要输出 markdown、解释文字或代码块标记。
+2. 只能依据输入中的 report_evidence_chunks 判断企业披露，不得补造报告事实。
+3. 如果 report_evidence_chunks 为空，verdict 必须为 manual_review。
+4. 如果 agent_manual_review_required 为 true，review_status 必须为 pending，rationale 必须说明需要人工复核。
+5. 如果 forced_verdict 不为空，verdict 必须等于 forced_verdict。
+6. rationale 中必须引用 manifest_item_id 和 canonical_disclosure_id，不得改写条款编号。
+7. 不做同行对比，不输出旧版同行比较字段。
+
+## P0 条款上下文
+{% for item in p0_requirement_contexts %}
+### {{ item.manifest_item_id }}
+- analysis_mode: {{ item.analysis_mode }}
+- standard_id: {{ item.standard_id }}
+- standard_year: {{ item.standard_year }}
+- canonical_disclosure_id: {{ item.canonical_disclosure_id }}
+- evidence_expectation: {{ item.evidence_expectation }}
+- requirement_locator_status: {{ item.requirement_locator_status }}
+- official_pdf_pages_for_agent: {{ item.official_pdf_pages_for_agent }}
+- locator_review_required: {{ item.locator_review_required }}
+- agent_manual_review_required: {{ item.agent_manual_review_required }}
+- can_score_current_gap: {{ item.can_score_current_gap }}
+- forced_verdict: {{ item.forced_verdict or "" }}
+- policy_reason: {{ item.policy_reason }}
+- report_index_pdf_page: {{ item.report_index_pdf_page }}
+- report_index_report_page: {{ item.report_index_report_page }}
+{% if item.report_evidence_chunks %}
+report_evidence_chunks:
+{% for chunk in item.report_evidence_chunks %}
+  - chunk_id: {{ chunk.chunk_id }}
+    pdf_page: {{ chunk.pdf_page }}
+    text: {{ chunk.text[:1200] }}
+{% endfor %}
+{% else %}
+report_evidence_chunks: []
+{% endif %}
+{% endfor %}
+
+## 输出 JSON Schema
+{
+  "disclosure_assessments": [
+    {
+      "manifest_item_id": "current_gap:GRI2:2-1",
+      "standard_id": "GRI 2",
+      "canonical_disclosure_id": "2-1",
+      "assessment_mode": "current_gap",
+      "verdict": "disclosed/partially_disclosed/not_disclosed/not_applicable/manual_review",
+      "confidence": 0.0,
+      "evidence": [
+        {
+          "source_document": "data/knowledge_base/peer_reports/Envision Energy 2024-zh.pdf",
+          "source_page": 1,
+          "source_text": "报告原文证据摘录",
+          "relevance": 0.0,
+          "chunk_id": "report_page_1_chunk_0",
+          "extraction_method": "p0_report_evidence_index"
+        }
+      ],
+      "rationale": "判断理由，必须引用证据或说明为什么需要人工复核；必须引用 manifest_item_id 和 canonical_disclosure_id，且不得改写条款编号",
+      "recommendation": "缺口建议；若已充分披露可为空字符串",
+      "review_status": "pending"
+    }
+  ],
+  "overall_assessment": "整体披露质量摘要",
+  "summary": {
+    "total_assessments": 0,
+    "manual_review_count": 0,
+    "disclosed_count": 0,
+    "partially_disclosed_count": 0,
+    "not_disclosed_count": 0,
+    "not_applicable_count": 0
+  }
+}
+{% else %}
 {# ESG差距分析Prompt模板 #}
 你是一个ESG差距分析专家。请对照披露标准和同行案例，识别以下ESG文本中存在的披露差距。
 
@@ -41,8 +119,7 @@
       "current_disclosure": "现有披露内容描述",
       "standard_requirement": "标准要求描述",
       "gap": "缺少Scope 3排放数据，未披露减排目标",
-      "gap_level": "major/minor/none",
-      "standard_ref": "HKEX A1, ISSB S2-29"
+      "gap_level": "major/minor/none"
     }
   ],
   "peer_comparison": [
@@ -77,3 +154,4 @@
    - 持平：我方与同行披露深度大致相当（±1个维度以内）
    - 落后：同行有但我方缺少的关键披露维度≥2个
    - 无参照：知识库中无可比同行案例（填"无参照"，不强行判断）
+{% endif %}

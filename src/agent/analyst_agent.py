@@ -13,6 +13,7 @@ from typing import Dict, Any
 
 from src.agent.base_agent import BaseAgent
 from src.config import get_logger
+from src.models.analysis_contract import DisclosureAssessment, Evidence
 from src.utils import (
     load_prompt_template,
     load_esg_standards,
@@ -52,8 +53,10 @@ class AnalystAgent(BaseAgent):
         retrieved_standards = retrieval_result.get("retrieved_standards", [])
         retrieved_peers = retrieval_result.get("retrieved_peers", [])
         input_text = retrieval_result.get("input_text", "")
+        is_p0_branch = "p0_requirement_contexts" in retrieval_result
+        p0_requirement_contexts = retrieval_result.get("p0_requirement_contexts", [])
 
-        if not identified_topics:
+        if not is_p0_branch and not identified_topics:
             self.logger.warning("未识别到任何议题，跳过差距分析")
             return {
                 "identified_topics": [],
@@ -61,6 +64,44 @@ class AnalystAgent(BaseAgent):
                 "peer_comparison": [],
                 "overall_assessment": "未识别到ESG议题，无法进行分析",
                 "status": "skipped",
+            }
+
+        if is_p0_branch:
+            # P0 branch is selected by key presence, so an explicit empty list
+            # still renders the P0 schema instead of falling back to legacy analysis.
+            self.logger.debug("Building P0 disclosure assessment prompt")
+            prompt = self.analyst_prompt.render(
+                p0_requirement_contexts=p0_requirement_contexts,
+                input_text=input_text,
+            )
+            messages = [{"role": "user", "content": prompt}]
+
+            self.logger.debug("Calling LLM for P0 disclosure assessment")
+            llm_output = call_llm(messages)
+
+            self.logger.debug("Parsing P0 disclosure assessment result")
+            analyst_data = clean_and_parse_json(llm_output, logger=self.logger)
+
+            disclosure_assessments = analyst_data.get("disclosure_assessments", [])
+            validated_assessments = []
+            for item in disclosure_assessments:
+                item_payload = dict(item)
+                evidence_items = item_payload.get("evidence", []) or []
+                item_payload["evidence"] = [
+                    Evidence.model_validate(e).model_dump(mode="json")
+                    for e in evidence_items
+                ]
+                validated_assessments.append(
+                    DisclosureAssessment.model_validate(item_payload).model_dump(mode="json")
+                )
+
+            return {
+                "p0_contract_version": "p0_stage_d_agent_contract_v1",
+                "disclosure_assessments": validated_assessments,
+                "overall_assessment": analyst_data.get("overall_assessment", "未生成整体评估"),
+                "summary": analyst_data.get("summary", {}),
+                "raw_llm_output": llm_output,
+                "status": "completed",
             }
 
         # 2. 构建Prompt

@@ -49,3 +49,20 @@ build/
 
 # Ruff缓存
 .ruff_cache/
+
+# 阶段计划与执行记录
+docs/superpowers/
+
+# 本地环境与密钥扩展
+*.env
+
+# 本地运行日志
+*.log
+
+# 本地脚本与调试文件（保留核心 scripts/*.py 进入版本控制）
+scripts/tmp/
+scripts/local/
+scripts/*.local.py
+scripts/*_local.py
+scripts/*_scratch.py
+scripts/*_debug.py

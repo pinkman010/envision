@@ -21,6 +21,7 @@ from src.utils import (
     ValidationException,
     get_chroma_manager,
 )
+from src.utils.p0_agent_context import build_p0_requirement_contexts
 
 
 class RetrievalAgent(BaseAgent):
@@ -126,6 +127,7 @@ class RetrievalAgent(BaseAgent):
 
         # 6. 返回结果
         self.logger.info(f"议题识别完成: 识别到 {len(identified_topics)} 个议题")
+        p0_requirement_contexts = build_p0_requirement_contexts()
 
         return {
             "corpus_metadata": metadata,
@@ -135,9 +137,12 @@ class RetrievalAgent(BaseAgent):
             "retrieved_peers": retrieved_peers,
             "coverage_summary": retrieval_data["coverage_summary"],
             "raw_llm_output": llm_output,
+            "p0_requirement_contexts": p0_requirement_contexts,
+            "p0_contract_version": "p0_stage_d_agent_contract_v1",
             "retrieval_summary": {
                 "topic_count": len(identified_topics),
                 "standards_count": len(retrieved_standards),
                 "peers_count": len(retrieved_peers),
+                "p0_requirement_count": len(p0_requirement_contexts),
             },
         }

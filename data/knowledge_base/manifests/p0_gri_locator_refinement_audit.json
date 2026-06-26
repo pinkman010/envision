@@ -1,0 +1,424 @@
+{
+  "metadata": {
+    "built_at": "2026-06-26T10:27:06.338034+00:00",
+    "source_manifest_sha256": "CF3A86BA43EE82759736DB950B314A30FBAC0B7FB013CEAE91E3FC0F1542ADF8",
+    "disclosure_manifest_sha256": "E6C0920313713A59859AD497540335A220DDFB0F290CB7AE448EF7BD470657E9",
+    "report_source_document_relative_path": "data/knowledge_base/peer_reports/Envision Energy 2024-zh.pdf",
+    "report_pdf_sha256": "57360DCDA8E6256726BE5D2A49F8921E13187B40AE44661549903F702DF38068",
+    "gri_source_document_relative_path": "data/knowledge_base/standards/gri_reference/GRI_Standards_Official_Consolidated_Set_en.pdf",
+    "gri_pdf_sha256": "5FA47C6680D10DCFF7E3781952F95C7B2AD58A27972812330F7AD40F034FF466",
+    "chunk_size": 1600,
+    "chunk_overlap": 200
+  },
+  "locator_counts": {
+    "found": 109,
+    "multiple_candidates": 5,
+    "not_required_for_future_watch": 3,
+    "requires_topic_instantiation": 1
+  },
+  "locator_review_required_count": 5,
+  "sections": [
+    {
+      "standard_id": "GRI 1",
+      "standard_year": "2021",
+      "title": "GRI 1: Foundation 2021",
+      "start_pdf_page": 5,
+      "end_pdf_page": 39
+    },
+    {
+      "standard_id": "GRI 2",
+      "standard_year": "2021",
+      "title": "GRI 2: General Disclosures 2021",
+      "start_pdf_page": 40,
+      "end_pdf_page": 93
+    },
+    {
+      "standard_id": "GRI 3",
+      "standard_year": "2021",
+      "title": "GRI 3: Material Topics 2021",
+      "start_pdf_page": 94,
+      "end_pdf_page": 120
+    },
+    {
+      "standard_id": "GRI 11",
+      "standard_year": "2021",
+      "title": "GRI 11: Oil and Gas Sector 2021",
+      "start_pdf_page": 121,
+      "end_pdf_page": 209
+    },
+    {
+      "standard_id": "GRI 12",
+      "standard_year": "2022",
+      "title": "GRI 12: Coal Sector 2022",
+      "start_pdf_page": 210,
+      "end_pdf_page": 291
+    },
+    {
+      "standard_id": "GRI 13",
+      "standard_year": "2022",
+      "title": "GRI 13: Agriculture, Aquaculture and Fishing Sectors 2022",
+      "start_pdf_page": 292,
+      "end_pdf_page": 381
+    },
+    {
+      "standard_id": "GRI 14",
+      "standard_year": "2024",
+      "title": "GRI 14: Mining Sector 2024",
+      "start_pdf_page": 382,
+      "end_pdf_page": 458
+    },
+    {
+      "standard_id": "GRI 101",
+      "standard_year": "2024",
+      "title": "GRI 101: Biodiversity 2024",
+      "start_pdf_page": 459,
+      "end_pdf_page": 504
+    },
+    {
+      "standard_id": "GRI 102",
+      "standard_year": "2025",
+      "title": "GRI 102: Climate Change 2025",
+      "start_pdf_page": 505,
+      "end_pdf_page": 563
+    },
+    {
+      "standard_id": "GRI 103",
+      "standard_year": "2025",
+      "title": "GRI 103: Energy 2025",
+      "start_pdf_page": 564,
+      "end_pdf_page": 589
+    },
+    {
+      "standard_id": "GRI 201",
+      "standard_year": "2016",
+      "title": "GRI 201: Economic Performance 2016",
+      "start_pdf_page": 590,
+      "end_pdf_page": 605
+    },
+    {
+      "standard_id": "GRI 202",
+      "standard_year": "2016",
+      "title": "GRI 202: Market Presence 2016",
+      "start_pdf_page": 606,
+      "end_pdf_page": 615
+    },
+    {
+      "standard_id": "GRI 203",
+      "standard_year": "2016",
+      "title": "GRI 203: Indirect Economic Impacts 2016",
+      "start_pdf_page": 616,
+      "end_pdf_page": 623
+    },
+    {
+      "standard_id": "GRI 204",
+      "standard_year": "2016",
+      "title": "GRI 204: Procurement Practices 2016",
+      "start_pdf_page": 624,
+      "end_pdf_page": 631
+    },
+    {
+      "standard_id": "GRI 205",
+      "standard_year": "2016",
+      "title": "GRI 205: Anti-corruption 2016",
+      "start_pdf_page": 632,
+      "end_pdf_page": 644
+    },
+    {
+      "standard_id": "GRI 206",
+      "standard_year": "2016",
+      "title": "GRI 206: Anti-competitive Behavior 2016",
+      "start_pdf_page": 645,
+      "end_pdf_page": 653
+    },
+    {
+      "standard_id": "GRI 207",
+      "standard_year": "2019",
+      "title": "GRI 207: Tax 2019",
+      "start_pdf_page": 654,
+      "end_pdf_page": 671
+    },
+    {
+      "standard_id": "GRI 301",
+      "standard_year": "2016",
+      "title": "GRI 301: Materials 2016",
+      "start_pdf_page": 672,
+      "end_pdf_page": 681
+    },
+    {
+      "standard_id": "GRI 302",
+      "standard_year": "2016",
+      "title": "GRI 302: Energy 2016",
+      "start_pdf_page": 682,
+      "end_pdf_page": 697
+    },
+    {
+      "standard_id": "GRI 303",
+      "standard_year": "2018",
+      "title": "GRI 303: Water and Effluents 2018",
+      "start_pdf_page": 698,
+      "end_pdf_page": 723
+    },
+    {
+      "standard_id": "GRI 304",
+      "standard_year": "2016",
+      "title": "GRI 304: Biodiversity 2016",
+      "start_pdf_page": 724,
+      "end_pdf_page": 735
+    },
+    {
+      "standard_id": "GRI 305",
+      "standard_year": "2016",
+      "title": "GRI 305: Emissions 2016",
+      "start_pdf_page": 736,
+      "end_pdf_page": 758
+    },
+    {
+      "standard_id": "GRI 306",
+      "standard_year": "2016",
+      "title": "GRI 306: Effluents and Waste 2016",
+      "start_pdf_page": 759,
+      "end_pdf_page": 768
+    },
+    {
+      "standard_id": "GRI 306",
+      "standard_year": "2020",
+      "title": "GRI 306: Waste 2020",
+      "start_pdf_page": 769,
+      "end_pdf_page": 790
+    },
+    {
+      "standard_id": "GRI 308",
+      "standard_year": "2016",
+      "title": "GRI 308: Supplier Environmental Assessment 2016",
+      "start_pdf_page": 791,
+      "end_pdf_page": 801
+    },
+    {
+      "standard_id": "GRI 401",
+      "standard_year": "2016",
+      "title": "GRI 401: Employment 2016",
+      "start_pdf_page": 802,
+      "end_pdf_page": 814
+    },
+    {
+      "standard_id": "GRI 402",
+      "standard_year": "2016",
+      "title": "GRI 402: Labor/Management Relations 2016",
+      "start_pdf_page": 815,
+      "end_pdf_page": 824
+    },
+    {
+      "standard_id": "GRI 403",
+      "standard_year": "2018",
+      "title": "GRI 403: Occupational Health and Safety 2018",
+      "start_pdf_page": 825,
+      "end_pdf_page": 855
+    },
+    {
+      "standard_id": "GRI 404",
+      "standard_year": "2016",
+      "title": "GRI 404: Training and Education 2016",
+      "start_pdf_page": 856,
+      "end_pdf_page": 867
+    },
+    {
+      "standard_id": "GRI 405",
+      "standard_year": "2016",
+      "title": "GRI 405: Diversity and Equal Opportunity 2016",
+      "start_pdf_page": 868,
+      "end_pdf_page": 879
+    },
+    {
+      "standard_id": "GRI 406",
+      "standard_year": "2016",
+      "title": "GRI 406: Non-discrimination 2016",
+      "start_pdf_page": 880,
+      "end_pdf_page": 888
+    },
+    {
+      "standard_id": "GRI 407",
+      "standard_year": "2016",
+      "title": "GRI 407: Freedom of Association and Collective Bargaining 2016",
+      "start_pdf_page": 889,
+      "end_pdf_page": 898
+    },
+    {
+      "standard_id": "GRI 408",
+      "standard_year": "2016",
+      "title": "GRI 408: Child Labor 2016",
+      "start_pdf_page": 899,
+      "end_pdf_page": 909
+    },
+    {
+      "standard_id": "GRI 409",
+      "standard_year": "2016",
+      "title": "GRI 409: Forced or Compulsory Labor 2016",
+      "start_pdf_page": 910,
+      "end_pdf_page": 919
+    },
+    {
+      "standard_id": "GRI 410",
+      "standard_year": "2016",
+      "title": "GRI 410: Security Practices 2016",
+      "start_pdf_page": 920,
+      "end_pdf_page": 927
+    },
+    {
+      "standard_id": "GRI 411",
+      "standard_year": "2016",
+      "title": "GRI 411: Rights of Indigenous Peoples 2016",
+      "start_pdf_page": 928,
+      "end_pdf_page": 937
+    },
+    {
+      "standard_id": "GRI 413",
+      "standard_year": "2016",
+      "title": "GRI 413: Local Communities 2016",
+      "start_pdf_page": 938,
+      "end_pdf_page": 949
+    },
+    {
+      "standard_id": "GRI 414",
+      "standard_year": "2016",
+      "title": "GRI 414: Supplier Social Assessment 2016",
+      "start_pdf_page": 950,
+      "end_pdf_page": 960
+    },
+    {
+      "standard_id": "GRI 415",
+      "standard_year": "2016",
+      "title": "GRI 415: Public Policy 2016",
+      "start_pdf_page": 961,
+      "end_pdf_page": 969
+    },
+    {
+      "standard_id": "GRI 416",
+      "standard_year": "2016",
+      "title": "GRI 416: Customer Health and Safety 2016",
+      "start_pdf_page": 970,
+      "end_pdf_page": 978
+    },
+    {
+      "standard_id": "GRI 417",
+      "standard_year": "2016",
+      "title": "GRI 417: Marketing and Labeling 2016",
+      "start_pdf_page": 979,
+      "end_pdf_page": 988
+    },
+    {
+      "standard_id": "GRI 418",
+      "standard_year": "2016",
+      "title": "GRI 418: Customer Privacy 2016",
+      "start_pdf_page": 989,
+      "end_pdf_page": 1022
+    }
+  ],
+  "locator_review_required": [
+    {
+      "manifest_item_id": "current_gap:GRI2:2-21",
+      "standard_id": "GRI 2",
+      "standard_year": "2021",
+      "canonical_disclosure_id": "2-21",
+      "requirement_locator_status": "multiple_candidates",
+      "official_pdf_page_candidates": [
+        51,
+        68
+      ],
+      "locator_review_reason": "Multiple title-page candidates remain within GRI 2: General Disclosures 2021; manual locator review is required.",
+      "manual_locator_review": {
+        "review_status": "confirmed",
+        "confirmed_official_pdf_pages": [
+          68
+        ],
+        "confirmed_title": "Disclosure 2-21 Annual total compensation ratio",
+        "review_reason": "Page 68 contains the formal Disclosure 2-21 title and reporting requirement; page 51 is guidance text and is excluded.",
+        "reviewed_at": "2026-06-26"
+      }
+    },
+    {
+      "manifest_item_id": "current_gap:GRI207:207-4",
+      "standard_id": "GRI 207",
+      "standard_year": "2019",
+      "canonical_disclosure_id": "207-4",
+      "requirement_locator_status": "multiple_candidates",
+      "official_pdf_page_candidates": [
+        663,
+        664,
+        665
+      ],
+      "locator_review_reason": "Multiple title-page candidates remain within GRI 207: Tax 2019; manual locator review is required.",
+      "manual_locator_review": {
+        "review_status": "confirmed",
+        "confirmed_official_pdf_pages": [
+          663
+        ],
+        "confirmed_title": "Disclosure 207-4 Country-by-country reporting",
+        "review_reason": "Page 663 contains the formal Disclosure 207-4 title and reporting requirement; pages 664 and 665 are guidance text for Disclosure 207-4-b-i and Disclosure 207-4-b-viii and are excluded.",
+        "reviewed_at": "2026-06-26"
+      }
+    },
+    {
+      "manifest_item_id": "current_gap:GRI306:306-4",
+      "standard_id": "GRI 306",
+      "standard_year": "2020",
+      "canonical_disclosure_id": "306-4",
+      "requirement_locator_status": "multiple_candidates",
+      "official_pdf_page_candidates": [
+        779,
+        789
+      ],
+      "locator_review_reason": "Multiple title-page candidates remain within GRI 306: Waste 2020; manual locator review is required.",
+      "manual_locator_review": {
+        "review_status": "confirmed",
+        "confirmed_official_pdf_pages": [
+          779
+        ],
+        "confirmed_title": "Disclosure 306-4 Waste diverted from disposal",
+        "review_reason": "Page 779 contains the formal Disclosure 306-4 title and reporting requirement; page 789 is appendix content and is excluded.",
+        "reviewed_at": "2026-06-26"
+      }
+    },
+    {
+      "manifest_item_id": "current_gap:GRI401:401-1",
+      "standard_id": "GRI 401",
+      "standard_year": "2016",
+      "canonical_disclosure_id": "401-1",
+      "requirement_locator_status": "multiple_candidates",
+      "official_pdf_page_candidates": [
+        807,
+        814
+      ],
+      "locator_review_reason": "Multiple title-page candidates remain within GRI 401: Employment 2016; manual locator review is required.",
+      "manual_locator_review": {
+        "review_status": "confirmed",
+        "confirmed_official_pdf_pages": [
+          807
+        ],
+        "confirmed_title": "Disclosure 401-1 New employee hires and employee turnover",
+        "review_reason": "Page 807 contains the formal Disclosure 401-1 title and reporting requirement; page 814 is Standard Interpretations content and is excluded.",
+        "reviewed_at": "2026-06-26"
+      }
+    },
+    {
+      "manifest_item_id": "current_gap:GRI403:403-2",
+      "standard_id": "GRI 403",
+      "standard_year": "2018",
+      "canonical_disclosure_id": "403-2",
+      "requirement_locator_status": "multiple_candidates",
+      "official_pdf_page_candidates": [
+        833,
+        844
+      ],
+      "locator_review_reason": "Multiple title-page candidates remain within GRI 403: Occupational Health and Safety 2018; manual locator review is required.",
+      "manual_locator_review": {
+        "review_status": "confirmed",
+        "confirmed_official_pdf_pages": [
+          833
+        ],
+        "confirmed_title": "Disclosure 403-2 Hazard identification, risk assessment, and incident investigation",
+        "review_reason": "Page 833 contains the formal Disclosure 403-2 title and reporting requirement; page 844 is guidance text for Disclosure 403-9-c and is excluded.",
+        "reviewed_at": "2026-06-26"
+      }
+    }
+  ]
+}

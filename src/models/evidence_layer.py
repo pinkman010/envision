@@ -38,6 +38,32 @@ class TranslationStatus(str, Enum):
     WORKING_TRANSLATION_AVAILABLE = "working_translation_available"
 
 
+class ManualLocatorReview(BaseModel):
+    """Manual confirmation for ambiguous official GRI PDF locators."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    review_status: str
+    confirmed_official_pdf_pages: List[int] = Field(min_length=1)
+    confirmed_title: str
+    review_reason: str
+    reviewed_at: str
+
+    @field_validator("review_status", "confirmed_title", "review_reason", "reviewed_at")
+    @classmethod
+    def text_fields_must_not_be_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("manual locator review text fields must not be empty")
+        return value
+
+    @field_validator("confirmed_official_pdf_pages")
+    @classmethod
+    def confirmed_pages_must_be_positive(cls, value: List[int]) -> List[int]:
+        if any(page < 1 for page in value):
+            raise ValueError("confirmed official PDF pages must be positive")
+        return value
+
+
 class GRIRequirement(BaseModel):
     """A P0 disclosure requirement with official-source locator metadata."""
 
@@ -66,11 +92,22 @@ class GRIRequirement(BaseModel):
     source_document_sha256: str
     locator_review_required: bool = False
     locator_review_reason: Optional[str] = None
+    manual_locator_review: Optional[ManualLocatorReview] = None
 
     @field_validator("source_document_sha256")
     @classmethod
     def validate_source_document_sha256(cls, value: str) -> str:
         return _normalize_sha256(value)
+
+    @model_validator(mode="after")
+    def manual_locator_review_pages_must_be_candidates(self) -> "GRIRequirement":
+        if self.manual_locator_review is None:
+            return self
+        confirmed_pages = set(self.manual_locator_review.confirmed_official_pdf_pages)
+        candidate_pages = set(self.official_pdf_page_candidates)
+        if not confirmed_pages.issubset(candidate_pages):
+            raise ValueError("confirmed official PDF pages must be a subset of official PDF page candidates")
+        return self
 
 
 class ReportEvidenceChunk(BaseModel):

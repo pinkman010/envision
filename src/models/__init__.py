@@ -17,6 +17,7 @@ from src.models.evidence_layer import (
     EvidenceLayerMetadata,
     GRIRequirement,
     GRIRequirementPack,
+    ManualLocatorReview,
     ReportEvidenceChunk,
     ReportEvidenceIndex,
     RequirementLocatorStatus,
@@ -40,6 +41,7 @@ __all__ = [
     "ReportEvidenceIndex",
     "ReportEvidenceChunk",
     "GRIRequirementPack",
+    "ManualLocatorReview",
     "GRIRequirement",
     "EvidenceLayerMetadata",
 ]

@@ -6,7 +6,7 @@ import hashlib
 from pathlib import Path
 from typing import Dict, List
 
-from pypdf import PdfReader
+import pdfplumber
 
 
 def sha256_file(path: Path) -> str:
@@ -20,11 +20,11 @@ def sha256_file(path: Path) -> str:
 
 def extract_pdf_pages(path: Path) -> List[Dict[str, object]]:
     """Extract text from each PDF page using 1-based page numbers."""
-    reader = PdfReader(str(path))
     pages: List[Dict[str, object]] = []
-    for index, page in enumerate(reader.pages, start=1):
-        text = page.extract_text() or ""
-        pages.append({"pdf_page": index, "text": text})
+    with pdfplumber.open(str(path)) as pdf:
+        for index, page in enumerate(pdf.pages, start=1):
+            text = page.extract_text() or ""
+            pages.append({"pdf_page": index, "text": text})
     return pages
 
 

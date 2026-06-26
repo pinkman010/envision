@@ -33,11 +33,11 @@ def extract_text_from_pdf(file_path: Path) -> str:
     :return: 纯文本内容
     """
     try:
-        from PyPDF2 import PdfReader
-        reader = PdfReader(file_path)
+        import pdfplumber
         text = ""
-        for page in reader.pages:
-            text += page.extract_text() or ""
+        with pdfplumber.open(str(file_path)) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text() or ""
         # 简单的文本清洗（去除多余空白）
         text = re.sub(r"\s+", " ", text).strip()
         return text

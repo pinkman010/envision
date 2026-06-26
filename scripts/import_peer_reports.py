@@ -9,7 +9,7 @@ import_peer_reports.py
     python import_peer_reports.py
 
 依赖:
-    pip install chromadb pypdf pandas
+    pip install chromadb pdfplumber pandas
 """
 
 import os
@@ -18,7 +18,7 @@ import re
 import chromadb
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from pypdf import PdfReader
+import pdfplumber
 
 # 把项目根目录加入sys.path，才能import src.*
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -111,16 +111,15 @@ def extract_text_from_pdf(pdf_path: Path, max_pages: Optional[int] = None) -> st
         提取的文本内容
     """
     try:
-        reader = PdfReader(str(pdf_path))
         text_parts = []
 
-        pages_to_read = max_pages if max_pages else len(reader.pages)
-
-        for i in range(pages_to_read):
-            page = reader.pages[i]
-            text = page.extract_text()
-            if text:
-                text_parts.append(text)
+        with pdfplumber.open(str(pdf_path)) as pdf:
+            pages_to_read = max_pages if max_pages else len(pdf.pages)
+            for i in range(pages_to_read):
+                page = pdf.pages[i]
+                text = page.extract_text()
+                if text:
+                    text_parts.append(text)
 
         return "\n".join(text_parts)
     except Exception as e:

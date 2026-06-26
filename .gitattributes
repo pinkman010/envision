@@ -17,6 +17,7 @@
 *.scss text eol=lf
 *.html text eol=lf
 *.sh text eol=lf
+*.j2 text eol=lf
 
 # Windows脚本保持CRLF
 *.bat text eol=crlf

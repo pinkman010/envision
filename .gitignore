@@ -50,8 +50,10 @@ build/
 # Ruff缓存
 .ruff_cache/
 
-# 阶段计划与执行记录
+# 本地计划与代理约束文件
 docs/superpowers/
+AGENTS.md
+docs/ESG项目全生命周期实施计划.md
 
 # 本地环境与密钥扩展
 *.env

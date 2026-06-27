@@ -132,6 +132,20 @@ def _source_by_document_type(source_manifest: Dict[str, Any], document_type: str
     return matches[0]
 
 
+def _report_metadata_for_chunks(source_manifest: Dict[str, Any]) -> Dict[str, Any]:
+    report_source = _source_by_document_type(source_manifest, REPORT_DOCUMENT_TYPE)
+    reporting_period = report_source.get("reporting_period") or {}
+    report_year = report_source.get("year")
+    if report_year is None:
+        period_end = str(reporting_period.get("end") or "")
+        report_year = int(period_end[:4]) if period_end[:4].isdigit() else 2024
+    return {
+        "company": report_source.get("company") or report_source.get("publisher") or "Envision Energy",
+        "report_year": int(report_year),
+        "industry": report_source.get("industry") or "renewable_energy",
+    }
+
+
 def _verify_file_hash(path: Path, expected_sha256: str) -> str:
     actual = sha256_file(path)
     if actual != expected_sha256.upper():
@@ -260,7 +274,13 @@ def _section_for_standard(
 
 def _line_starts_disclosure_heading(line: str, disclosure_id: str) -> bool:
     stripped = line.strip()
-    return bool(re.match(rf"^Disclosure\s+{re.escape(disclosure_id)}\b", stripped, flags=re.IGNORECASE))
+    return bool(
+        re.match(
+            rf"^Disclosure\s+{re.escape(disclosure_id)}(?:\b|(?=[A-Z]))",
+            stripped,
+            flags=re.IGNORECASE,
+        )
+    )
 
 
 def _line_starts_short_disclosure_heading(line: str, disclosure_id: str) -> bool:
@@ -548,6 +568,10 @@ def build_p0_report_evidence_index(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
     )
+    report_metadata = _report_metadata_for_chunks(source_manifest)
+    for payload in chunk_payloads:
+        payload.update(report_metadata)
+        payload.setdefault("topic", "general")
     index = ReportEvidenceIndex.model_validate(
         {
             "metadata": metadata.model_dump(mode="json"),
@@ -585,3 +609,4 @@ def build_and_write_p0_evidence_layer(*, rebuild_report_index: bool = False) -> 
         "locator_review_required": requirement_pack.locator_review_required,
         "locator_review_required_count": len(requirement_pack.locator_review_required),
     }
+

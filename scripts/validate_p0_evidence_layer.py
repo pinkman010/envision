@@ -347,6 +347,18 @@ def validate_p0_evidence_layer() -> Dict[str, Any]:
         if not chunk.source_document_sha256:
             errors.append(f"chunk {chunk.chunk_id} has empty source_document_sha256")
             break
+        if not chunk.company.strip():
+            errors.append(f"chunk {chunk.chunk_id} has empty company")
+            break
+        if chunk.report_year != 2024:
+            errors.append(f"chunk {chunk.chunk_id} report_year expected 2024, got {chunk.report_year}")
+            break
+        if not chunk.industry.strip():
+            errors.append(f"chunk {chunk.chunk_id} has empty industry")
+            break
+        if not chunk.topic.strip():
+            errors.append(f"chunk {chunk.chunk_id} has empty topic")
+            break
         if not chunk.text.strip():
             errors.append(f"chunk {chunk.chunk_id} has empty text")
             break

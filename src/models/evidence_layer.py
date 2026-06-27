@@ -118,6 +118,10 @@ class ReportEvidenceChunk(BaseModel):
     chunk_id: str
     source_document_relative_path: str
     source_document_sha256: str
+    company: str
+    report_year: int
+    industry: str
+    topic: str = "general"
     pdf_page: int = Field(ge=1)
     char_start: int = Field(ge=0)
     char_end: int = Field(ge=0)
@@ -127,6 +131,13 @@ class ReportEvidenceChunk(BaseModel):
     @classmethod
     def validate_source_document_sha256(cls, value: str) -> str:
         return _normalize_sha256(value)
+
+    @field_validator("company", "industry", "topic")
+    @classmethod
+    def chunk_metadata_must_not_be_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("chunk metadata text fields must not be empty")
+        return value
 
     @field_validator("text")
     @classmethod

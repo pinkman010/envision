@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -14,8 +15,15 @@ from src.utils.evidence_layer_utils import build_and_write_p0_evidence_layer
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Build Stage C P0 GRI requirement and report evidence manifests.")
+    parser.add_argument(
+        "--rebuild-report-index",
+        action="store_true",
+        help="Rebuild and write p0_report_evidence_index.json instead of reusing the existing index.",
+    )
+    args = parser.parse_args()
     try:
-        summary = build_and_write_p0_evidence_layer()
+        summary = build_and_write_p0_evidence_layer(rebuild_report_index=args.rebuild_report_index)
     except Exception as exc:  # pragma: no cover - command-line guard
         print(json.dumps({"status": "failed", "error": str(exc)}, ensure_ascii=False, indent=2))
         return 1

@@ -1,5 +1,43 @@
 # 开发日志（DEV_LOG）
 
+## 2026-06-27｜P0 阶段 E0 计划入口
+
+E0 用于收敛真实运行前缺口，优先处理 AdvisorAgent P0 分支、evidence chunk metadata、verdict 映射、dry-run 输出保存和人工复核模板。
+
+AnalysisRun 持久化、API、Streamlit 重写、全量中文译文和 ChromaDB 重建记录为后续阶段事项，不作为 E0 阻塞。
+
+## 2026-06-27｜P0 阶段 D：Agent 合约对齐验收
+
+### 已完成
+
+- P0 Agent context 已可构造 118 条 requirement contexts。
+- RetrievalAgent 已返回 `p0_requirement_contexts`、`p0_contract_version` 和 `retrieval_summary.p0_requirement_count`。
+- `analyst_prompt.j2` 已支持 P0 `disclosure_assessments` 分支，并保留旧 `gap_analysis + peer_comparison` 分支。
+- AnalystAgent 已支持 P0 分支，将 LLM JSON 输出校验为 `DisclosureAssessment` 兼容结构。
+- OrchestratorAgent 已在 `disclosure_assessments` 非空时汇总 `AnalysisRun`。
+- 新增 `scripts/validate_stage_d_agent_contract.py`，用于验证 118 条上下文、5 条人工 locator 页码和 Agent 高置信字段消费规则。
+
+### 验证结果
+
+```text
+py_compile: passed
+validate_p0_evidence_layer.py: status=ok, requirements=118, manual_locator_review_count=5, errors=[]
+validate_stage_d_agent_contract.py: status=ok, context_count=118, manual_locator_context_count=5, errors=[]
+stub verification: analyst_assessments=1, analysis_run_manifest_version=0.1, analysis_run_assessments=1, analysis_run_sources=2
+```
+
+### 已知非阻塞风险
+
+- AdvisorAgent 仍为旧逻辑；P0 下可能返回 `skipped`。
+- 尚未执行真实外部 LLM 端到端运行。
+- CRLF/LF warning 暂不处理，提交前再单独评估。
+- `audit metadata/sections` 暂未强一致校验。
+- `manual_locator_review.confirmed_title/review_reason` 暂未全文锁定。
+- `build CLI` 暂未暴露 `--rebuild-report-index`。
+
+### 下一阶段入口
+
+阶段 E 应进入真实运行、人工复核和误差复盘，目标是证明 P0 链路能产出可信的单报告 ESG 分析结果。
 ## 2026-03-26 当前状态快照
 
 本文件记录当前仓库的实现状态，不再沿用早期的旧模块命名。
@@ -131,3 +169,6 @@ OrchestratorAgent
 - 删除两份与当前实现不一致的历史文档
 
 后续如果再次调整架构、环境变量或前端行为，应优先更新文档，避免继续积累“文档比代码老一代”的问题。
+
+
+

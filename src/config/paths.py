@@ -39,6 +39,7 @@ GRI_REFERENCE_DIR: Path = STANDARDS_DIR / "gri_reference"
 GRI_REFERENCE_PDF_PATH: Path = GRI_REFERENCE_DIR / "GRI_Standards_Official_Consolidated_Set_en.pdf"
 ENVISION_2024_ZH_REPORT_PATH: Path = PEER_REPORTS_DIR / "Envision Energy 2024-zh.pdf"
 P0_GRI_REQUIREMENT_PACK_PATH: Path = MANIFESTS_DIR / "p0_gri_requirement_pack.json"
+P0_GRI_REQUIREMENT_CHECKLIST_PATH: Path = MANIFESTS_DIR / "p0_gri_requirement_checklist.json"
 P0_REPORT_EVIDENCE_INDEX_PATH: Path = MANIFESTS_DIR / "p0_report_evidence_index.json"
 P0_GRI_LOCATOR_REFINEMENT_AUDIT_PATH: Path = MANIFESTS_DIR / "p0_gri_locator_refinement_audit.json"
 

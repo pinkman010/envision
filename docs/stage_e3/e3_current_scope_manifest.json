@@ -1,0 +1,112 @@
+{
+  "manifest_version": "p0_stage_e3_current_scope_manifest_v1",
+  "created_at": "2026-06-30",
+  "stage": "E3",
+  "stage_name": "2024 current disclosure batched full run",
+  "status": "frozen_for_planning",
+  "source_report": {
+    "company": "Envision Energy",
+    "report_year": 2024,
+    "report_path": "data/knowledge_base/peer_reports/Envision Energy 2024-zh.pdf"
+  },
+  "standard_profile": {
+    "standard_profile_id": "gri_p0_2024_current_disclosure_v1",
+    "requirement_checklist": "data/knowledge_base/manifests/p0_gri_requirement_checklist.json",
+    "current_gap_disclosure_count": 114,
+    "current_gap_scored_requirement_count": 658,
+    "topic_instantiation_required_count": 1,
+    "excluded_counts_by_mode": {
+      "readiness_2026": 1,
+      "watchlist_2027": 2
+    }
+  },
+  "scope_rules": [
+    "Run E3 only for 2024 current_gap disclosures in the frozen standard profile.",
+    "Do not describe E3 as 118-item full analysis.",
+    "Exclude readiness_2026 and watchlist_2027 from 2024 current-gap statistics.",
+    "Exclude current_gap:GRI3:3-3_generic from ordinary scoring; handle topic-level 3-3 in E3.5.",
+    "Retain GRI 3-1 and GRI 3-2 in E3 ordinary current-gap scope."
+  ],
+  "batch_plan": [
+    {
+      "batch_id": "e3_batch_01_gri2",
+      "label": "GRI 2 general disclosures",
+      "standards": ["GRI2"],
+      "expected_current_gap_disclosure_count": 30,
+      "smoke_review_count": 5
+    },
+    {
+      "batch_id": "e3_batch_02_gri3_without_3_3",
+      "label": "GRI 3 material topics metadata",
+      "standards": ["GRI3"],
+      "included_disclosures": ["current_gap:GRI3:3-1", "current_gap:GRI3:3-2"],
+      "excluded_disclosures": ["current_gap:GRI3:3-3_generic"],
+      "expected_current_gap_disclosure_count": 2,
+      "smoke_review_count": 2
+    },
+    {
+      "batch_id": "e3_batch_03_environment",
+      "label": "Environment disclosures",
+      "standards": ["GRI301", "GRI302", "GRI303", "GRI304", "GRI305", "GRI306"],
+      "expected_current_gap_disclosure_count": 29,
+      "smoke_review_count": 5
+    },
+    {
+      "batch_id": "e3_batch_04_employees_and_human_rights",
+      "label": "Employees, labor, human rights, communities and product responsibility",
+      "standards": [
+        "GRI401",
+        "GRI402",
+        "GRI403",
+        "GRI404",
+        "GRI405",
+        "GRI406",
+        "GRI407",
+        "GRI408",
+        "GRI409",
+        "GRI410",
+        "GRI413",
+        "GRI416",
+        "GRI417",
+        "GRI418"
+      ],
+      "expected_current_gap_disclosure_count": 32,
+      "smoke_review_count": 5
+    },
+    {
+      "batch_id": "e3_batch_05_governance_supply_chain_economic",
+      "label": "Economic, governance, tax, procurement and supplier disclosures",
+      "standards": [
+        "GRI201",
+        "GRI202",
+        "GRI203",
+        "GRI204",
+        "GRI205",
+        "GRI206",
+        "GRI207",
+        "GRI308",
+        "GRI414"
+      ],
+      "expected_current_gap_disclosure_count": 21,
+      "smoke_review_count": 5
+    }
+  ],
+  "hard_gate_summary": {
+    "disclosed_or_partial_requires_non_index_body_evidence": true,
+    "partial_requires_missing_or_partial_requirements": true,
+    "manual_review_requires_reason_enum": true,
+    "body_evidence_required_fields": [
+      "source_page",
+      "report_page_label",
+      "source_text",
+      "evidence_kind",
+      "chunk_id"
+    ],
+    "page_offset_validation_required": true,
+    "advisor_internal_absence_inference_forbidden": true
+  },
+  "next_stage": {
+    "e3_5": "GRI 3-3 topic-level instantiation after ordinary E3 current disclosure batches pass smoke review.",
+    "f": "Evaluation and error analysis after E3 and E3.5 produce reviewable outputs."
+  }
+}

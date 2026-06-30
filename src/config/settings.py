@@ -92,6 +92,21 @@ LLM_MAX_RETRIES: int = get_required_env("LLM_MAX_RETRIES", int)
 LLM_RETRY_DELAY: float = get_required_env("LLM_RETRY_DELAY", float)
 # 可选配置：禁用推理模型思考能力（如 kimi-k2.5, DeepSeek-R1）
 LLM_THINKING_DISABLED: bool = os.getenv("LLM_THINKING_DISABLED", "false").lower() in ("true", "1", "yes", "on")
+LLM_THINKING_TYPE: str = os.getenv(
+    "LLM_THINKING_TYPE",
+    "disabled" if LLM_THINKING_DISABLED else "enabled",
+).strip().lower()
+LLM_REASONING_EFFORT: str = os.getenv("LLM_REASONING_EFFORT", "max").strip().lower()
+LLM_RESPONSE_FORMAT: str = os.getenv("LLM_RESPONSE_FORMAT", "").strip().lower()
+
+if LLM_THINKING_TYPE not in {"enabled", "disabled"}:
+    raise ValueError("环境变量 LLM_THINKING_TYPE 只允许 enabled 或 disabled")
+
+if LLM_REASONING_EFFORT not in {"high", "max"}:
+    raise ValueError("环境变量 LLM_REASONING_EFFORT 只允许 high 或 max")
+
+if LLM_RESPONSE_FORMAT not in {"", "json_object"}:
+    raise ValueError("环境变量 LLM_RESPONSE_FORMAT 只允许空值或 json_object")
 
 # ------------------------------
 # 硬规则校验阈值（ESG合规核心）
@@ -164,6 +179,9 @@ class Settings:
     LLM_MAX_RETRIES = LLM_MAX_RETRIES
     LLM_RETRY_DELAY = LLM_RETRY_DELAY
     LLM_THINKING_DISABLED = LLM_THINKING_DISABLED
+    LLM_THINKING_TYPE = LLM_THINKING_TYPE
+    LLM_REASONING_EFFORT = LLM_REASONING_EFFORT
+    LLM_RESPONSE_FORMAT = LLM_RESPONSE_FORMAT
     
     # 硬规则
     SIMILARITY_THRESHOLD = SIMILARITY_THRESHOLD

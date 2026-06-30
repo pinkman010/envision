@@ -15,7 +15,7 @@ from src.utils.validate_utils import (
     clean_and_parse_json,
 )
 from src.utils.similarity_utils import calculate_similarity
-from src.utils.llm_utils import call_llm
+from src.utils.llm_utils import call_llm, call_llm_with_metadata
 from src.utils.audit_utils import (
     write_audit_log,
     query_audit_logs,
@@ -69,6 +69,7 @@ __all__ = [
     "calculate_similarity",
     # LLM
     "call_llm",
+    "call_llm_with_metadata",
     # 审计日志
     "write_audit_log",
     "query_audit_logs",

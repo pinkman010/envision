@@ -1,15 +1,30 @@
-{% if p0_requirement_contexts is defined %}
-{# P0 GRI disclosure assessment prompt. Rule source: 不做同行对比，不输出 peer_comparison。 #}
-你是一个 ESG 披露分析助手。你的任务是基于远景能源 2024 中文 ESG 报告证据，对照 GRI 条款上下文，生成条款级披露判断。
+﻿{% if p0_requirement_contexts is defined %}
+{# P0 GRI disclosure assessment prompt. Rule source: requirement-level evidence contract. #}
+你是一个 ESG 披露证据核验助手。你的任务是基于远景能源 2024 中文 ESG 报告证据，对照 GRI requirement checklist，先逐项核验 requirement，再汇总 disclosure verdict。
 
 【硬性规则】
 1. 只返回纯 JSON，不要输出 markdown、解释文字或代码块标记。
-2. 只能依据输入中的 report_evidence_chunks 判断企业披露，不得补造报告事实。
-3. 如果 report_evidence_chunks 为空，verdict 必须为 manual_review。
-4. 如果 agent_manual_review_required 为 true，review_status 必须为 pending，rationale 必须说明需要人工复核。
-5. 如果 forced_verdict 不为空，verdict 必须等于 forced_verdict。
-6. rationale 中必须引用 manifest_item_id 和 canonical_disclosure_id，不得改写条款编号。
-7. 不做同行对比，不输出旧版同行比较字段。
+2. 只能依据输入中的 evidence_bundle 和 report_evidence_chunks 判断企业披露，不得补造报告事实。
+3. index_evidence 只能证明企业在 GRI 内容索引中引用了该披露项，不能单独支持 disclosed。
+   index_evidence is a locator only. Never mark any requirement as met based solely on index_evidence, even when the index row lists a page number or omission statement.
+4. disclosed 必须同时满足：存在 requirement_checks；所有适用且强制的 requirement support_status 均为 met；至少有一条非 index_evidence 支持。
+5. partially_disclosed 必须列出 missing_requirements 或 partial_requirements；support_status=partially_met 的 hard_score requirement 只能放入 partial_requirements，不得放入 missing_requirements；not_met、not_assessed、manual_review 才放入 missing_requirements。
+6. not_applicable 必须有 omission_or_not_applicable_explanation，并保持 review_status=pending 等待人工确认；current_gap 适用但因商业保密、法律限制或其他限制从略披露时，不输出 not_applicable，必须输出 manual_review，manual_review_reason_codes=["omission_reason_requires_review"]，aggregation_reason="omission_reason_requires_review"。
+7. 如果 report_evidence_chunks 和 evidence_bundle 均无可用证据，verdict 必须为 manual_review。
+8. 所有条目的 review_status 必须固定为 pending；AI 输出未经人工复核，不允许输出 completed、approved、reviewed 等状态。
+9. 如果 forced_verdict 不为空，verdict 必须等于 forced_verdict。
+10. 如果 canonical_disclosure_id 为 3-3_generic，verdict 必须为 manual_review，manual_review_requirements 和 manual_review_reason_codes 必须包含 needs_topic_instantiation，not_scored_reason 必须为 "not_scored_requires_topic_instantiation"，不得进入普通 scoring。
+11. verdict 为 manual_review 时必须输出 manual_review_reason_codes，取值只能来自：weak_evidence_support、additional_evidence_needed、omission_reason_requires_review、needs_topic_instantiation、source_text_extraction_error、readiness_item_needs_separate_verdict、requirement_scope_issue、missing_llm_assessment_for_manifest_item、index_evidence_cannot_support_disclosed。
+12. readiness_2026 条目如果 forced_verdict 或 current-gap 政策导致 verdict=not_applicable，但仍存在准备度缺口，必须输出 readiness_verdict="readiness_gap"，不得写成已无事项。
+13. rationale 和 aggregation_reason 必须引用 manifest_item_id 与 canonical_disclosure_id，不得改写条款编号。
+14. 不做同行对比，不输出旧版同行比较字段。
+
+
+Evidence bundle usage order:
+- index_evidence: locator only; use it only to understand where the report index points.
+- referenced_page_evidence: primary body evidence candidates from pages named by the GRI index.
+- nearby_page_evidence: supporting candidates from adjacent pages; use only when source_text directly addresses the requirement.
+- fulltext_requirement_evidence: requirement-level keyword candidates from the full report; verify source_text before claiming support.
 
 ## P0 条款上下文
 {% for item in p0_requirement_contexts %}
@@ -18,6 +33,7 @@
 - standard_id: {{ item.standard_id }}
 - standard_year: {{ item.standard_year }}
 - canonical_disclosure_id: {{ item.canonical_disclosure_id }}
+- canonical_status: {{ item.canonical_status }}
 - evidence_expectation: {{ item.evidence_expectation }}
 - requirement_locator_status: {{ item.requirement_locator_status }}
 - official_pdf_pages_for_agent: {{ item.official_pdf_pages_for_agent }}
@@ -28,15 +44,47 @@
 - policy_reason: {{ item.policy_reason }}
 - report_index_pdf_page: {{ item.report_index_pdf_page }}
 - report_index_report_page: {{ item.report_index_report_page }}
-{% if item.report_evidence_chunks %}
-report_evidence_chunks:
-{% for chunk in item.report_evidence_chunks %}
-  - chunk_id: {{ chunk.chunk_id }}
-    pdf_page: {{ chunk.pdf_page }}
-    text: {{ chunk.text[:1200] }}
+{% if item.requirement_checklist_items %}
+requirement_checklist_items:
+{% for req in item.requirement_checklist_items %}
+  - requirement_id: {{ req.requirement_id }}
+    requirement_text: {{ req.requirement_text[:1000] }}
+    requirement_type: {{ req.requirement_type }}
+    is_mandatory: {{ req.is_mandatory }}
+    conditional: {{ req.conditional }}
+    condition_text: {{ req.condition_text }}
+    scoring_role: {{ req.scoring_role }}
+    official_pdf_page: {{ req.official_pdf_page }}
 {% endfor %}
 {% else %}
-report_evidence_chunks: []
+requirement_checklist_items: []
+{% endif %}
+{% if item.evidence_bundle %}
+evidence_bundle:
+{% for kind, evidences in item.evidence_bundle.items() %}
+  {{ kind }}:
+{% if evidences %}
+{% for evidence in evidences %}
+    - chunk_id: {{ evidence.chunk_id }}
+      source_document: {{ evidence.source_document }}
+      source_document_sha256: {{ evidence.source_document_sha256 }}
+      pdf_page: {{ evidence.pdf_page }}
+      source_page: {{ evidence.source_page }}
+      report_page_label: {{ evidence.report_page_label }}
+      source_section: {{ evidence.source_section }}
+      evidence_kind: {{ evidence.evidence_kind }}
+      evidence_subtype: {{ evidence.evidence_subtype }}
+      retrieval_method: {{ evidence.retrieval_method }}
+      supports_requirement_ids: {{ evidence.supports_requirement_ids }}
+      source_text_extraction_warning: {{ evidence.source_text_extraction_warning }}
+      source_text: {{ (evidence.source_text or evidence.text)[:1200] }}
+{% endfor %}
+{% else %}
+    []
+{% endif %}
+{% endfor %}
+{% else %}
+evidence_bundle: {}
 {% endif %}
 {% endfor %}
 
@@ -46,26 +94,55 @@ report_evidence_chunks: []
     {
       "manifest_item_id": "current_gap:GRI2:2-1",
       "standard_id": "GRI 2",
+      "standard_year": "2021",
       "canonical_disclosure_id": "2-1",
+      "canonical_status": "confirmed_from_report_index",
       "assessment_mode": "current_gap",
       "verdict": "disclosed/partially_disclosed/not_disclosed/not_applicable/manual_review",
       "confidence": 0.0,
       "evidence": [
         {
           "source_document": "data/knowledge_base/peer_reports/Envision Energy 2024-zh.pdf",
+          "source_document_sha256": "输入证据中的 source_document_sha256",
           "source_page": 1,
+          "report_page_label": "1",
           "source_text": "报告原文证据摘录",
           "relevance": 0.0,
+          "evidence_kind": "index_evidence/substantive_report_evidence/omission_or_not_applicable_explanation/external_reference_evidence",
+          "supports_requirement_ids": ["current_gap:GRI2:2-1:a"],
+          "source_section": "GRI content index 或报告正文章节",
+          "judgment_reason": "说明该证据支持哪些 requirement；索引证据只能定位",
           "chunk_id": "report_page_1_chunk_0",
           "extraction_method": "p0_report_evidence_index"
         }
       ],
-      "rationale": "判断理由，必须引用证据或说明为什么需要人工复核；必须引用 manifest_item_id 和 canonical_disclosure_id，且不得改写条款编号",
+      "requirement_checks": [
+        {
+          "requirement_id": "current_gap:GRI2:2-1:a",
+          "requirement_text": "requirement 原文",
+          "is_mandatory": true,
+          "conditional": false,
+          "condition_text": "",
+          "support_status": "met/partially_met/not_met/not_applicable_claimed/not_assessed/manual_review",
+          "supporting_evidence_ids": ["evidence_id 或可追溯证据标识"],
+          "missing_reason": "缺失或不足原因；已满足可为空",
+          "manual_review_reason": "需要人工复核原因；不需要可为空"
+        }
+      ],
+      "missing_requirements": ["未满足 requirement_id"],
+      "partial_requirements": ["部分满足的 requirement_id；support_status=partially_met 放这里，不放 missing_requirements"],
+      "not_applicable_requirements": ["企业明确说明不适用的 requirement_id"],
+      "manual_review_requirements": ["需要人工复核的 requirement_id 或 needs_topic_instantiation"],
+      "manual_review_reason_codes": ["weak_evidence_support/additional_evidence_needed/omission_reason_requires_review/needs_topic_instantiation/source_text_extraction_error/readiness_item_needs_separate_verdict/requirement_scope_issue/missing_llm_assessment_for_manifest_item/index_evidence_cannot_support_disclosed"],
+      "readiness_verdict": "readiness_gap 或 null；仅 readiness_2026/watchlist 观察准备度时使用",
+      "not_scored_reason": "not_scored_requires_topic_instantiation 或 null；仅 3-3_generic 等不可直接评分条目使用",
+      "aggregation_reason": "基于 requirement_checks 汇总 verdict 的原因",
+      "rationale": "判断理由，必须引用 manifest_item_id 和 canonical_disclosure_id",
       "recommendation": "缺口建议；若已充分披露可为空字符串",
       "review_status": "pending"
     }
   ],
-  "overall_assessment": "整体披露质量摘要",
+  "overall_assessment": "整体披露支持充分性摘要",
   "summary": {
     "total_assessments": 0,
     "manual_review_count": 0,
@@ -155,3 +232,5 @@ report_evidence_chunks: []
    - 落后：同行有但我方缺少的关键披露维度≥2个
    - 无参照：知识库中无可比同行案例（填"无参照"，不强行判断）
 {% endif %}
+
+

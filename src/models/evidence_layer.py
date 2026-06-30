@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -36,6 +36,37 @@ class TranslationStatus(str, Enum):
     NOT_TRANSLATED = "not_translated"
     WORKING_TRANSLATION_PENDING = "working_translation_pending"
     WORKING_TRANSLATION_AVAILABLE = "working_translation_available"
+
+
+class RequirementChecklistType(str, Enum):
+    """Requirement checklist item type for scoring and reference separation."""
+
+    REQUIREMENT = "requirement"
+    COMPILATION_REQUIREMENT = "compilation_requirement"
+    GUIDANCE = "guidance"
+    RECOMMENDATION = "recommendation"
+    EXAMPLE = "example"
+    BACKGROUND = "background"
+
+
+class RequirementScoringRole(str, Enum):
+    """How a checklist item participates in disclosure scoring."""
+
+    HARD_SCORE = "hard_score"
+    AGGREGATION_PARENT = "aggregation_parent"
+    SCOPE_REVIEW = "scope_review"
+    SOFT_REFERENCE = "soft_reference"
+    EXCLUDED = "excluded"
+
+
+class RequirementExtractionReviewStatus(str, Enum):
+    """Manual extraction review status for seed or leaf requirements."""
+
+    PENDING_REVIEW = "pending_review"
+    REVIEWED = "reviewed"
+    REVIEWED_PARENT_NOT_SCORED = "reviewed_parent_not_scored"
+    NEEDS_SCOPE_REVIEW = "needs_scope_review"
+    REJECTED = "rejected"
 
 
 class ManualLocatorReview(BaseModel):
@@ -177,6 +208,138 @@ class EvidenceLayerMetadata(BaseModel):
     @classmethod
     def validate_sha256(cls, value: str) -> str:
         return _normalize_sha256(value)
+
+
+class P0RequirementChecklistMetadata(BaseModel):
+    """Metadata for the P0 requirement checklist seed manifest."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    manifest_version: str
+    standard_profile_id: str
+    source_requirement_pack: str
+    source_disclosure_manifest: str
+    created_at: str
+    generated_by: str
+    notes: str
+    excluded_counts_by_mode: Dict[str, int] = Field(default_factory=dict)
+    excluded_items: List[Dict[str, Any]] = Field(default_factory=list)
+
+    @field_validator(
+        "manifest_version",
+        "standard_profile_id",
+        "source_requirement_pack",
+        "source_disclosure_manifest",
+        "created_at",
+        "generated_by",
+        "notes",
+    )
+    @classmethod
+    def metadata_text_must_not_be_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("checklist metadata text fields must not be empty")
+        return value
+
+
+class P0RequirementChecklistItem(BaseModel):
+    """A checklist item used to assess one P0 disclosure requirement."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requirement_id: str
+    parent_requirement_id: str
+    canonical_disclosure_id: str
+    requirement_text: str
+    requirement_type: RequirementChecklistType
+    conditional: bool = False
+    condition_text: str = ""
+    official_pdf_page: Optional[int] = Field(default=None, ge=1)
+    is_mandatory: bool
+    scoring_role: RequirementScoringRole
+    standard_year: str
+    published_at: Optional[str] = None
+    effective_date: Optional[str] = None
+    analysis_applicability_date: str
+    replaced_standard: Optional[str] = None
+    assessment_mode: AnalysisMode
+    standard_profile_id: str
+    extraction_review_status: RequirementExtractionReviewStatus
+    notes: str = ""
+
+    @field_validator(
+        "requirement_id",
+        "parent_requirement_id",
+        "canonical_disclosure_id",
+        "requirement_text",
+        "standard_year",
+        "analysis_applicability_date",
+        "standard_profile_id",
+    )
+    @classmethod
+    def checklist_text_must_not_be_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("checklist text fields must not be empty")
+        return value
+
+    @model_validator(mode="after")
+    def scoring_role_must_match_requirement_type(self) -> "P0RequirementChecklistItem":
+        hard_score_types = {
+            RequirementChecklistType.REQUIREMENT,
+            RequirementChecklistType.COMPILATION_REQUIREMENT,
+        }
+        if self.scoring_role == RequirementScoringRole.HARD_SCORE:
+            if self.requirement_type not in hard_score_types:
+                raise ValueError("hard_score is only valid for requirement or compilation_requirement items")
+            if self.assessment_mode != AnalysisMode.CURRENT_GAP:
+                raise ValueError("hard_score checklist items must use current_gap assessment_mode")
+        non_scoring_roles = {
+            RequirementScoringRole.AGGREGATION_PARENT,
+            RequirementScoringRole.SCOPE_REVIEW,
+        }
+        if self.scoring_role in non_scoring_roles and self.is_mandatory:
+            raise ValueError("aggregation_parent and scope_review checklist items must not be mandatory")
+        if self.conditional and not self.condition_text.strip():
+            raise ValueError("conditional checklist items must include condition_text")
+        return self
+
+
+class P0TopicInstantiationRequirement(BaseModel):
+    """A generic disclosure that must be instantiated by material topic before scoring."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    parent_requirement_id: str
+    canonical_disclosure_id: str
+    reason: str
+
+    @field_validator("parent_requirement_id", "canonical_disclosure_id", "reason")
+    @classmethod
+    def topic_instantiation_text_must_not_be_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("topic instantiation fields must not be empty")
+        return value
+
+
+class P0RequirementChecklist(BaseModel):
+    """P0 checklist of current disclosure requirements and topic-instantiation exclusions."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    metadata: P0RequirementChecklistMetadata
+    requirements: List[P0RequirementChecklistItem]
+    topic_instantiation_required: List[P0TopicInstantiationRequirement] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def requirement_ids_must_be_unique(self) -> "P0RequirementChecklist":
+        seen = set()
+        duplicates = set()
+        for item in self.requirements:
+            if item.requirement_id in seen:
+                duplicates.add(item.requirement_id)
+            seen.add(item.requirement_id)
+        if duplicates:
+            raise ValueError(f"duplicate requirement_id values: {sorted(duplicates)}")
+        return self
 
 
 class GRIRequirementPack(BaseModel):

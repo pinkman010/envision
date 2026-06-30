@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "manifest_version": "p0_stage_e2_regression_manifest_v1",
+    "created_at": "2026-06-29",
+    "standard_profile_id": "gri_p0_2024_current_disclosure_v1",
+    "source_requirement_checklist": "data/knowledge_base/manifests/p0_gri_requirement_checklist.json",
+    "purpose": "Stage E2.1-B high-risk regression samples for evidence-kind and requirement-check aggregation rules.",
+    "llm_required": false
+  },
+  "regression_items": [
+    {
+      "manifest_item_id": "current_gap:GRI2:2-1",
+      "standard_id": "GRI2",
+      "canonical_disclosure_id": "2-1",
+      "risk_reason": "E2 sample previously over-relied on GRI content index location for organization details.",
+      "blocked_verdicts": [
+        "disclosed"
+      ],
+      "required_requirement_ids": [
+        "current_gap:GRI2:2-1:a",
+        "current_gap:GRI2:2-1:b",
+        "current_gap:GRI2:2-1:c",
+        "current_gap:GRI2:2-1:d"
+      ],
+      "contract_assertions": [
+        "index_evidence cannot alone support disclosed",
+        "disclosed requires requirement_checks",
+        "all applicable mandatory requirements must be met before disclosed"
+      ]
+    },
+    {
+      "manifest_item_id": "current_gap:GRI302:302-4",
+      "standard_id": "GRI302",
+      "canonical_disclosure_id": "302-4",
+      "risk_reason": "Energy reduction disclosure needs quantitative reduction, energy types, basis, methods, and compilation requirements.",
+      "blocked_verdicts": [
+        "disclosed"
+      ],
+      "required_requirement_ids": [
+        "current_gap:GRI302:302-4:a",
+        "current_gap:GRI302:302-4:b",
+        "current_gap:GRI302:302-4:c",
+        "current_gap:GRI302:302-4:d",
+        "current_gap:GRI302:302-4:2.7",
+        "current_gap:GRI302:302-4:2.7.1",
+        "current_gap:GRI302:302-4:2.7.2"
+      ],
+      "contract_assertions": [
+        "partially_disclosed must list missing_requirements",
+        "disclosed requires every applicable mandatory requirement to be met",
+        "index_evidence cannot alone support disclosed"
+      ]
+    },
+    {
+      "manifest_item_id": "current_gap:GRI3:3-3_generic",
+      "standard_id": "GRI3",
+      "canonical_disclosure_id": "3-3_generic",
+      "risk_reason": "Generic GRI 3-3 must be instantiated per material topic before ordinary scoring.",
+      "forced_verdict": "manual_review",
+      "manual_review_reason": "needs_topic_instantiation",
+      "required_requirement_ids": [],
+      "contract_assertions": [
+        "3-3_generic must remain manual_review",
+        "manual review reason must be needs_topic_instantiation"
+      ]
+    }
+  ]
+}

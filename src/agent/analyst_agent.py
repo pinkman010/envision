@@ -50,14 +50,39 @@ class AnalystAgent(BaseAgent):
         }
 
     @staticmethod
+    def _is_parent_intro_compilation_requirement(
+        requirement: Dict[str, Any],
+        all_requirement_ids: set[str],
+    ) -> bool:
+        requirement_id = str(requirement.get("requirement_id", ""))
+        requirement_text = str(requirement.get("requirement_text", "")).strip()
+        if requirement.get("requirement_type") != "compilation_requirement":
+            return False
+        if not requirement_id or not requirement_text.endswith(":"):
+            return False
+        return any(other_id.startswith(f"{requirement_id}.") for other_id in all_requirement_ids)
+
+    @staticmethod
     def _mandatory_requirement_ids(context: Dict[str, Any]) -> List[str]:
         ids: List[str] = []
-        for requirement in context.get("requirement_checklist_items", []) or []:
+        requirements = [
+            requirement
+            for requirement in context.get("requirement_checklist_items", []) or []
+            if isinstance(requirement, dict)
+        ]
+        all_requirement_ids = {
+            str(requirement.get("requirement_id"))
+            for requirement in requirements
+            if requirement.get("requirement_id")
+        }
+        for requirement in requirements:
             if not isinstance(requirement, dict) or not requirement.get("requirement_id"):
                 continue
             if requirement.get("is_mandatory", True) is False:
                 continue
             if requirement.get("scoring_role", "hard_score") != "hard_score":
+                continue
+            if AnalystAgent._is_parent_intro_compilation_requirement(requirement, all_requirement_ids):
                 continue
             ids.append(str(requirement["requirement_id"]))
         return ids
@@ -69,6 +94,37 @@ class AnalystAgent(BaseAgent):
             for check in requirement_checks
             if isinstance(check, dict) and check.get("requirement_id")
         }
+
+    @staticmethod
+    def _normalize_requirement_support_status(value: Any) -> Any:
+        aliases = {
+            "partial_met": RequirementSupportStatus.PARTIALLY_MET.value,
+            "partially met": RequirementSupportStatus.PARTIALLY_MET.value,
+            "partial": RequirementSupportStatus.PARTIALLY_MET.value,
+            "not applicable": RequirementSupportStatus.NOT_APPLICABLE_CLAIMED.value,
+            "not_applicable": RequirementSupportStatus.NOT_APPLICABLE_CLAIMED.value,
+            "na": RequirementSupportStatus.NOT_APPLICABLE_CLAIMED.value,
+            "n/a": RequirementSupportStatus.NOT_APPLICABLE_CLAIMED.value,
+            "unassessed": RequirementSupportStatus.NOT_ASSESSED.value,
+            "not assessed": RequirementSupportStatus.NOT_ASSESSED.value,
+            "not met": RequirementSupportStatus.NOT_MET.value,
+            "manual review": RequirementSupportStatus.MANUAL_REVIEW.value,
+        }
+        key = str(value).strip().lower()
+        return aliases.get(key, value)
+
+    @staticmethod
+    def _normalize_requirement_checks(requirement_checks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        normalized: List[Dict[str, Any]] = []
+        for check in requirement_checks:
+            if not isinstance(check, dict):
+                continue
+            item = dict(check)
+            if "support_status" in item:
+                item["support_status"] = AnalystAgent._normalize_requirement_support_status(item["support_status"])
+            normalized.append(item)
+        return normalized
+
     @staticmethod
     def _manual_review_requirement_ids(context: Dict[str, Any]) -> List[str]:
         return AnalystAgent._mandatory_requirement_ids(context) or ["all_applicable_requirements"]
@@ -76,6 +132,41 @@ class AnalystAgent(BaseAgent):
     @staticmethod
     def _hard_score_requirement_id_set(context: Dict[str, Any]) -> set[str]:
         return set(AnalystAgent._mandatory_requirement_ids(context))
+
+    @staticmethod
+    def _has_reasonable_retrieval_coverage(context: Dict[str, Any]) -> bool:
+        if context.get("report_evidence_chunks"):
+            return True
+        evidence_bundle = context.get("evidence_bundle", {}) or {}
+        if not isinstance(evidence_bundle, dict):
+            return False
+        return any(bool(items) for items in evidence_bundle.values() if isinstance(items, list))
+
+    @staticmethod
+    def _can_accept_not_disclosed_without_evidence(
+        item_payload: Dict[str, Any],
+        context: Dict[str, Any],
+    ) -> bool:
+        if item_payload.get("verdict") != AssessmentVerdict.NOT_DISCLOSED.value:
+            return False
+        if not AnalystAgent._has_reasonable_retrieval_coverage(context):
+            return False
+        requirement_checks = item_payload.get("requirement_checks", []) or []
+        hard_score_ids = AnalystAgent._hard_score_requirement_id_set(context)
+        if not requirement_checks or not hard_score_ids:
+            return False
+        checked_ids = AnalystAgent._checked_requirement_ids(requirement_checks)
+        if not hard_score_ids <= checked_ids:
+            return False
+        not_met_statuses = {
+            RequirementSupportStatus.NOT_MET.value,
+            RequirementSupportStatus.NOT_ASSESSED.value,
+        }
+        return all(
+            check.get("support_status") in not_met_statuses
+            for check in requirement_checks
+            if str(check.get("requirement_id")) in hard_score_ids
+        )
 
     @staticmethod
     def _missing_llm_assessment_payload(context: Dict[str, Any]) -> Dict[str, Any]:
@@ -204,7 +295,7 @@ class AnalystAgent(BaseAgent):
             item_payload["readiness_verdict"] = context.get("readiness_verdict") or "readiness_gap"
         evidence_items = item_payload.get("evidence", []) or []
         item_payload["evidence"] = self._normalize_evidence_items(evidence_items, context)
-        requirement_checks = item_payload.get("requirement_checks", []) or []
+        requirement_checks = self._normalize_requirement_checks(item_payload.get("requirement_checks", []) or [])
         item_payload["requirement_checks"] = requirement_checks
         checklist_ids = [
             str(req.get("requirement_id"))
@@ -246,6 +337,13 @@ class AnalystAgent(BaseAgent):
             and not item_payload["evidence"]
             and item_payload.get("verdict") != AssessmentVerdict.MANUAL_REVIEW.value
         ):
+            if self._can_accept_not_disclosed_without_evidence(item_payload, context):
+                item_payload["manual_review_requirements"] = []
+                item_payload["manual_review_reason_codes"] = []
+                item_payload["aggregation_reason"] = item_payload.get("aggregation_reason") or (
+                    "no_substantive_evidence_after_reasonable_retrieval"
+                )
+                return item_payload
             item_payload["manual_review_requirements"] = self._manual_review_requirement_ids(context)
             self._manual_review_payload(item_payload, "no_report_evidence_requires_manual_review")
             return item_payload

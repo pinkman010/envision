@@ -1,0 +1,852 @@
+{
+  "document_version": "p0_stage_e3_traceability_cleanup_audit_v1",
+  "recorded_at": "2026-06-30",
+  "stage": "E3",
+  "scope": "traceability_cleanup_plan_only_no_effective_artifact_changes",
+  "inputs": {
+    "agents_md": "AGENTS.md",
+    "acceptance_result": "docs/stage_e3/e3_current_scope_acceptance_result.json",
+    "effective_artifacts_index": "docs/stage_e3/e3_current_scope_effective_artifacts.json",
+    "requirement_checklist": "data/knowledge_base/manifests/p0_gri_requirement_checklist.json",
+    "effective_assessment_artifacts": [
+      "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+      "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result_corrected.json"
+    ]
+  },
+  "non_mutation_statement": {
+    "effective_artifacts_modified": false,
+    "raw_artifacts_modified": false,
+    "original_pdfs_modified": false,
+    "external_llm_called": false
+  },
+  "aggregate_counts": {
+    "assessment_count": 114,
+    "requirement_check_count": 558,
+    "checklist_requirement_count": 661,
+    "evidence_count": 219,
+    "substantive_report_evidence_count": 159,
+    "supporting_evidence_id_occurrences": 111,
+    "requirement_checks_not_in_checklist_unique_count": 23,
+    "requirement_checks_not_in_checklist_occurrence_count": 23,
+    "all_requirement_references_not_in_checklist_unique_count": 25,
+    "all_requirement_references_not_in_checklist_occurrence_count": 30,
+    "supporting_evidence_id_binding_counts": {
+      "chunk_id": 88,
+      "unknown": 1,
+      "evidence_id": 22
+    },
+    "verdict_counts": {
+      "partially_disclosed": 42,
+      "not_disclosed": 25,
+      "manual_review": 45,
+      "disclosed": 2
+    },
+    "support_status_counts": {
+      "met": 65,
+      "partially_met": 42,
+      "not_met": 318,
+      "manual_review": 129,
+      "not_assessed": 4
+    }
+  },
+  "requirement_id_audit": {
+    "acceptance_audit_retained_issue_summary": "Acceptance audit records Batch03 dot-level IDs and Batch05 parent disclosure IDs as retained traceability issues. This local audit separates requirement_checks IDs from all requirement references.",
+    "requirement_checks_not_in_checklist_unique_count": 23,
+    "requirement_checks_not_in_checklist_occurrence_count": 23,
+    "all_requirement_references_not_in_checklist_unique_count": 25,
+    "all_requirement_references_not_in_checklist_occurrence_count": 30,
+    "by_reference_source": {
+      "evidence[].supports_requirement_ids": {
+        "unique_count": 7,
+        "occurrence_count": 7,
+        "samples": [
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.v",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:b.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:b.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI308:308-1",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": true
+          },
+          {
+            "requirement_id": "current_gap:GRI414:414-1",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": true
+          }
+        ]
+      },
+      "requirement_checks[].requirement_id": {
+        "unique_count": 23,
+        "occurrence_count": 23,
+        "samples": [
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.iii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.iv",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:a.v",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:b.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:b.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:b.iii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:b.iv",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:b.v",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:c.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-3:c.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:a.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:a.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:a.iii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:a.iv",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:b.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:b.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:c.i",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          },
+          {
+            "requirement_id": "current_gap:GRI303:303-4:c.ii",
+            "occurrences": 1,
+            "is_parent_requirement_id_in_checklist": false
+          }
+        ]
+      }
+    },
+    "samples": [
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI303:303-3:a.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI303:303-3:a.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI303:303-3:a.v",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:a.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:a.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:a.iii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:a.iv",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:a.v",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:b.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:b.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:b.iii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:b.iv",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:b.v",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:c.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-3",
+        "assessment_id": "assessment_80148afe205949aca7554f6786457744",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-3:c.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-3"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI303:303-4:b.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI303:303-4:b.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:a.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:a.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:a.iii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:a.iv",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:b.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:b.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:c.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:c.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:d.i",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:d.ii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "manifest_item_id": "current_gap:GRI303:303-4",
+        "assessment_id": "assessment_8843b81d2f8e49a494ce0ed247b48df6",
+        "source": "requirement_checks[].requirement_id",
+        "requirement_id": "current_gap:GRI303:303-4:d.iii",
+        "is_parent_requirement_id_in_checklist": false,
+        "canonical_disclosure_id": "303-4"
+      },
+      {
+        "batch_id": "e3_batch_05_governance_supply_chain_economic",
+        "manifest_item_id": "current_gap:GRI308:308-1",
+        "assessment_id": "assessment_623196a9a663446ca4c42556c86514da",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI308:308-1",
+        "is_parent_requirement_id_in_checklist": true,
+        "canonical_disclosure_id": "308-1"
+      },
+      {
+        "batch_id": "e3_batch_05_governance_supply_chain_economic",
+        "manifest_item_id": "current_gap:GRI414:414-1",
+        "assessment_id": "assessment_20b78fdffb664362bacbea4164f2ce8c",
+        "source": "evidence[].supports_requirement_ids",
+        "requirement_id": "current_gap:GRI414:414-1",
+        "is_parent_requirement_id_in_checklist": true,
+        "canonical_disclosure_id": "414-1"
+      }
+    ],
+    "top_not_in_checklist_ids": [
+      {
+        "requirement_id": "current_gap:GRI303:303-3:a.i",
+        "occurrences": 2,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:a.ii",
+        "occurrences": 2,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:a.v",
+        "occurrences": 2,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:b.i",
+        "occurrences": 2,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:b.ii",
+        "occurrences": 2,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:a.iii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:a.iv",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:b.i",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:b.ii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:b.iii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:b.iv",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:b.v",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:c.i",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-3:c.ii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:a.i",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:a.ii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:a.iii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:a.iv",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:c.i",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:c.ii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:d.i",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:d.ii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI303:303-4:d.iii",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": false
+      },
+      {
+        "requirement_id": "current_gap:GRI308:308-1",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": true
+      },
+      {
+        "requirement_id": "current_gap:GRI414:414-1",
+        "occurrences": 1,
+        "is_parent_requirement_id_in_checklist": true
+      }
+    ],
+    "interpretation": "All requirement references absent from checklist must be normalized to checklist requirement_id or explicitly waived before final hard-score statistics."
+  },
+  "supporting_evidence_id_binding_audit": {
+    "binding_rule_observed": "supporting_evidence_ids may point to either evidence[].evidence_id or evidence[].chunk_id; unknown means no same-assessment evidence_id or chunk_id match.",
+    "counts": {
+      "chunk_id": 88,
+      "unknown": 1,
+      "evidence_id": 22
+    },
+    "unknown_samples": [
+      {
+        "batch_id": "e3_batch_01_gri2",
+        "manifest_item_id": "current_gap:GRI2:2-25",
+        "assessment_id": "assessment_5ba4a543bb3f48f6bb79ce7e1e65f255",
+        "requirement_id": "current_gap:GRI2:2-25:b",
+        "supporting_evidence_id": "chunk_9d24f9810dbf3a9ffe65793e"
+      }
+    ],
+    "mixed_binding_assessment_samples": [],
+    "recommended_final_rule": "Use evidence[].evidence_id in final audit artifacts, keeping chunk_id as evidence metadata for corpus traceability."
+  },
+  "pdf_source_text_machine_location_audit": {
+    "status": "pending_repair_or_manual_waiver",
+    "acceptance_audit_baseline": {
+      "substantive_report_evidence_snippets": 159,
+      "pypdf2_matched": 28,
+      "pypdf2_unmatched": 131
+    },
+    "note": "This cleanup audit did not rerun PDF text extraction. It preserves the E3 current scope acceptance audit baseline and treats source_text location as unresolved until stronger extraction/rendering or human waiver is applied."
+  },
+  "advisor_regeneration_audit": {
+    "ready_for_final_recommendations": [
+      "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/advisor_result.json",
+      "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/advisor_result_corrected.json"
+    ],
+    "requires_regeneration": [
+      "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/advisor_result.json",
+      "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/advisor_result.json",
+      "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/advisor_result.json"
+    ],
+    "batch_statuses": [
+      {
+        "batch_id": "e3_batch_01_gri2",
+        "run_id": "20260630T021253Z_e3_batch_01_gri2",
+        "status": "stale_regeneration_required",
+        "effective_advisor_artifact_for_final_recommendations": null
+      },
+      {
+        "batch_id": "e3_batch_02_gri3_without_3_3",
+        "run_id": "20260630T043746Z_e3_batch_02_gri3_without_3_3",
+        "status": "usable_if_final_advisor_chain_keeps_batch_level_outputs",
+        "effective_advisor_artifact_for_final_recommendations": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/advisor_result.json"
+      },
+      {
+        "batch_id": "e3_batch_03_environment",
+        "run_id": "20260630T053306Z_e3_batch_03_environment_split_merged",
+        "status": "stale_regeneration_required",
+        "effective_advisor_artifact_for_final_recommendations": null
+      },
+      {
+        "batch_id": "e3_batch_04_employees_and_human_rights",
+        "run_id": "20260630T060615Z_e3_batch_04_employees_and_human_rights",
+        "status": "stale_regeneration_required",
+        "effective_advisor_artifact_for_final_recommendations": null
+      },
+      {
+        "batch_id": "e3_batch_05_governance_supply_chain_economic",
+        "run_id": "20260630T070123Z_e3_batch_05_governance_supply_chain_economic",
+        "status": "corrected_advisor_available",
+        "effective_advisor_artifact_for_final_recommendations": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/advisor_result_corrected.json"
+      }
+    ],
+    "recommended_gate": "Final advisor output may be marked usable only after regenerated from cleaned effective assessments, or after one consolidated final advisor run over the cleaned 114-assessment set."
+  },
+  "per_batch": [
+    {
+      "batch_id": "e3_batch_01_gri2",
+      "run_id": "20260630T021253Z_e3_batch_01_gri2",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result_corrected.json",
+      "assessment_count": 30,
+      "requirement_check_count": 146,
+      "requirement_checks_not_in_checklist_unique_count": 0,
+      "requirement_checks_not_in_checklist_occurrence_count": 0,
+      "all_requirement_references_not_in_checklist_unique_count": 0,
+      "all_requirement_references_not_in_checklist_occurrence_count": 0,
+      "requirement_ids_not_in_checklist_samples": [],
+      "supporting_evidence_id_binding_counts": {
+        "evidence_id": 0,
+        "chunk_id": 36,
+        "unknown": 1
+      },
+      "supporting_evidence_unknown_samples": [
+        {
+          "batch_id": "e3_batch_01_gri2",
+          "manifest_item_id": "current_gap:GRI2:2-25",
+          "assessment_id": "assessment_5ba4a543bb3f48f6bb79ce7e1e65f255",
+          "requirement_id": "current_gap:GRI2:2-25:b",
+          "supporting_evidence_id": "chunk_9d24f9810dbf3a9ffe65793e"
+        }
+      ]
+    },
+    {
+      "batch_id": "e3_batch_02_gri3_without_3_3",
+      "run_id": "20260630T043746Z_e3_batch_02_gri3_without_3_3",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+      "assessment_count": 2,
+      "requirement_check_count": 6,
+      "requirement_checks_not_in_checklist_unique_count": 0,
+      "requirement_checks_not_in_checklist_occurrence_count": 0,
+      "all_requirement_references_not_in_checklist_unique_count": 0,
+      "all_requirement_references_not_in_checklist_occurrence_count": 0,
+      "requirement_ids_not_in_checklist_samples": [],
+      "supporting_evidence_id_binding_counts": {
+        "evidence_id": 0,
+        "chunk_id": 2,
+        "unknown": 0
+      },
+      "supporting_evidence_unknown_samples": []
+    },
+    {
+      "batch_id": "e3_batch_03_environment",
+      "run_id": "20260630T053306Z_e3_batch_03_environment_split_merged",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result_corrected.json",
+      "assessment_count": 29,
+      "requirement_check_count": 226,
+      "requirement_checks_not_in_checklist_unique_count": 23,
+      "requirement_checks_not_in_checklist_occurrence_count": 23,
+      "all_requirement_references_not_in_checklist_unique_count": 23,
+      "all_requirement_references_not_in_checklist_occurrence_count": 28,
+      "requirement_ids_not_in_checklist_samples": [
+        {
+          "requirement_id": "current_gap:GRI303:303-3:a.i",
+          "occurrences": 2,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:a.ii",
+          "occurrences": 2,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:a.v",
+          "occurrences": 2,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-4:b.i",
+          "occurrences": 2,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-4:b.ii",
+          "occurrences": 2,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:a.iii",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:a.iv",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:b.i",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:b.ii",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": false
+        },
+        {
+          "requirement_id": "current_gap:GRI303:303-3:b.iii",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": false
+        }
+      ],
+      "supporting_evidence_id_binding_counts": {
+        "evidence_id": 0,
+        "chunk_id": 31,
+        "unknown": 0
+      },
+      "supporting_evidence_unknown_samples": []
+    },
+    {
+      "batch_id": "e3_batch_04_employees_and_human_rights",
+      "run_id": "20260630T060615Z_e3_batch_04_employees_and_human_rights",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result_corrected.json",
+      "assessment_count": 32,
+      "requirement_check_count": 71,
+      "requirement_checks_not_in_checklist_unique_count": 0,
+      "requirement_checks_not_in_checklist_occurrence_count": 0,
+      "all_requirement_references_not_in_checklist_unique_count": 0,
+      "all_requirement_references_not_in_checklist_occurrence_count": 0,
+      "requirement_ids_not_in_checklist_samples": [],
+      "supporting_evidence_id_binding_counts": {
+        "evidence_id": 22,
+        "chunk_id": 0,
+        "unknown": 0
+      },
+      "supporting_evidence_unknown_samples": []
+    },
+    {
+      "batch_id": "e3_batch_05_governance_supply_chain_economic",
+      "run_id": "20260630T070123Z_e3_batch_05_governance_supply_chain_economic",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result_corrected.json",
+      "assessment_count": 21,
+      "requirement_check_count": 109,
+      "requirement_checks_not_in_checklist_unique_count": 0,
+      "requirement_checks_not_in_checklist_occurrence_count": 0,
+      "all_requirement_references_not_in_checklist_unique_count": 2,
+      "all_requirement_references_not_in_checklist_occurrence_count": 2,
+      "requirement_ids_not_in_checklist_samples": [
+        {
+          "requirement_id": "current_gap:GRI308:308-1",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": true
+        },
+        {
+          "requirement_id": "current_gap:GRI414:414-1",
+          "occurrences": 1,
+          "is_parent_requirement_id_in_checklist": true
+        }
+      ],
+      "supporting_evidence_id_binding_counts": {
+        "evidence_id": 0,
+        "chunk_id": 19,
+        "unknown": 0
+      },
+      "supporting_evidence_unknown_samples": []
+    }
+  ],
+  "blocking_statement": {
+    "blocks_final_evaluation": true,
+    "blocks_final_advisor_chain": true,
+    "blocks_thesis_experiment_statistics": true,
+    "blocks_e3_5": false,
+    "reason": "Traceability defects affect final scoring, recommendation chain and experiment statistics, while E3.5 can proceed using the accepted ordinary current scope coverage."
+  }
+}

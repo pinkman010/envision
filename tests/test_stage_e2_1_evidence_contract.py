@@ -285,7 +285,32 @@ def test_partially_disclosed_must_list_missing_requirements():
     result = _validate_assessments([assessment])
 
     assert result["status"] == "failed"
-    assert any("partially_disclosed" in error and "missing_requirements" in error for error in result["errors"])
+    assert any("partially_disclosed" in error and "missing_requirements or partial_requirements" in error for error in result["errors"])
+
+
+def test_partially_disclosed_can_be_supported_by_partial_requirements():
+    assessment = _base_assessment(
+        verdict="partially_disclosed",
+        missing_requirements=[],
+        partial_requirements=["current_gap:GRI2:2-1:a"],
+        requirement_checks=[
+            {
+                "requirement_id": "current_gap:GRI2:2-1:a",
+                "requirement_text": "report its legal name;",
+                "is_mandatory": True,
+                "conditional": False,
+                "condition_text": "",
+                "support_status": "partially_met",
+                "supporting_evidence_ids": ["evidence_body_1"],
+                "missing_reason": "Partially supported.",
+                "manual_review_reason": "",
+            }
+        ],
+    )
+
+    result = _validate_assessments([assessment])
+
+    assert result["status"] == "ok"
 
 
 def test_not_applicable_requires_omission_explanation_and_pending_manual_review():
@@ -385,7 +410,7 @@ def test_regression_manifest_contains_required_high_risk_samples():
     } <= sample_ids
 
 
-def test_analyst_guardrail_sanitizes_chunk_shaped_evidence_and_enforces_manual_review():
+def test_analyst_guardrail_sanitizes_chunk_shaped_evidence_and_handles_no_evidence_verdicts():
     analyst = importlib.import_module("src.agent.analyst_agent").AnalystAgent()
     context = _agent_context()
     payload = _base_assessment(
@@ -411,11 +436,18 @@ def test_analyst_guardrail_sanitizes_chunk_shaped_evidence_and_enforces_manual_r
     assert "pdf_page" not in guarded["evidence"][0]
     assert "text" not in guarded["evidence"][0]
 
-    no_evidence = analyst._apply_p0_guardrails(
+    no_evidence_disclosed = analyst._apply_p0_guardrails(
+        _base_assessment(verdict="disclosed", evidence=[], missing_requirements=[]),
+        context,
+    )
+    assert no_evidence_disclosed["verdict"] == "manual_review"
+
+    no_evidence_not_disclosed = analyst._apply_p0_guardrails(
         _base_assessment(verdict="not_disclosed", evidence=[], missing_requirements=[]),
         context,
     )
-    assert no_evidence["verdict"] == "manual_review"
+    assert no_evidence_not_disclosed["verdict"] == "not_disclosed"
+    assert no_evidence_not_disclosed["manual_review_requirements"] == []
 
     future_context = _agent_context(
         manifest_item_id="readiness_2026:GRI101",
@@ -604,6 +636,59 @@ def test_analyst_guardrail_backfills_uncovered_hard_score_requirements_for_parti
 
     assert "current_gap:GRI401:401-1:b" in guarded["missing_requirements"]
     assert "current_gap:GRI401:401-1:2.1" not in guarded["missing_requirements"]
+
+
+def test_analyst_guardrail_excludes_parent_intro_compilation_nodes_from_missing():
+    analyst = importlib.import_module("src.agent.analyst_agent").AnalystAgent()
+    context = _agent_context(
+        manifest_item_id="current_gap:GRI301:301-2",
+        canonical_disclosure_id="301-2",
+        requirement_checklist_items=[
+            {
+                "requirement_id": "current_gap:GRI301:301-2:a",
+                "requirement_type": "requirement",
+                "requirement_text": "Percentage of recycled input materials used.",
+                "is_mandatory": True,
+                "scoring_role": "hard_score",
+            },
+            {
+                "requirement_id": "current_gap:GRI301:301-2:2.2",
+                "requirement_type": "compilation_requirement",
+                "requirement_text": "When compiling the information specified in Disclosure 301-2, the reporting organization shall:",
+                "is_mandatory": True,
+                "scoring_role": "hard_score",
+            },
+            {
+                "requirement_id": "current_gap:GRI301:301-2:2.2.1",
+                "requirement_type": "compilation_requirement",
+                "requirement_text": "use the total weight or volume of materials used as specified in Disclosure 301-1;",
+                "is_mandatory": True,
+                "scoring_role": "hard_score",
+            },
+            {
+                "requirement_id": "current_gap:GRI301:301-2:2.2.2",
+                "requirement_type": "compilation_requirement",
+                "requirement_text": "calculate the percentage of recycled input materials used by applying the formula;",
+                "is_mandatory": True,
+                "scoring_role": "hard_score",
+            },
+        ],
+    )
+    payload = _base_assessment(
+        manifest_item_id="current_gap:GRI301:301-2",
+        canonical_disclosure_id="301-2",
+        verdict="partially_disclosed",
+        requirement_checks=[_met_requirement_check("current_gap:GRI301:301-2:a")],
+        missing_requirements=["current_gap:GRI301:301-2:2.2"],
+    )
+
+    guarded = analyst._apply_p0_guardrails(payload, context)
+
+    assert "current_gap:GRI301:301-2:2.2" not in guarded["missing_requirements"]
+    assert "current_gap:GRI301:301-2:2.2.1" in guarded["missing_requirements"]
+    assert "current_gap:GRI301:301-2:2.2.2" in guarded["missing_requirements"]
+
+
 def test_validation_script_supports_assessment_file_and_no_arg_self_check(tmp_path):
     validator = importlib.import_module("scripts.validate_stage_e2_1_evidence_contract")
     assessment_path = tmp_path / "assessment.json"
@@ -635,6 +720,45 @@ def test_validation_script_supports_assessment_file_and_no_arg_self_check(tmp_pa
     assert validator.main(["--assessment-file", str(assessment_path)]) == 0
     assert validator.main(["--run-dir", str(run_dir)]) == 0
     assert validator.main(["--manual-review-result", str(manual_review_path)]) == 0
+
+
+def test_validator_excludes_parent_intro_compilation_nodes_from_mandatory_coverage(tmp_path):
+    validator = importlib.import_module("scripts.validate_stage_e2_1_evidence_contract")
+    checklist_path = tmp_path / "checklist.json"
+    checklist_path.write_text(
+        json.dumps(
+            {
+                "requirements": [
+                    {
+                        "requirement_id": "current_gap:GRI301:301-2:2.2",
+                        "parent_requirement_id": "current_gap:GRI301:301-2",
+                        "requirement_type": "compilation_requirement",
+                        "requirement_text": "When compiling the information specified in Disclosure 301-2, the reporting organization shall:",
+                        "assessment_mode": "current_gap",
+                        "is_mandatory": True,
+                        "scoring_role": "hard_score",
+                    },
+                    {
+                        "requirement_id": "current_gap:GRI301:301-2:2.2.1",
+                        "parent_requirement_id": "current_gap:GRI301:301-2",
+                        "requirement_type": "compilation_requirement",
+                        "requirement_text": "use the total weight or volume of materials used as specified in Disclosure 301-1;",
+                        "assessment_mode": "current_gap",
+                        "is_mandatory": True,
+                        "scoring_role": "hard_score",
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    by_parent, warnings = validator._mandatory_requirement_ids_by_parent(checklist_path)
+
+    assert warnings == []
+    assert "current_gap:GRI301:301-2:2.2" not in by_parent["current_gap:GRI301:301-2"]
+    assert "current_gap:GRI301:301-2:2.2.1" in by_parent["current_gap:GRI301:301-2"]
+
 
 def test_analyst_guardrail_sets_reason_for_generic_3_3_and_not_applicable_without_explanation():
     analyst = importlib.import_module("src.agent.analyst_agent").AnalystAgent()
@@ -707,6 +831,89 @@ def test_analyst_treats_missing_scoring_role_as_hard_score_for_backward_compatib
     )
 
     assert analyst._mandatory_requirement_ids(context) == ["current_gap:GRI2:2-1:a"]
+
+
+def test_analyst_guardrail_normalizes_requirement_support_status_aliases():
+    analyst = importlib.import_module("src.agent.analyst_agent").AnalystAgent()
+    context = _agent_context(
+        requirement_checklist_items=[
+            {"requirement_id": "current_gap:GRI2:2-1:a", "is_mandatory": True, "scoring_role": "hard_score"}
+        ],
+    )
+    payload = _base_assessment(
+        verdict="partially_disclosed",
+        requirement_checks=[
+            {
+                "requirement_id": "current_gap:GRI2:2-1:a",
+                "requirement_text": "report its legal name;",
+                "is_mandatory": True,
+                "conditional": False,
+                "condition_text": "",
+                "support_status": "partial_met",
+                "supporting_evidence_ids": ["evidence_body_1"],
+                "missing_reason": "",
+                "manual_review_reason": "",
+            }
+        ],
+        missing_requirements=[],
+        partial_requirements=[],
+    )
+
+    guarded = analyst._apply_p0_guardrails(payload, context)
+
+    assert guarded["requirement_checks"][0]["support_status"] == "partially_met"
+    assert guarded["partial_requirements"] == ["current_gap:GRI2:2-1:a"]
+
+
+def test_analyst_guardrail_keeps_no_evidence_not_disclosed_only_with_full_not_met_checks():
+    analyst = importlib.import_module("src.agent.analyst_agent").AnalystAgent()
+    context = _agent_context(
+        requirement_checklist_items=[
+            {"requirement_id": "current_gap:GRI2:2-8:a", "is_mandatory": True, "scoring_role": "hard_score"},
+            {"requirement_id": "current_gap:GRI2:2-8:b", "is_mandatory": True, "scoring_role": "hard_score"},
+        ],
+    )
+    incomplete_payload = _base_assessment(
+        manifest_item_id="current_gap:GRI2:2-8",
+        canonical_disclosure_id="2-8",
+        verdict="not_disclosed",
+        evidence=[],
+        requirement_checks=[
+            {
+                "requirement_id": "current_gap:GRI2:2-8:a",
+                "requirement_text": "report the total number of workers who are not employees;",
+                "is_mandatory": True,
+                "support_status": "not_met",
+            }
+        ],
+        missing_requirements=["current_gap:GRI2:2-8:a"],
+    )
+    guarded_incomplete = analyst._apply_p0_guardrails(incomplete_payload, context)
+    assert guarded_incomplete["verdict"] == "manual_review"
+
+    complete_payload = _base_assessment(
+        manifest_item_id="current_gap:GRI2:2-8",
+        canonical_disclosure_id="2-8",
+        verdict="not_disclosed",
+        evidence=[],
+        requirement_checks=[
+            {
+                "requirement_id": "current_gap:GRI2:2-8:a",
+                "requirement_text": "report the total number of workers who are not employees;",
+                "is_mandatory": True,
+                "support_status": "not_met",
+            },
+            {
+                "requirement_id": "current_gap:GRI2:2-8:b",
+                "requirement_text": "describe methodologies used to compile the data;",
+                "is_mandatory": True,
+                "support_status": "not_met",
+            },
+        ],
+        missing_requirements=["current_gap:GRI2:2-8:a", "current_gap:GRI2:2-8:b"],
+    )
+    guarded_complete = analyst._apply_p0_guardrails(complete_payload, context)
+    assert guarded_complete["verdict"] == "not_disclosed"
 
 
 def test_disclosure_assessment_rejects_unknown_manual_review_and_readiness_codes():

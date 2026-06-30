@@ -1,0 +1,69 @@
+{
+  "document_version": "p0_stage_e3_traceability_cleanup_acceptance_gate_v1",
+  "recorded_at": "2026-06-30T12:00:49Z",
+  "run_id": "20260630T083619Z_e3_traceability_cleanup",
+  "gate_status": "traceability_cleanup_accepted_with_explicit_waivers_for_f_evaluation",
+  "clean_accepted": false,
+  "decision_summary": "Traceability cleanup maps and PDF source_text machine-match waiver are accepted for F0 evaluation preparation with explicit limitations. This does not mutate raw artifacts, effective assessments, or the accepted 143-item final assessment set. E4 persistence and Streamlit workspace remain pending before the full P0 workflow can be treated as closed.",
+  "scope": {
+    "cleanup_package_assessment_count": 114,
+    "final_current_effective_assessment_count": 143,
+    "final_current_effective_assessment_set": "data/runs/stage_e_final_assessment_set/20260630T113930Z_e3_final_current_effective_set_accepted/final_current_effective_assessment_set.json",
+    "final_advisor_effective_result": "data/runs/stage_e_final_advisor/20260630T114005Z_e3_143_unified_final_advisor/final_advisor_result_corrected.json"
+  },
+  "basis": [
+    "143 accepted current assessment set has passed evidence contract and AnalysisRun validation.",
+    "final_advisor_result_corrected.json has passed Advisor validation with no forbidden phrase or schema warnings.",
+    "Traceability findings affect audit precision and thesis wording boundaries, not a known systematic change to five-category verdicts.",
+    "Requirement-level metrics can proceed if they use the cleanup map rather than raw requirement IDs.",
+    "Evidence binding can support review if cleanup map is used, while E4 persistence should normalize supporting_evidence_ids to evidence_id.",
+    "PDF source_text machine matching is waived because PyPDF2 full-string matching is unreliable for table layout and line-break ordering."
+  ],
+  "must_fix": [],
+  "accepted": [
+    "143 accepted current assessment set can enter F0 evaluation preparation",
+    "final_advisor_result_corrected.json can enter Advisor usefulness review",
+    "traceability cleanup maps can be used as effective metric mapping inputs"
+  ],
+  "waived_with_reason": [
+    {
+      "waiver_code": "requirement_id_cleanup_map_required_for_requirement_level_metrics",
+      "reason": "Dot-level requirement IDs, parent/intro compilation nodes, and a small number of parent disclosure references are accepted only when requirement-level statistics use requirement_id_cleanup_map.json as the effective mapping layer."
+    },
+    {
+      "waiver_code": "evidence_binding_cleanup_map_required_before_e4_persistence",
+      "reason": "Mixed supporting_evidence_ids references to chunk_id and evidence_id are sufficient for F-stage review when evidence_binding_cleanup_map.json uniquely maps them, but E4 persistence and Streamlit display should normalize bindings to evidence_id."
+    },
+    {
+      "waiver_code": "pdf_source_text_machine_match_waived_with_manual_traceability_limitations",
+      "reason": "PyPDF2 matched only 28 of 159 substantive evidence snippets because of PDF table layout and text order limitations. F-stage and thesis wording may state page-level traceability and manual waiver, but must not claim every source_text snippet was machine-verified against the PDF."
+    }
+  ],
+  "effective_metric_policy_for_f": {
+    "requirement_level_metrics": "Use requirement_id_cleanup_map.json for E3 ordinary current-gap requirement references; use E3.5 reviewed artifacts as accepted unless a separate E3.5 traceability issue is identified.",
+    "evidence_location_metrics": "Use source_page, report_page_label, evidence_kind, chunk_id, smoke review results, and pdf_source_text_location_waiver.json limitations; do not report full machine-verbatim match coverage.",
+    "advisor_usefulness_review": "Use final_advisor_result_corrected.json as the input for human usefulness evaluation; keep raw final_advisor_result.json as audit trail only."
+  },
+  "accepted_artifacts": [
+    "data/runs/stage_e_traceability_cleanup/20260630T083619Z_e3_traceability_cleanup/requirement_id_cleanup_map.json",
+    "data/runs/stage_e_traceability_cleanup/20260630T083619Z_e3_traceability_cleanup/evidence_binding_cleanup_map.json",
+    "data/runs/stage_e_traceability_cleanup/20260630T083619Z_e3_traceability_cleanup/pdf_source_text_location_waiver.json",
+    "data/runs/stage_e_final_assessment_set/20260630T113930Z_e3_final_current_effective_set_accepted/final_current_effective_assessment_set.json",
+    "data/runs/stage_e_final_advisor/20260630T114005Z_e3_143_unified_final_advisor/final_advisor_result_corrected.json"
+  ],
+  "blocked_next_stages": [
+    "full_f_stage_closure_until_e4_persistence_api_streamlit_is_completed"
+  ],
+  "next_stage": "ready_for_f0_evaluation_preparation_with_e4_still_pending",
+  "e4_status": "pending_p0_product_workflow_closure",
+  "e4_required_follow_up": [
+    "Normalize supporting_evidence_ids to evidence_id before persistence or Streamlit display.",
+    "Carry chunk_id as evidence metadata after binding normalization.",
+    "Make PDF source_text machine-match waiver visible in traceability/audit documentation."
+  ],
+  "thesis_wording_limitations": [
+    "Do not state that all evidence source_text snippets were machine-verified against PDF text.",
+    "Use wording such as evidence pages are traceable and part of source_text matching was manually waived because of PDF extraction limitations.",
+    "Requirement-level accuracy or F1 metrics must state whether cleanup-map-normalized IDs were used."
+  ]
+}

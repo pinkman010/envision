@@ -15,6 +15,7 @@ C:\ProgramData\miniconda3\envs\envision\python.exe scripts\validate_stage_e2_1_e
 C:\ProgramData\miniconda3\envs\envision\python.exe scripts\validate_p0_index_target_evidence.py
 C:\ProgramData\miniconda3\envs\envision\python.exe scripts\validate_p0_requirement_checklist.py
 C:\ProgramData\miniconda3\envs\envision\python.exe scripts\check_llm_config.py
+git status --short
 ```
 
 ## Expected Local Results
@@ -28,6 +29,42 @@ C:\ProgramData\miniconda3\envs\envision\python.exe scripts\check_llm_config.py
   - `excluded_counts_by_mode.readiness_2026=1`
   - `excluded_counts_by_mode.watchlist_2027=2`
 - `check_llm_config.py` must not print secrets.
+- `git status --short` is recorded as an audit snapshot. A dirty worktree is not a business blocker by itself, but the E3 run note must distinguish planned E3 changes from unrelated existing modifications.
+
+## Disclosure ID Spelling Checks
+
+Before requesting LLM approval, confirm that social disclosure IDs use the exact GRI identifiers `405-2` and `414-2`. These IDs must not be normalized, translated, or rewritten as lookalike variants.
+
+Run:
+
+```powershell
+@'
+import json
+from pathlib import Path
+
+checklist = json.loads(Path("data/knowledge_base/manifests/p0_gri_requirement_checklist.json").read_text(encoding="utf-8-sig"))
+parent_ids = {
+    item.get("parent_requirement_id")
+    for item in checklist["requirements"]
+    if item.get("assessment_mode") == "current_gap"
+}
+
+required = {
+    "current_gap:GRI405:405-2": "Diversity and equal opportunity pay ratio disclosure",
+    "current_gap:GRI414:414-2": "Supplier social assessment negative impacts disclosure"
+}
+missing = sorted(required_id for required_id in required if required_id not in parent_ids)
+if missing:
+    raise SystemExit(f"Missing or misspelled disclosure IDs: {missing}")
+print({"status": "ok", "checked_ids": sorted(required)})
+'@ | C:\ProgramData\miniconda3\envs\envision\python.exe -
+```
+
+Expected:
+
+```text
+{'status': 'ok', 'checked_ids': ['current_gap:GRI405:405-2', 'current_gap:GRI414:414-2']}
+```
 
 ## Batch Preflight Checks
 
@@ -38,6 +75,7 @@ For the target batch:
 - Confirm output directory does not already contain a completed run with the same run id.
 - Confirm the active thread contains explicit approval for that batch.
 - Confirm smoke review template is ready for 3 to 5 sampled items after the batch.
+- Record `git status --short` in the batch run note or `batch_validation_result.json` under `git_status_snapshot`.
 
 ## Stop Criteria
 

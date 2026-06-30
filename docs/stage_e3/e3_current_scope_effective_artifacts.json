@@ -1,0 +1,144 @@
+{
+  "document_version": "p0_stage_e3_current_scope_effective_artifacts_v1",
+  "recorded_at": "2026-06-30",
+  "stage": "E3",
+  "scope": "2024_current_disclosure_ordinary_current_gap",
+  "effective_artifact_policy": {
+    "statistics_source": "effective_assessment_artifacts",
+    "raw_artifacts_role": "audit_trail_only",
+    "ordinary_current_gap_count": 114,
+    "exclude_from_ordinary_scope": [
+      "current_gap:GRI3:3-3_generic",
+      "readiness_2026:*",
+      "watchlist_2027:*"
+    ],
+    "final_recommendation_policy": "Do not use stale Advisor outputs generated before corrected assessments; regenerate Advisor from effective corrected artifacts before final recommendation use."
+  },
+  "batches": [
+    {
+      "batch_order": 1,
+      "batch_id": "e3_batch_01_gri2",
+      "run_id": "20260630T021253Z_e3_batch_01_gri2",
+      "run_dir": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result_corrected.json",
+      "effective_analysis_run_artifact": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analysis_run_corrected.json",
+      "effective_manual_review_input_artifact": null,
+      "effective_advisor_artifact_for_final_recommendations": null,
+      "advisor_status_for_final_recommendations": "stale_regeneration_required",
+      "smoke_review_result": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/smoke_review_result.json",
+      "stage_gate_result": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/stage_gate_result.json",
+      "assessment_count": 30,
+      "effective_gate_status": "accepted_after_corrections_before_batch_02",
+      "raw_artifacts_preserved": [
+        "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result.json",
+        "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analysis_run.json",
+        "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/advisor_result.json"
+      ]
+    },
+    {
+      "batch_order": 2,
+      "batch_id": "e3_batch_02_gri3_without_3_3",
+      "run_id": "20260630T043746Z_e3_batch_02_gri3_without_3_3",
+      "run_dir": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+      "effective_analysis_run_artifact": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analysis_run.json",
+      "effective_manual_review_input_artifact": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/manual_review_input.json",
+      "effective_advisor_artifact_for_final_recommendations": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/advisor_result.json",
+      "advisor_status_for_final_recommendations": "usable_if_final_advisor_chain_keeps_batch_level_outputs",
+      "smoke_review_result": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/smoke_review_result.json",
+      "stage_gate_result": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/stage_gate_result.json",
+      "assessment_count": 2,
+      "effective_gate_status": "passed_before_batch_03",
+      "raw_artifacts_preserved": [
+        "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+        "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analysis_run.json",
+        "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/advisor_result.json"
+      ]
+    },
+    {
+      "batch_order": 3,
+      "batch_id": "e3_batch_03_environment",
+      "run_id": "20260630T053306Z_e3_batch_03_environment_split_merged",
+      "run_dir": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result_corrected.json",
+      "effective_analysis_run_artifact": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analysis_run_corrected.json",
+      "effective_manual_review_input_artifact": null,
+      "effective_advisor_artifact_for_final_recommendations": null,
+      "advisor_status_for_final_recommendations": "stale_regeneration_required",
+      "smoke_review_result": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/smoke_review_result.json",
+      "stage_gate_result": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/stage_gate_result.json",
+      "assessment_count": 29,
+      "effective_gate_status": "passed_before_batch_04_with_minor_requirement_granularity_issue",
+      "raw_artifacts_preserved": [
+        "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result.json",
+        "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analysis_run.json",
+        "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/advisor_result.json"
+      ]
+    },
+    {
+      "batch_order": 4,
+      "batch_id": "e3_batch_04_employees_and_human_rights",
+      "run_id": "20260630T060615Z_e3_batch_04_employees_and_human_rights",
+      "run_dir": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result_corrected.json",
+      "effective_analysis_run_artifact": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analysis_run_corrected.json",
+      "effective_manual_review_input_artifact": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/manual_review_input_corrected.json",
+      "effective_advisor_artifact_for_final_recommendations": null,
+      "advisor_status_for_final_recommendations": "stale_regeneration_required",
+      "smoke_review_result": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/smoke_review_result.json",
+      "stage_gate_result": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/stage_gate_result.json",
+      "assessment_count": 32,
+      "effective_gate_status": "corrected_artifacts_accepted_as_stage_gate_input",
+      "raw_artifacts_preserved": [
+        "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result.json",
+        "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analysis_run.json",
+        "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/advisor_result.json"
+      ]
+    },
+    {
+      "batch_order": 5,
+      "batch_id": "e3_batch_05_governance_supply_chain_economic",
+      "run_id": "20260630T070123Z_e3_batch_05_governance_supply_chain_economic",
+      "run_dir": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result_corrected.json",
+      "effective_analysis_run_artifact": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analysis_run_corrected.json",
+      "effective_manual_review_input_artifact": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/manual_review_input_corrected.json",
+      "effective_advisor_artifact_for_final_recommendations": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/advisor_result_corrected.json",
+      "advisor_status_for_final_recommendations": "corrected_advisor_available",
+      "smoke_review_result": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/smoke_review_result.json",
+      "stage_gate_result": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/stage_gate_result.json",
+      "assessment_count": 21,
+      "effective_gate_status": "accepted_after_corrections_for_e3_current_scope_acceptance",
+      "raw_artifacts_preserved": [
+        "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result.json",
+        "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analysis_run.json",
+        "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/advisor_result.json"
+      ]
+    }
+  ],
+  "aggregate_effective_inputs": {
+    "effective_assessment_artifacts": [
+      "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+      "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result_corrected.json"
+    ],
+    "effective_analysis_run_artifacts": [
+      "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analysis_run_corrected.json",
+      "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analysis_run.json",
+      "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analysis_run_corrected.json",
+      "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analysis_run_corrected.json",
+      "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analysis_run_corrected.json"
+    ],
+    "advisor_artifacts_ready_for_final_recommendations": [
+      "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/advisor_result.json",
+      "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/advisor_result_corrected.json"
+    ],
+    "advisor_artifacts_requiring_regeneration": [
+      "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/advisor_result.json",
+      "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/advisor_result.json",
+      "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/advisor_result.json"
+    ]
+  }
+}

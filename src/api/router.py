@@ -10,6 +10,7 @@ from src.api.corpus_router import router as corpus_router
 from src.api.retrieval_router import router as retrieval_router
 from src.api.analyst_router import router as analyst_router
 from src.api.advisor_router import router as advisor_router
+from src.api.p0_review_router import router as p0_review_router
 
 # 初始化全局总路由
 api_router = APIRouter()
@@ -34,4 +35,9 @@ api_router.include_router(
     advisor_router,
     prefix="/advisor",
     tags=["优化建议"],
+)
+api_router.include_router(
+    p0_review_router,
+    prefix="/p0-review",
+    tags=["P0人工复核"],
 )

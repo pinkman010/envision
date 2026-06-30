@@ -19,13 +19,19 @@ E3 may call DeepSeek only after explicit user confirmation in the active thread.
 - Execution mode: batched, not one-shot full run.
 - Raw LLM outputs: preserve under the batch run directory.
 - Secrets: do not write API keys or `.env` content to logs or artifacts.
+- Prompt templates:
+  - Analyst: `templates/prompt_templates/analyst_prompt.j2`
+  - Advisor: `templates/prompt_templates/advisor_prompt.j2`
+- Prompt version label: record the template file hashes or git diff summary before the approved batch run.
+- Key parameter source: local `.env` and `src/config/settings.py`; do not copy secret values into approval records.
+- Cost and latency: estimate before each approved batch using current provider pricing, expected item count, and configured output token cap. Treat the estimate as a risk note, not as a guaranteed charge.
 
 ## Required Confirmation Text
 
 Before any E3 LLM call, obtain an explicit message equivalent to:
 
 ```text
-I confirm E3 batch <batch_id> may send the required public report evidence snippets, GRI requirement data, and prompts to the configured DeepSeek API.
+I confirm E3 batch BATCH_ID may send the required public report evidence snippets, GRI requirement data, and prompts to the configured DeepSeek API.
 ```
 
 ## Approval Record
@@ -37,6 +43,19 @@ I confirm E3 batch <batch_id> may send the required public report evidence snipp
 | approver |  |
 | approval_thread_date |  |
 | model | DeepSeek configured in local `.env` |
+| analyst_prompt_template | `templates/prompt_templates/analyst_prompt.j2` |
+| advisor_prompt_template | `templates/prompt_templates/advisor_prompt.j2` |
+| prompt_version_or_hash | record before approval |
+| llm_base_url | record provider host only, no key |
+| llm_model | record configured model |
+| llm_response_format | record configured response format |
+| llm_thinking_type | record configured value |
+| llm_reasoning_effort | record configured value |
+| llm_max_tokens | record configured value |
+| llm_timeout_seconds | record configured value |
+| estimated_input_output_tokens | record before approval |
+| estimated_cost_risk | record low / medium / high and basis before approval |
+| estimated_latency_risk | record low / medium / high and basis before approval |
 | notes | E2.1-E passed local gates, but E3 execution remains blocked until explicit confirmation. |
 
 ## Abort Conditions

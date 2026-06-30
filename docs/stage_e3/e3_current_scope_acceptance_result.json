@@ -1,0 +1,136 @@
+{
+  "document_version": "p0_stage_e3_current_scope_acceptance_result_v1",
+  "recorded_at": "2026-06-30",
+  "stage": "E3",
+  "scope": "2024_current_disclosure_ordinary_current_gap",
+  "gate_status": "conditionally_passed_for_e3_5_scope",
+  "final_evaluation_status": "blocked",
+  "final_evaluation_blocking_status": "final_evaluation_blocked_pending_traceability_cleanup_and_advisor_regeneration",
+  "overall_judgment": {
+    "allow_start_e3_5_gri_3_3_topic_instantiation": true,
+    "allow_clean_acceptance": false,
+    "allow_final_evaluation": false,
+    "allow_final_advisor_chain": false,
+    "allow_thesis_experiment_statistics": false,
+    "reason": "E3 ordinary current disclosure coverage is complete enough to start E3.5, but final evaluation and final recommendations remain blocked by traceability cleanup and advisor regeneration gaps."
+  },
+  "scope_coverage": {
+    "ordinary_current_gap_assessment_count": 114,
+    "unique_manifest_item_count": 114,
+    "duplicate_manifest_item_ids": [],
+    "excluded_items_confirmed_absent": [
+      "current_gap:GRI3:3-3_generic",
+      "readiness_2026:*",
+      "watchlist_2027:*"
+    ],
+    "raw_artifacts_retained_for_audit": true,
+    "statistics_use_effective_artifacts": true
+  },
+  "effective_batch_inputs": [
+    {
+      "batch_id": "e3_batch_01_gri2",
+      "run_id": "20260630T021253Z_e3_batch_01_gri2",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result_corrected.json",
+      "assessment_count": 30,
+      "stage_gate_judgment": "corrected accepted",
+      "notes": "Raw smoke gate remains blocked_before_batch_02 for audit; corrected artifacts accepted as stage gate input."
+    },
+    {
+      "batch_id": "e3_batch_02_gri3_without_3_3",
+      "run_id": "20260630T043746Z_e3_batch_02_gri3_without_3_3",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+      "assessment_count": 2,
+      "stage_gate_judgment": "passed",
+      "notes": "No corrected assessment artifact required."
+    },
+    {
+      "batch_id": "e3_batch_03_environment",
+      "run_id": "20260630T053306Z_e3_batch_03_environment_split_merged",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result_corrected.json",
+      "assessment_count": 29,
+      "stage_gate_judgment": "passed with minor requirement granularity issue",
+      "notes": "Split merged artifact accepted; explicit corrected acceptance field should be added in a later traceability cleanup."
+    },
+    {
+      "batch_id": "e3_batch_04_employees_and_human_rights",
+      "run_id": "20260630T060615Z_e3_batch_04_employees_and_human_rights",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result_corrected.json",
+      "assessment_count": 32,
+      "stage_gate_judgment": "corrected accepted",
+      "notes": "Raw smoke gate remains blocked_before_batch_05_required_field_corrections for audit; corrected artifacts accepted as stage gate input."
+    },
+    {
+      "batch_id": "e3_batch_05_governance_supply_chain_economic",
+      "run_id": "20260630T070123Z_e3_batch_05_governance_supply_chain_economic",
+      "effective_assessment_artifact": "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result_corrected.json",
+      "assessment_count": 21,
+      "stage_gate_judgment": "corrected accepted",
+      "notes": "Raw smoke gate remains blocked_before_e3_current_scope_acceptance_required_field_corrections for audit; corrected artifacts and corrected Advisor accepted as stage gate input."
+    }
+  ],
+  "validation_summary": {
+    "e3_validator_status_all_batches": "ok",
+    "e2_1_evidence_contract_validator_status_all_batches": "ok",
+    "smoke_review_status_all_batches": "completed",
+    "smoke_review_human_verdicts_filled": true,
+    "git_diff_check": "only_crlf_lf_warnings_no_whitespace_error"
+  },
+  "result_distribution": {
+    "disclosed": 2,
+    "partially_disclosed": 42,
+    "not_disclosed": 25,
+    "manual_review": 45,
+    "review_status": {
+      "pending": 114
+    }
+  },
+  "manual_review_reason_distribution": {
+    "additional_evidence_needed": 29,
+    "omission_reason_requires_review": 14,
+    "weak_evidence_support": 13,
+    "index_evidence_cannot_support_disclosed": 2
+  },
+  "retained_issues": [
+    {
+      "issue_id": "requirement_id_traceability_cleanup",
+      "severity": "blocks_final_evaluation",
+      "description": "Batch03 has 28 requirement IDs not found in p0_gri_requirement_checklist.json, typically dot-level IDs such as current_gap:GRI303:303-3:a.iii; batch05 has 2 parent disclosure IDs used as requirement references.",
+      "required_action": "Normalize or map requirement IDs to checklist IDs before final evaluation, or document a manual waiver."
+    },
+    {
+      "issue_id": "evidence_binding_consistency",
+      "severity": "blocks_final_evaluation",
+      "description": "Most supporting_evidence_ids bind chunk_id while some bind evidence_id. Current validators allow this, but the strict final audit design expects evidence[].evidence_id binding.",
+      "required_action": "Choose and enforce one binding rule, preferably evidence_id for final audit artifacts, or document a manual waiver."
+    },
+    {
+      "issue_id": "pdf_source_text_machine_location",
+      "severity": "blocks_final_evaluation",
+      "description": "Among 159 substantive report evidence snippets, PyPDF2 matched 28 and did not match 131. Causes include PDF table/layout extraction limitations and possible non-verbatim snippet risk.",
+      "required_action": "Repair PDF evidence location checks with stronger extraction/rendering or add human waiver notes before final statistics."
+    },
+    {
+      "issue_id": "advisor_chain_regeneration",
+      "severity": "blocks_final_advisor_chain",
+      "description": "Batch01, batch03 and batch04 advisor outputs were generated before corrected assessments and cannot be used for final recommendations. Batch05 has advisor_result_corrected.json and raw advisor is superseded.",
+      "required_action": "Regenerate Advisor outputs from effective corrected artifacts, or generate one final Advisor result from the consolidated effective assessment set."
+    }
+  ],
+  "next_actions": [
+    {
+      "action": "start_e3_5_gri_3_3_topic_instantiation",
+      "allowed": true,
+      "condition": "E3.5 may rely on the 114 ordinary current_gap coverage and current assessment statistics only."
+    },
+    {
+      "action": "traceability_cleanup",
+      "allowed": true,
+      "condition": "Must block final evaluation, final advisor chain and thesis statistics until resolved or explicitly waived."
+    },
+    {
+      "action": "final_evaluation",
+      "allowed": false,
+      "condition": "Blocked pending requirement ID cleanup, evidence binding unification, PDF evidence location cleanup or waiver, and advisor regeneration."
+    }
+  ]
+}

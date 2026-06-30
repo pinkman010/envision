@@ -100,6 +100,16 @@ def _mandatory_checks(assessment: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def _is_parent_intro_compilation_requirement(item: dict[str, Any], all_requirement_ids: set[str]) -> bool:
+    requirement_id = str(item.get("requirement_id", ""))
+    requirement_text = str(item.get("requirement_text", "")).strip()
+    if item.get("requirement_type") != "compilation_requirement":
+        return False
+    if not requirement_id or not requirement_text.endswith(":"):
+        return False
+    return any(other_id.startswith(f"{requirement_id}.") for other_id in all_requirement_ids)
+
+
 def _mandatory_requirement_ids_by_parent(checklist_path: Path = DEFAULT_REQUIREMENT_CHECKLIST_PATH) -> tuple[dict[str, set[str]], list[str]]:
     warnings: list[str] = []
     try:
@@ -108,7 +118,17 @@ def _mandatory_requirement_ids_by_parent(checklist_path: Path = DEFAULT_REQUIREM
         return {}, [f"Checklist mandatory coverage cross-check skipped: {exc}"]
 
     by_parent: dict[str, set[str]] = {}
-    for item in _as_list(checklist.get("requirements") if isinstance(checklist, dict) else []):
+    requirements = [
+        item
+        for item in _as_list(checklist.get("requirements") if isinstance(checklist, dict) else [])
+        if isinstance(item, dict)
+    ]
+    all_requirement_ids = {
+        str(item.get("requirement_id"))
+        for item in requirements
+        if item.get("requirement_id")
+    }
+    for item in requirements:
         if not isinstance(item, dict):
             continue
         if item.get("assessment_mode") != "current_gap":
@@ -116,6 +136,8 @@ def _mandatory_requirement_ids_by_parent(checklist_path: Path = DEFAULT_REQUIREM
         if item.get("is_mandatory") is not True:
             continue
         if item.get("scoring_role", "hard_score") != "hard_score":
+            continue
+        if _is_parent_intro_compilation_requirement(item, all_requirement_ids):
             continue
         parent_id = str(item.get("parent_requirement_id", ""))
         requirement_id = str(item.get("requirement_id", ""))
@@ -203,8 +225,9 @@ def validate_assessments(
                 if check.get("support_status") != MET:
                     errors.append(f"{label}: mandatory requirement {requirement_id} is not met")
 
-        if verdict == PARTIALLY_DISCLOSED and not missing_requirements:
-            errors.append(f"{label}: partially_disclosed requires missing_requirements")
+        partial_requirements = _as_list(assessment.get("partial_requirements"))
+        if verdict == PARTIALLY_DISCLOSED and not missing_requirements and not partial_requirements:
+            errors.append(f"{label}: partially_disclosed requires missing_requirements or partial_requirements")
 
         if verdict == NOT_APPLICABLE:
             is_policy_excluded = assessment.get("assessment_mode") != "current_gap"

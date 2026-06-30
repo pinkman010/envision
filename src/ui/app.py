@@ -29,10 +29,11 @@ page_05 = st.Page("pages/05_review.py", title="人工复核", icon="✅")
 page_06 = st.Page("pages/06_benchmarking.py", title="对标分析", icon="📊")
 page_07 = st.Page("pages/07_audit.py", title="审计日志", icon="📜")
 page_08 = st.Page("pages/08_rules.py", title="规则配置", icon="⚙️")
+page_09 = st.Page("pages/09_p0_review_workbench.py", title="P0条款复核", icon="🧾")
 
 # 2. 页面分组（按业务流程位置）
 pages = {
-    "📊 核心业务流程": [page_01, page_02, page_03, page_04, page_05, page_06],
+    "📊 核心业务流程": [page_01, page_02, page_03, page_04, page_05, page_09, page_06],
     "⚙️ 系统管理功能": [page_07, page_08],
 }
 

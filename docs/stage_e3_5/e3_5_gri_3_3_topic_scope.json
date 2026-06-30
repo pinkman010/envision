@@ -1,0 +1,239 @@
+{
+  "document_version": "p0_stage_e3_5_gri_3_3_topic_scope_draft_v1",
+  "recorded_at": "2026-06-30",
+  "stage": "E3.5",
+  "scope": "gri_3_3_topic_level_instantiation_for_2024_current_disclosure",
+  "status": "draft_pending_deepseek_authorized_assessment",
+  "source_policy": {
+    "primary_report": "data/knowledge_base/peer_reports/Envision Energy 2024-zh.pdf",
+    "primary_evidence_index": "data/knowledge_base/manifests/p0_report_evidence_index.json",
+    "gri_requirement_checklist": "data/knowledge_base/manifests/p0_gri_requirement_checklist.json",
+    "raw_artifacts_policy": "Do not overwrite raw artifacts or original PDFs.",
+    "ordinary_scoring_policy": "current_gap:GRI3:3-3_generic is excluded from ordinary scoring; E3.5 instantiates and assesses Disclosure 3-3 at topic level."
+  },
+  "stage_gate_inputs": [
+    "docs/stage_e3/e3_current_scope_acceptance_result.json",
+    "docs/stage_e3/e3_current_scope_effective_artifacts.json",
+    "data/knowledge_base/manifests/p0_report_evidence_index.json",
+    "data/knowledge_base/manifests/p0_gri_requirement_checklist.json"
+  ],
+  "stage_gate_summary": {
+    "e3_5_start_allowed": true,
+    "clean_acceptance_allowed": false,
+    "final_evaluation_allowed": false,
+    "reason": "E3 current ordinary coverage is conditionally sufficient to start E3.5, while final evaluation remains blocked pending traceability cleanup and Advisor regeneration."
+  },
+  "materiality_source_evidence": {
+    "primary": {
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "summary": "The report states that Envision Energy used policy and regulation analysis, ESG standards research, stakeholder research, and a two-factor materiality matrix to identify and screen 16 ESG material topics during the reporting period, and that these topics are disclosed with priority in the report."
+    },
+    "cross_check": {
+      "source_page": 11,
+      "report_page_label": "10",
+      "source_chunk_id": "chunk_a168baace8b3681e8e04d70e",
+      "summary": "The ESG Strategy and Targets page lists the same topic set across environment, people, governance, and product dimensions, with related targets and 2024 progress."
+    }
+  },
+  "topic_instances": [
+    {
+      "topic_instance_id": "gri_3_3_topic_001_climate_change",
+      "topic_name_zh": "应对气候变化",
+      "topic_name_en_slug": "climate_change",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics identified through the report's materiality assessment; also classified by the report as a highly material environmental topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_002_waste_management",
+      "topic_name_zh": "废弃物管理",
+      "topic_name_en_slug": "waste_management",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Included in the report's 16-topic materiality list and placed in the materiality matrix; ESG Strategy and Targets links it to waste reduction and landfill targets.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_003_energy_management",
+      "topic_name_zh": "能源管理",
+      "topic_name_en_slug": "energy_management",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Included in the report's 16-topic materiality list and matrix; ESG Strategy and Targets links it to renewable electricity and energy efficiency commitments.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_004_biodiversity_and_land_use",
+      "topic_name_zh": "生物多样性与土地利用",
+      "topic_name_en_slug": "biodiversity_and_land_use",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Included in the report's 16-topic materiality list and shown in the materiality matrix; the strategy page ties it to biodiversity protection and prudent land and natural resource use.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_005_water_resource_management",
+      "topic_name_zh": "水资源管理",
+      "topic_name_en_slug": "water_resource_management",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Included in the report's 16-topic materiality list and materiality matrix; the strategy page links it to water-saving strategies and water management in high-risk regions.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_006_circular_economy",
+      "topic_name_zh": "循环经济",
+      "topic_name_en_slug": "circular_economy",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material environmental topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_007_occupational_health_and_safety",
+      "topic_name_zh": "职业健康与安全",
+      "topic_name_en_slug": "occupational_health_and_safety",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material social topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_008_human_capital_development",
+      "topic_name_zh": "人力资本发展",
+      "topic_name_en_slug": "human_capital_development",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Included in the report's 16-topic materiality list and materiality matrix; the strategy page associates it with employee development and fair compensation practices.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_009_labor_and_human_rights",
+      "topic_name_zh": "劳工与人权",
+      "topic_name_en_slug": "labor_and_human_rights",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material social topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_010_socioeconomic_contribution_and_community_relations",
+      "topic_name_zh": "社会经济贡献与社区关系",
+      "topic_name_en_slug": "socioeconomic_contribution_and_community_relations",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Included in the report's 16-topic materiality list and materiality matrix; the strategy page ties it to community development and shared development with stakeholders.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_011_corporate_governance",
+      "topic_name_zh": "公司治理",
+      "topic_name_en_slug": "corporate_governance",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material governance topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_012_business_ethics",
+      "topic_name_zh": "商业道德行为",
+      "topic_name_en_slug": "business_ethics",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material governance topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_013_data_security_and_privacy_protection",
+      "topic_name_zh": "数据安全与隐私保护",
+      "topic_name_en_slug": "data_security_and_privacy_protection",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material governance topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_014_innovation_management",
+      "topic_name_zh": "创新管理",
+      "topic_name_en_slug": "innovation_management",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material governance topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_015_product_quality_and_safety",
+      "topic_name_zh": "产品质量与安全",
+      "topic_name_en_slug": "product_quality_and_safety",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material social topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    },
+    {
+      "topic_instance_id": "gri_3_3_topic_016_sustainable_supply_chain_management",
+      "topic_name_zh": "可持续供应链管理",
+      "topic_name_en_slug": "sustainable_supply_chain_management",
+      "source_page": 15,
+      "report_page_label": "14",
+      "source_chunk_id": "chunk_e5d997720034f27d8de684b9",
+      "materiality_evidence_summary": "Listed as one of the 16 ESG material topics and classified by the report as a highly material social topic.",
+      "requires_llm_assessment": true,
+      "initial_status": "pending_llm_assessment"
+    }
+  ],
+  "validation_expectations": {
+    "topic_count": 16,
+    "required_fields": [
+      "topic_instance_id",
+      "topic_name_zh",
+      "topic_name_en_slug",
+      "source_page",
+      "report_page_label",
+      "source_chunk_id",
+      "materiality_evidence_summary",
+      "requires_llm_assessment",
+      "initial_status"
+    ],
+    "requires_llm_assessment_expected_value": true,
+    "initial_status_expected_value": "pending_llm_assessment"
+  },
+  "risks": [
+    "Materiality matrix text extraction is layout-sensitive; topic position and materiality tier should be visually reviewed against the PDF before final use.",
+    "Some topic-to-GRI mapping decisions require assessment judgment and should not be treated as final without an authorized DeepSeek run and manual review.",
+    "E3 final evaluation remains blocked by traceability cleanup and Advisor regeneration; this E3.5 draft must not be used as final scoring output."
+  ]
+}

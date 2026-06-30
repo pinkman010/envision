@@ -18,6 +18,7 @@
 12. readiness_2026 条目如果 forced_verdict 或 current-gap 政策导致 verdict=not_applicable，但仍存在准备度缺口，必须输出 readiness_verdict="readiness_gap"，不得写成已无事项。
 13. rationale 和 aggregation_reason 必须引用 manifest_item_id 与 canonical_disclosure_id，不得改写条款编号。
 14. 不做同行对比，不输出旧版同行比较字段。
+15. compilation_requirement 中仅作为引导语的 parent/intro 节点不得单独放入 missing_requirements；例如文本为 "When compiling ... shall:" 且存在下级 requirement_id 的节点，只由其子项参与 hard missing 聚合。
 
 
 Evidence bundle usage order:

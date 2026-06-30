@@ -1,0 +1,31 @@
+{
+  "document_version": "p0_stage_e3_final_current_effective_assessment_set_draft_v1",
+  "recorded_at": "2026-06-30T11:27:19.396985+00:00",
+  "run_id": "20260630T112719Z_e3_final_current_effective_set_draft",
+  "status": "draft_pending_e3_5_human_smoke_review",
+  "scope": "2024_current_disclosure_final_assessment_units",
+  "ordinary_current_gap_count": 114,
+  "gri_3_3_index_row_count": 29,
+  "total_current_assessment_units": 143,
+  "verdict_distribution": {
+    "partially_disclosed": 61,
+    "not_disclosed": 31,
+    "manual_review": 49,
+    "disclosed": 2
+  },
+  "input_artifacts": {
+    "ordinary_effective_assessment_artifacts": [
+      "data/runs/stage_e/20260630T021253Z_e3_batch_01_gri2/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T043746Z_e3_batch_02_gri3_without_3_3/analyst_result.json",
+      "data/runs/stage_e/20260630T053306Z_e3_batch_03_environment_split_merged/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T060615Z_e3_batch_04_employees_and_human_rights/analyst_result_corrected.json",
+      "data/runs/stage_e/20260630T070123Z_e3_batch_05_governance_supply_chain_economic/analyst_result_corrected.json"
+    ],
+    "gri_3_3_effective_candidate_artifact": "C:\\Alvin\\SUFE\\整合实践\\envision\\data\\runs\\stage_e3_5\\20260630T085702Z_e3_5_gri3_3_llm_index_assessment\\analyst_result_merged_reviewed.json"
+  },
+  "blocking_items": [
+    "E3.5 human smoke review is still pending.",
+    "Unified final advisor real generation remains blocked until this draft is accepted."
+  ],
+  "run_dir": "C:\\Alvin\\SUFE\\整合实践\\envision\\data\\runs\\stage_e_final_assessment_set\\20260630T112719Z_e3_final_current_effective_set_draft"
+}

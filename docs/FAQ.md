@@ -1,180 +1,208 @@
 # 常见问题（FAQ）
 
-## 1. 部署与启动
+## 1. 当前系统是否已经可以使用？
 
-### Q: 当前项目怎么启动？
+可以用于当前 P0 范围。
 
-A: 先创建环境并配置 `.env`，再分别启动后端和前端：
+当前可直接使用的是固定报告 artifact-backed review workbench：
 
-```bash
-uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+- 远景能源 2024 中文 ESG 报告
+- 143 条 current disclosure assessments
+- 143 条 Advisor coverage
+- 条款级查看、人工复核保存、CSV/JSON 导出
+
+当前状态仍是 pending review：
+
+```text
+review_status=pending
+final_evaluation_status=pending_human_evaluation
+```
+
+AI 结果不能直接作为企业正式披露结论。
+
+## 2. 为什么是 143 条？
+
+当前 143 条由两部分构成：
+
+| 类型 | 数量 |
+|---|---:|
+| ordinary current disclosure | 114 |
+| GRI 3-3 index-row instances | 29 |
+| 合计 | 143 |
+
+早期出现过 118、115 等技术口径，当前 P0 页面、README 和生命周期文档统一使用 143 条 accepted current assessment set。
+
+## 3. 系统怎么启动？
+
+先写入 E4 pending-review 数据：
+
+```powershell
+python scripts/seed_stage_e4_pending_review.py
+```
+
+启动后端：
+
+```powershell
+python scripts/run_api.py
+```
+
+启动前端：
+
+```powershell
 streamlit run src/ui/app.py
 ```
 
-详细步骤见 `docs/部署说明文档.md`。
+访问：
 
-### Q: 需要哪些外部依赖？
+```text
+http://127.0.0.1:8501
+```
 
-A: 当前实现不依赖 Ollama。默认依赖：
+## 4. 为什么推荐使用 `scripts/run_api.py`？
 
-- OpenAI 兼容大模型服务
-- SiliconFlow 嵌入服务
-- 本地 ChromaDB 持久化目录
-- 本地 SQLite 审计日志库
+当前推荐入口是：
 
-### Q: Python 版本要求是什么？
+```powershell
+python scripts/run_api.py
+```
 
-A: `pyproject.toml` 要求 `Python >=3.10`，仓库自带的 `environment.yml` 使用 `Python 3.13`。
+原因：
 
-## 2. 配置与模型
+- 它会优先加载项目内 `vendor/python_runtime/`。
+- 可以避开部分环境中 `uvicorn` 安装位置和环境权限不一致的问题。
+- 与当前 README 和部署说明保持一致。
 
-### Q: 必填环境变量有哪些？
+## 5. 使用 P0 工作台会调用外部 LLM 吗？
 
-A: 至少要保证下面几类配置完整：
+不会。
 
-- 服务基础：`PROJECT_NAME`、`PROJECT_DESCRIPTION`、`VERSION`、`API_PREFIX`
-- 运行地址：`ENVIRONMENT`、`HOST`、`PORT`、`API_BASE_URL`、`ALLOWED_ORIGINS`
-- 大模型：`LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`
-- 嵌入：`SILICONFLOW_API_KEY`、`EMBEDDING_MODEL`
-- 存储：`SQLITE_DB_NAME`、`CHROMA_DB_PERSIST_DIR`
+E4 条款复核工作台读取的是已接受的 Stage E artifacts 和 SQLite 数据。只有执行真实分析脚本、重新生成 Advisor 或重新跑 Stage E/E3/E3.5 时才会调用外部 LLM。
 
-### Q: 嵌入模型可以随便换吗？
+## 6. 数据保存在什么位置？
 
-A: 不建议。当前仓库默认使用 `BAAI/bge-m3`。如果已经导入过现有知识库或历史语料，改模型会导致向量空间不兼容。
+关键数据位置：
 
-### Q: 系统里的 AI 是怎么接入的？
+| 数据 | 路径 |
+|---|---|
+| 原始报告和标准 | `data/knowledge_base/` |
+| 阶段运行产物 | `data/runs/` |
+| E4 工作台 SQLite | `data/sqlite_db/` |
+| requirement 复核样本 | `data/review/` |
+| 项目内 runtime bridge | `vendor/python_runtime/` |
 
-A: 文本生成走 `LLM_BASE_URL + LLM_API_KEY`，嵌入走 SiliconFlow 的 OpenAI 兼容接口。相关实现见：
+`data/export_results/` 是导出结果目录，可为空，程序需要时会重建。
 
-- `src/utils/llm_utils.py`
-- `src/utils/chroma_utils.py`
+## 7. 哪些目录不能随便删？
 
-## 3. 功能使用
+不要直接删除：
 
-### Q: 支持哪些文件格式？
-
-A: 当前上传入口支持：
-
-- PDF：`.pdf`
-- Word：`.docx`、`.doc`
-- Excel：`.xlsx`、`.xls`
-
-### Q: 最大文件大小是多少？
-
-A: 由 `.env` 中的 `MAX_FILE_SIZE` 控制，默认示例值是 `52428800`，也就是 `50MB`。
-
-### Q: 议题识别页面需要手动点“开始识别”吗？
-
-A: 不需要。当前页面在拿到 `corpus_result` 后会自动请求 `/retrieval/run`，然后展示识别结果。
-
-### Q: 对标分析现在能用吗？
-
-A: 还不能。前端已有“对标分析”页面，但当前是占位说明；`multi_company_benchmark` 工作流也还是预留接口。
-
-### Q: 规则修改后会立刻生效吗？
-
-A: 会。`RetrievalAgent` 和 `AnalystAgent` 在每次运行前都会重新加载规则或标准配置，规则页面保存后无需重启服务。
-
-## 4. 数据与安全
-
-### Q: 数据保存在什么位置？
-
-A: 当前主要会写入以下目录：
-
-- `data/chroma_db/`：向量库
-- `data/raw_corpus/`：原始文本与修复文本
-- `data/sqlite_db/audit_log.db`：审计日志
-- `data/export_results/`：导出文件
-
-### Q: 数据会不会发送到云端？
-
-A: 分两类：
-
-- 文档、向量库和日志文件默认保存在本地
-- 文本片段会发送到你配置的 LLM 服务和嵌入服务
-
-如果你需要完全内网运行，就必须把 `LLM_BASE_URL` 和嵌入服务都换成你自己的兼容部署。
-
-### Q: 如何备份？
-
-A: 至少备份这三部分：
-
+- `data/knowledge_base/`
+- `data/runs/`
+- `data/sqlite_db/`
+- `data/review/`
+- `vendor/python_runtime/`
 - `.env`
-- `data/`
-- `templates/rule_templates/`
 
-## 5. 故障排查
+这些目录分别对应原始证据、审计留痕、工作台数据、测试口径、运行补丁和本地配置。
 
-### Q: 后端启动直接报错“缺少必需的环境变量”？
+## 8. 哪些内容可以清理？
 
-A: 说明 `.env` 缺字段。当前 `settings.py` 对多数配置项没有默认兜底，必须补齐。
+通常可以清理：
 
-### Q: 上传文件失败怎么办？
+- `__pycache__/`
+- `.pytest_cache/`
+- `.ruff_cache/`
+- 临时测试目录
+- 空的 `data/export_results/`
+- 明确带 `superseded_by.json` 且已确认不再需要的旧运行目录
 
-A: 先检查：
+清理前建议先看 `git status --short`，避免误删 tracked 文件。
 
-1. 文件格式是否受支持
-2. 文件大小是否超过限制
-3. 文档是否损坏
-4. 后端是否正常运行
+## 9. 为什么 GRI 索引不能直接判断“已披露”？
 
-### Q: 大模型调用失败怎么办？
+GRI 索引主要用于定位披露位置。披露充分性仍需要正文实质证据支持。
 
-A: 先检查：
+当前规则：
 
-1. `LLM_API_KEY` 是否有效
-2. `LLM_BASE_URL` 是否可访问
-3. `LLM_MODEL` 是否存在
-4. 目标服务是否支持当前请求参数
+- `index_evidence` 只能定位。
+- `disclosed` 和 `partially_disclosed` 必须有正文证据。
+- 商业保密、从略披露和不适用说明通常进入 `manual_review`。
 
-### Q: 向量库初始化失败怎么办？
+## 10. 五分类 verdict 是什么？
 
-A: 先检查：
+| verdict | 含义 |
+|---|---|
+| `disclosed` | 已披露 |
+| `partially_disclosed` | 部分披露 |
+| `not_disclosed` | 未披露 |
+| `not_applicable` | 不适用 |
+| `manual_review` | 待人工复核 |
 
-1. `SILICONFLOW_API_KEY` 是否有效
-2. `EMBEDDING_MODEL` 是否正确
-3. `data/chroma_db/` 是否可写
-4. 到嵌入服务的网络是否正常
+`manual_review` 是风险控制机制，不等同于错误。
 
-### Q: 前端连不上后端怎么办？
+## 11. Advisor 建议能直接使用吗？
 
-A: 先检查：
+不能直接作为正式建议使用。
 
-1. 后端监听地址和端口是否正确
-2. `.env` 中 `API_BASE_URL` 是否匹配
-3. `.env` 中 `ALLOWED_ORIGINS` 是否包含前端地址
+当前 Advisor 状态是：
 
-## 6. 扩展与维护
+```text
+AI-assisted recommendation pending human review
+```
 
-### Q: Prompt 模板在哪里？
+建议内容用于人工复核、修改和导出。对外披露前需要企业 ESG 团队或导师确认。
 
-A: 当前实际使用的模板在 `templates/prompt_templates/`：
+## 12. 当前支持上传新报告后自动生成 143 条结果吗？
 
-- `corpus_fix_prompt.j2`
-- `retrieval_prompt.j2`
-- `analyst_prompt.j2`
-- `advisor_prompt.j2`
-- `rag_extraction_enhancement_prompt.j2`
+当前 P0 工作台使用固定报告 accepted artifacts。
 
-### Q: 如何添加或修改 ESG 议题？
+上传页面和 1+4 Agents 链路仍存在，但“任意报告上传后自动稳定生成完整 143 条核验结果”还没有产品化闭环。这属于后续工程化方向。
 
-A: 有两种方式：
+## 13. 旧的议题识别、差距分析、人工复核页面还在吗？
 
-- 在“规则配置”页面直接修改
-- 手动编辑 `templates/rule_templates/topic_rules.json`
+旧的议题识别、差距分析、人工复核、对标分析和规则配置页面已从仓库和当前 Streamlit 导航中移除。当前 Streamlit 导航只注册：
 
-### Q: 如何补充标准条文？
+- 首页概览
+- 报告上传
+- 条款复核
+- 审计日志
 
-A: 分两层：
+当前 P0 展示和复核以“条款复核”页面为准。
 
-- 规则层标准配置：`templates/rule_templates/esg_standards.json`
-- 检索层标准知识库：`data/knowledge_base/standards/standards_kb.xlsx`，再用 `scripts/import_standards.py` 导入 Chroma
+## 14. 如何验证当前 P0 工作台？
 
-### Q: 如何新增 Agent？
+运行：
 
-A: 当前主架构固定为 `Orchestrator + Corpus/Retrieval/Analyst/Advisor`。如果确实要新增：
+```powershell
+$env:PYTHONPATH='vendor/python_runtime'
+python -m pytest `
+  tests\test_stage_e4_p0_review_store.py `
+  tests\test_stage_e4_seed_pending_review.py `
+  tests\test_stage_e4_p0_review_api.py `
+  tests\test_stage_e4_p0_review_export.py `
+  tests\test_stage_e4_import_f_review_results.py `
+  tests\test_stage_e4_streamlit_workbench_static.py `
+  -q -p no:cacheprovider
+```
 
-1. 继承 `BaseAgent`
-2. 明确输入输出结构
-3. 在 API 或编排层接入
-4. 同步更新相关文档和前端流程
+再检查 live API smoke：
+
+```powershell
+python -c "import json; from pathlib import Path; d=json.loads(Path('data/runs/stage_e4/20260701T034420Z_p0_delivery_live_api_smoke/live_api_smoke_result.json').read_text(encoding='utf-8')); assert d['status']=='p0_delivery_live_api_smoke_passed'; print('ok')"
+```
+
+## 15. 后续最应该做什么？
+
+当前下一步是 Stage G：
+
+- 整理交付包
+- 写演示脚本
+- 准备录屏
+- 准备项目汇报和答辩口径
+
+工程化后续方向：
+
+- 任意报告上传后的完整 143 条核验链路
+- evidence binding 统一为 `evidence_id`
+- 更完整的任务管理和异常恢复
+- 多用户、权限、部署和生产数据隔离

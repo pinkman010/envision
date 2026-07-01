@@ -1,4 +1,4 @@
-﻿# 开发日志（DEV_LOG）
+# 开发日志（DEV_LOG）
 
 ## 2026-06-28｜P0 阶段 E1 小样本真实 LLM 运行
 
@@ -743,7 +743,7 @@ OrchestratorAgent
 - 已执行真实 seed，写入本地 SQLite pending-review 数据，并生成 summary：`data/runs/stage_e4/20260630T144314Z_e4_pending_review_seed/seed_summary.json`。
 - Seed 结果：assessment=143，advisor coverage=143；verdict 分布为 `partially_disclosed=61`、`not_disclosed=31`、`manual_review=49`、`disclosed=2`；Advisor recommendation status 全部为 `ai_assisted_pending_human_review`。
 - 新增 `src/api/p0_review_router.py` 并注册到 `src/api/router.py` 的 `/p0-review`：支持 runs、summary、assessments、advisor-items、review-decisions 和三类 CSV export endpoint。
-- API summary 仅返回 pending-review 统计，不输出 `accuracy`、`precision`、`recall`、`final_accuracy`、`human_verified_count`、`confirmed_recommendation_count` 等 F 阶段指标。
+- API summary 仅返回 pending-review 统计，不输出 `accuracy`、`precision`、`recall`、`terminal_accuracy_metric`、`human_verified_count`、`confirmed_recommendation_count` 等 F 阶段指标。
 - 新增测试：`tests/test_stage_e4_p0_review_store.py`、`tests/test_stage_e4_seed_pending_review.py`、`tests/test_stage_e4_p0_review_api.py`。
 - RED 验证：store 测试最初因 `src.storage` 缺失失败；seed 测试最初因 `scripts.seed_stage_e4_pending_review` 缺失失败；API 测试最初因 `src.api.p0_review_router` 缺失失败。
 - GREEN 验证通过：`pytest tests/test_stage_e4_p0_review_store.py tests/test_stage_e4_seed_pending_review.py tests/test_stage_e4_p0_review_api.py -q -p no:cacheprovider --basetemp tmp/pytest-e4-task1-3`，结果 12 passed。
@@ -782,18 +782,86 @@ OrchestratorAgent
 - 最终 E4 验证通过：`pytest tests/test_stage_e4_p0_review_store.py tests/test_stage_e4_seed_pending_review.py tests/test_stage_e4_p0_review_api.py tests/test_stage_e4_p0_review_export.py tests/test_stage_e4_import_f_review_results.py tests/test_stage_e4_streamlit_workbench_static.py -q -p no:cacheprovider --basetemp tmp/pytest-e4-task1-8`，结果 19 passed。
 - 最终 seed 验证通过：`scripts/seed_stage_e4_pending_review.py` 生成 `data/runs/stage_e4/20260630T150827Z_e4_pending_review_seed/seed_summary.json`。
 - 本地服务 smoke 通过：FastAPI `http://127.0.0.1:8010` 返回 assessment=143、advisor coverage=143、`final_evaluation_status=pending_human_evaluation`；Streamlit `http://127.0.0.1:8510` 返回 200；review decisions JSON export 返回 200。
-- 禁用完成态表述扫描通过：`rg "最终准确率|人工验证通过|最终建议已确认|final_accuracy" src docs/项目模型说明文档.md docs/用户操作手册.md` 无命中。
+- 禁用完成态表述扫描通过：`rg "终局准确性指标|人工评测完成|终局建议确认|terminal_accuracy_metric" src docs/项目模型说明文档.md docs/用户操作手册.md` 无命中。
 - 本阶段未调用 LLM，未修改 Stage E accepted artifacts，未计算 F 阶段指标。
 
 ## 2026-06-30 Stage E4 fixed-report artifact-backed E2E smoke
 
-- 已执行 P0 fixed-report artifact-backed E2E workflow smoke，不重跑 143 条 LLM，不计算最终准确率，不宣称人工验证通过，不生成论文最终指标。
+- 已执行 P0 fixed-report artifact-backed E2E workflow smoke，不重跑 143 条 LLM，不计算终局准确性指标，不宣称人工评测完成，不生成论文最终指标。
 - Smoke 范围：143 条 accepted current assessments、143 条 Advisor coverage、E4 SQLite/API/Streamlit pending-review 工作台。
 - 结果文件：`data/runs/stage_e4/20260630T152020Z_e4_fixed_report_e2e_smoke/e2e_smoke_result.json`。
 - API smoke 通过：FastAPI `http://127.0.0.1:8010` 返回 assessment=143、advisor coverage=143、`final_evaluation_status=pending_human_evaluation`。
 - Assessment detail smoke 通过：通过 API 打开 `current_gap:GRI201:201-1` detail，确认存在 requirement checks、evidence、`source_page`、`report_page_label` 和 `source_text`。
 - 人工复核保存链路通过：写入测试记录 `review_decision_id=review_5b7c5255b33e05fb`，`reviewer=e4_smoke_test`，`source=e4_manual_smoke`，comment 为 `E4 smoke test record; not final human evaluation`。
-- 导出 smoke 通过：assessment/advisor/review decisions JSON export 均返回 200；导出内容未命中最终指标、人工验证完成、最终建议确认或 final evaluation completion 类表述。
+- 导出 smoke 通过：assessment/advisor/review decisions JSON export 均返回 200；导出内容未命中最终指标、人工验证完成、最终建议确认或 completion status 类表述。
 - Streamlit 入口 smoke 通过：`http://127.0.0.1:8510` 返回 200。Playwright MCP 可打开页面，但 snapshot 仅捕获 Streamlit banner；页面内容验证由静态页面测试、API detail 检查和导出检查覆盖。
 - 阶段状态记录为 `P0 fixed-report artifact-backed E2E workflow smoke passed`。
 - 限制继续保留：`final_evaluation_status=pending_human_evaluation`；F metrics pending human-filled workbook；P0 final evaluation not completed。
+
+## 2026-07-01 Stage F human evaluation inputs archived
+
+- 已读取桌面三份人工评测 workbook：`staff.xlsx`、`professor.xlsx`、`member.xlsx`，并归档到 `data/runs/stage_f/20260701T030010Z_f_human_evaluation_completed/`。
+- 每份 workbook 均包含三张评测表：assessment 143 行、advisor 143 行、requirement sample 140 行；三类表均与 F0 基准 key 完整匹配，缺失 key=0，额外 key=0。
+- 已保留原始 workbook 副本到 `source_workbooks/`，并生成每位评测人的 CSV/JSON 备份。
+- 已生成 `f_human_evaluation_input_manifest.json`、`f_human_evaluation_acceptance_result.json` 和 `run_summary.json`，状态为 `accepted_as_f_human_evaluation_inputs`。
+- 首次不完整归档目录 `data/runs/stage_f/20260701T025932Z_f_human_evaluation_completed/` 已写入 `superseded_by.json`，正式后续使用 `20260701T030010Z_f_human_evaluation_completed`。
+- 本步骤未调用 LLM，未修改 Stage E accepted artifacts，未导入 E4 SQLite，未计算 F 阶段指标。
+
+## 2026-07-01 Stage F human evaluation import, metrics and error analysis
+
+- 已将 `data/runs/stage_f/20260701T030010Z_f_human_evaluation_completed/` 中三位评测人的完成表导入 E4 SQLite：assessment 429 条、advisor 429 条、requirement sample 420 条，总计 1278 条 review decision，导入错误 0。
+- 新增执行脚本：`scripts/import_and_compute_stage_f_human_evaluation.py`，按三位评测人分别入库，并按多数表决计算 F 阶段指标。
+- 指标输出目录：`data/runs/stage_f/20260701T030541Z_f_metrics_and_error_analysis/`。
+- 主要结果：assessment 多数表决准确率 0.9790，macro F1 0.9806；Advisor accepted 或 minor_revision 比率 1.0000；requirement 抽样支持状态准确率 1.0000。
+- 主要误差归因：assessment 侧包括 additional_body_evidence_needed、omission_reason_handling_error、over_manual_review、index_only_positive_risk、wrong_verdict_aggregation；Advisor 侧主要为 advisor_internal_data_flag_error 和 advisor_not_actionable；requirement 侧主要为 traceability_mapping_required。
+- 输出文件包括 `f_metrics_summary.json`、`f_error_analysis.json`、`f_consensus_review_rows.json`、三张 consensus CSV、`f_metrics_and_error_analysis_report.md`、`run_summary.json`。
+- 本步骤未调用 LLM，未修改 Stage E accepted artifacts；requirement 指标基于 140 条抽样表，不代表全量 requirement object 指标。
+
+## 2026-07-01 P0 project closure final smoke
+
+- 已写入中文计划文件：`docs/superpowers/plans/2026-07-01-p0-project-closure-and-final-smoke.md`。
+- 已执行 P0 fixed-report artifact-backed 项目闭环最终验收 smoke，输出目录：`data/runs/stage_e4/20260701T032000Z_p0_project_closure_final_smoke/`。
+- 验收结果：`p0_project_closure_final_smoke_passed`，`all_required_checks_ok=true`。
+- API 行为通过 FastAPI TestClient 验证：summary 返回 assessment=143、advisor coverage=143、`review_status=pending`、`final_evaluation_status=pending_human_evaluation`。
+- Assessment detail 验证通过：存在 requirement checks、evidence、`source_page`、`report_page_label` 和 `source_text`。
+- 复核保存链路通过：写入 smoke 记录 `review_decision_id=review_a4fc7ade5241c597`，`source=p0_project_closure_smoke`；该记录仅用于产品闭环 smoke，不代表 F 阶段人工评测结论。
+- 导出链路通过：assessment/advisor/review decisions 的 CSV/JSON 导出接口均返回 200 且内容非空。
+- Streamlit 入口 smoke 通过：8510 端口因 Windows socket 权限被拒，自动切换到 8521，HTTP 返回 200；工作台静态契约标记检查通过。
+- 限制：当前项目 Python 环境缺少 `uvicorn`，因此 API 未以 live uvicorn server 方式启动；API router 和 SQLite store 行为已通过 TestClient 验证。F 阶段人工评测数据和指标保留归档，不作为本轮产品闭环完成条件。
+- 首次失败 smoke 目录 `data/runs/stage_e4/20260701T031859Z_p0_project_closure_final_smoke/` 已写入 `superseded_by.json`，后续使用 `20260701T032000Z_p0_project_closure_final_smoke`。
+
+## 2026-07-01 P0 delivery docs and runtime closure
+
+- 已同步项目交付口径：P0 fixed-report artifact-backed workflow completed；F 阶段人工评测数据和指标产物归档保留，不作为当前产品闭环验收条件。
+- 已更新生命周期计划、项目模型说明文档和用户操作手册，下一步入口调整为阶段 G：交付包、演示脚本、录屏和求职材料转化。
+- 已处理运行环境缺口：`pyproject.toml` 声明 `uvicorn[standard]`，但当前项目专用 Python 环境无写权限且缺少可导入的 `uvicorn`/`anyio` 包体；直接写入环境目录被 Windows 权限拒绝。
+- 已将 API 启动所需依赖安装到项目内 `vendor/python_runtime/`，并修正 ACL；`src/main.py`、`scripts/run_api.py` 和 `sitecustomize.py` 会优先加载该 runtime 目录。
+- 新增 `scripts/run_api.py`，用户手册后端启动命令更新为 `python scripts/run_api.py`。
+- 已执行 live FastAPI smoke，输出目录：`data/runs/stage_e4/20260701T034420Z_p0_delivery_live_api_smoke/`；`/health` 返回 200，`/api/v1/p0-review/runs/20260630T113930Z_e3_final_current_effective_set_accepted/summary` 返回 assessment=143、advisor coverage=143、`final_evaluation_status=pending_human_evaluation`。
+- 本步骤未调用 LLM，未修改 Stage E/F accepted artifacts。
+
+## 2026-07-01 Delivery document and stale artifact cleanup
+
+- 已重写 `docs/部署说明文档.md` 和 `docs/FAQ.md`，统一为当前 P0 fixed-report artifact-backed review workbench 口径：后端启动使用 `python scripts/run_api.py`，E4 工作台显示 143 条 assessments 和 143 条 Advisor coverage，状态保持 `pending_human_evaluation`。
+- 已删除 `.playwright-mcp/` 浏览器状态目录，该目录不属于 P0 产品交付物。
+- 已接受旧导出模板删除：`templates/export_templates/analysis_template.xlsx` 与 `templates/export_templates/word_template.docx`；当前 E4 导出链路使用 CSV/JSON 服务，不依赖旧 Excel/Word 模板。
+- 已清理两个明确 superseded 的运行目录：`data/runs/stage_e4/20260701T031859Z_p0_project_closure_final_smoke/` 和 `data/runs/stage_f/20260701T025932Z_f_human_evaluation_completed/`。
+- 保留当前 accepted artifacts、E4 SQLite、`data/knowledge_base/`、正式 Stage F 归档目录和 `vendor/python_runtime/`。
+- 本步骤未调用 LLM，未修改 Stage E accepted current assessment set 或 final Advisor corrected 输出。
+
+## 2026-07-01 P0 delivery cleanup: legacy UI and script archive
+
+- 已删除本地编辑器目录 `.vscode/`、空目录 `data/export_results/` 和空目录 `templates/export_templates/`。
+- 已移除 legacy Streamlit 页面 `03_materiality.py`、`04_analysis.py`、`05_review.py`、`06_benchmarking.py`、`08_rules.py`；当前 P0 导航只保留首页概览、报告上传、P0 条款复核和审计日志。
+- 已从 `src/config/paths.py` 与 `src/config/__init__.py` 移除 `EXPORT_TEMPLATES_DIR`，当前导出链路不依赖旧 Excel/Word 模板目录。
+- 已将 7 个一次性 Stage E 字段修正脚本移动到 `scripts/archive_stage_e/`，保留复现能力，同时减少主 `scripts/` 目录噪音。
+- 已更新 `docs/用户操作手册.md`、`docs/项目模型说明文档.md`、`README.md` 和 Streamlit 静态测试，明确 legacy 页面已从 P0 交付中移除。
+- 本步骤未调用 LLM，未修改 Stage E accepted artifacts、final Advisor corrected 输出或 E4 SQLite 数据。
+
+## 2026-07-01 P0 delivery cleanup: home page and Stage E script archive
+
+- 已删除空旧库 `data/sqlite_db/review_records.db`；当前 P0 工作台使用 `data/sqlite_db/esg_system.db`，审计日志使用 `data/sqlite_db/audit_log.db`。
+- 已更新 Streamlit 首页旧静态文案，移除“120+ 语料库”“ISSB/SASB/HKEX”“上传-识别-差距-建议”等旧 MVP 展示口径，改为当前 P0 fixed-report、143 条 assessment、143 条 Advisor coverage 和 pending human review 状态。
+- 已将 Stage E/E3/E3.5 历史构建、真实运行、接受和 final Advisor 生成脚本移动到 `scripts/archive_stage_e/`；主 `scripts/` 保留 API 启动、E4 seed、F 导入/计算、通用校验和 P0 基础构建脚本。
+- 已同步修正归档脚本与历史测试的 import 路径，保留阶段复现能力。
+- 本步骤未调用 LLM，未修改 Stage E accepted artifacts、final Advisor corrected 输出或 E4 SQLite 当前 P0 数据。

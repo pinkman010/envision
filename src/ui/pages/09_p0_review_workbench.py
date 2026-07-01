@@ -16,7 +16,7 @@ PENDING_FINAL_STATUS = "pending_human_evaluation"
 PENDING_ADVISOR_LABEL = "AI-assisted recommendation pending human review"
 
 
-st.title("P0 条款级复核工作台")
+st.title("条款复核工作台")
 st.caption(
     "当前数据来自 Stage E accepted artifacts；所有判断保持 pending-review，等待人工评测回传。"
 )

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.run_p0_stage_e2_1_regression import build_e2_1_retrieval_result, load_regression_sample_ids, main
+from scripts.archive_stage_e.run_p0_stage_e2_1_regression import build_e2_1_retrieval_result, load_regression_sample_ids, main
 
 
 def test_load_regression_sample_ids_merges_e1_and_e2_samples():

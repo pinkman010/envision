@@ -23,18 +23,13 @@ ensure_all_paths()
 # 1. 定义所有页面（按业务流程顺序）
 page_01 = st.Page("pages/01_home.py", title="首页概览", icon="🏠", default=True)
 page_02 = st.Page("pages/02_corpus.py", title="报告上传", icon="📄")
-page_03 = st.Page("pages/03_materiality.py", title="议题识别", icon="🔍")
-page_04 = st.Page("pages/04_analysis.py", title="差距分析", icon="⚠️")
-page_05 = st.Page("pages/05_review.py", title="人工复核", icon="✅")
-page_06 = st.Page("pages/06_benchmarking.py", title="对标分析", icon="📊")
 page_07 = st.Page("pages/07_audit.py", title="审计日志", icon="📜")
-page_08 = st.Page("pages/08_rules.py", title="规则配置", icon="⚙️")
-page_09 = st.Page("pages/09_p0_review_workbench.py", title="P0条款复核", icon="🧾")
+page_09 = st.Page("pages/09_p0_review_workbench.py", title="条款复核", icon="🧾")
 
 # 2. 页面分组（按业务流程位置）
 pages = {
-    "📊 核心业务流程": [page_01, page_02, page_03, page_04, page_05, page_09, page_06],
-    "⚙️ 系统管理功能": [page_07, page_08],
+    "📊 核心业务流程": [page_01, page_02, page_09],
+    "⚙️ 系统管理功能": [page_07],
 }
 
 # 3. 全局页面配置

@@ -1,6 +1,6 @@
 """
-首页：概览看板
-功能：系统介绍、快速操作入口、核心数据展示
+首页：P0 概览看板
+功能：展示当前 P0 fixed-report 工作台状态和入口
 """
 
 import streamlit as st
@@ -8,74 +8,72 @@ import streamlit as st
 from src.config import settings
 
 # 页面配置（app.py全局配置）
-st.header("🌱 ESG信息披露与沟通智能分析系统")
-st.subheader("规则驱动、AI辅助的强合规分析工具")
+st.header("ESG 披露证据核验工作台")
+st.subheader("单报告、条款级、证据可追溯的 P0 复核工具")
 st.divider()
 
 # 系统介绍
 st.markdown("### 系统定位")
 st.info(
-    "上传ESG报告 → AI识别议题 → 对照标准找差距 → 生成优化建议"
+    "当前 P0 基于远景能源 2024 中文 ESG 报告和 GRI 参照披露条款，"
+    "展示 143 条 current disclosure assessment units、证据页码、requirement checks、"
+    "AI-assisted Advisor coverage 和人工复核入口。"
 )
 st.caption(f"版本：v{settings.VERSION} | 环境：{settings.ENVIRONMENT}")
 
 st.divider()
 
-# 核心数据看板（MVP阶段用静态数据演示，后期对接数据库）
-st.markdown("### 📊 核心数据看板")
-st.markdown("#### （MVP阶段用静态数据演示，后期对接数据库）")
+# 核心数据看板
+st.markdown("### 核心状态")
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(
-        label="已接入语料库",
-        value="120+",
-        delta="TOP100新能源企业",
-        help="已预加载新能源行业20份ESG报告",
+        label="Assessment units",
+        value="143",
+        delta="current disclosure",
+        help="114 条普通披露项 + 29 条 GRI 3-3 议题级实例。",
     )
 with col2:
     st.metric(
-        label="覆盖披露标准",
-        value="3套",
-        delta="ISSB/SASB/HKEX",
-        help="支持ISSB IFRS S1/S2、SASB可再生能源行业标准、港股HKEX披露要求",
+        label="Advisor coverage",
+        value="143",
+        delta="AI-assisted",
+        help="141 条建议 + 2 条 disclosed/no-action coverage，均等待人工复核。",
     )
 with col3:
     st.metric(
-        label="核心实质性议题",
-        value="15个",
-        delta="新能源行业专属",
-        help="基于新能源行业特性定制的15个核心实质性议题",
+        label="Review status",
+        value="pending",
+        delta="human review",
+        help="当前数据可用于页面展示和人工复核录入，不能表述为最终人工验证通过。",
     )
 with col4:
     st.metric(
-        label="优化建议生成",
-        value="分条",
-        delta="可操作",
-        help="基于差距分析生成具体可操作的改进建议，支持人工复核确认",
+        label="Evaluation status",
+        value="pending",
+        delta="F metrics",
+        help="F 阶段指标和误差归因需在人工评测确认后再计算或展示。",
     )
 
 st.divider()
 
 # 快速操作入口
-st.markdown("### 🚀 快速开始")
-col1, col2, col3 = st.columns(3)
+st.markdown("### 快速开始")
+col1, col2 = st.columns(2)
 with col1:
-    if st.button("📄 导入ESG语料", use_container_width=True, type="primary"):
-        st.switch_page("pages/02_corpus.py")
+    if st.button("进入条款复核", use_container_width=True, type="primary"):
+        st.switch_page("pages/09_p0_review_workbench.py")
 with col2:
-    if st.button("🔍 分析实质性议题", use_container_width=True):
-        st.switch_page("pages/03_materiality.py")
-with col3:
-    if st.button("📊 做企业对标分析", use_container_width=True):
-        st.switch_page("pages/06_benchmarking.py")
+    if st.button("查看审计日志", use_container_width=True):
+        st.switch_page("pages/07_audit.py")
 
 st.divider()
 
 # 合规声明（醒目标注）
-st.markdown("### ⚠️ 合规声明")
+st.markdown("### 合规声明")
 st.error(
     "**重要提示**：\n\n"
-    "1. 本系统的AI输出仅为辅助参考，不构成任何披露建议、投资建议或法律意见；\n"
-    "2. 所有用于对外披露的内容，必须经企业ESG团队人工复核确认；\n"
-    "3. 使用人自行承担所有法律责任与披露责任。"
+    "1. 当前 AI 输出仅为披露证据核验辅助，不构成合规结论、投资建议或法律意见；\n"
+    "2. Advisor 内容状态为 AI-assisted recommendation pending human review；\n"
+    "3. 页面不得用于宣称最终准确率、人工验证通过或最终建议已确认。"
 )

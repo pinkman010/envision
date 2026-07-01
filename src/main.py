@@ -3,7 +3,14 @@ FastAPI后端服务入口
 功能：全局配置加载、API路由注册、CORS配置、健康检查
 """
 
-import uvicorn
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+VENDOR_RUNTIME = PROJECT_ROOT / "vendor" / "python_runtime"
+if VENDOR_RUNTIME.exists():
+    sys.path.insert(0, str(VENDOR_RUNTIME))
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -57,6 +64,8 @@ async def health_check():
 
 # 7. 本地启动入口（用于开发调试）
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(
         "src.main:app",
         host=settings.HOST,

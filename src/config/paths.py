@@ -19,7 +19,6 @@ CONFIG_DIR: Path = ROOT_DIR / "templates"
 PROMPT_TEMPLATES_DIR: Path = CONFIG_DIR / "prompt_templates"
 PROMPT_DIR: Path = PROMPT_TEMPLATES_DIR  # 别名，用于兼容测试
 RULE_TEMPLATES_DIR: Path = CONFIG_DIR / "rule_templates"
-EXPORT_TEMPLATES_DIR: Path = CONFIG_DIR / "export_templates"
 
 # ------------------------------
 # 数据存储目录（运行时生成，敏感内容不上传Git）
@@ -69,7 +68,6 @@ def ensure_all_paths() -> None:
         CONFIG_DIR,
         PROMPT_TEMPLATES_DIR,
         RULE_TEMPLATES_DIR,
-        EXPORT_TEMPLATES_DIR,
         # 数据目录
         DATA_DIR,
         CHROMA_DB_DIR,

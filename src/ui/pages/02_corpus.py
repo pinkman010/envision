@@ -94,5 +94,5 @@ if st.session_state.corpus_result:
     
     # 2.3 下一步操作
     st.subheader("➡️ 下一步操作")
-    if st.button("🔍 进入信息抽取", use_container_width=True):
-        st.switch_page("pages/03_materiality.py")
+    if st.button("🧾 进入条款复核", use_container_width=True):
+        st.switch_page("pages/09_p0_review_workbench.py")

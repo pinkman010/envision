@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scripts.run_stage_e3_143_unified_final_advisor import (
+from scripts.archive_stage_e.run_stage_e3_143_unified_final_advisor import (
     _sanitize_assessment_for_advisor,
     validate_final_advisor_result,
 )

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.run_stage_e3_5_index_3_3_llm import (
+from scripts.archive_stage_e.run_stage_e3_5_index_3_3_llm import (
     BATCHES,
     DEFAULT_SCOPE_OUTPUT,
     _chunk_lookup,

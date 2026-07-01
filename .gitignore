@@ -30,6 +30,7 @@ venv/
 env/
 ENV/
 *.venv
+vendor/python_runtime/
 
 # IDE配置
 .vscode/
@@ -68,4 +69,3 @@ scripts/*.local.py
 scripts/*_local.py
 scripts/*_scratch.py
 scripts/*_debug.py
-
